@@ -1,11 +1,10 @@
 
 
-
 all: 
-	gcc -o scheme concept.c -lm
+	gcc -o scheme concept.c -g -lm
 
 run: all
-	scheme
+	./scheme
 
 clean:
 	rm -rf scheme

@@ -46,6 +46,8 @@ struct snode {
         num nvalue;
     } data;
 
+    int quoted;
+
     snode *car, *cdr;
 };
 
@@ -62,6 +64,13 @@ struct parser_state {
     int32_t expected_cp;
 };
 
+typedef struct environment environment;
+struct environment {
+    environment* up_env;
+
+
+};
+
 void parser_state_init(parser_state* parser, const void* input) {
     parser->buffer = malloc(utf8size(input));
     utf8cpy(parser->buffer, input);
@@ -74,6 +83,8 @@ void parser_state_init(parser_state* parser, const void* input) {
 
     parser->has_error = FALSE;
     parser->expected_cp = -1;
+
+    parser->quoted = FALSE;
 }
 
 void parser_state_terminate(parser_state* p) {
@@ -140,16 +151,16 @@ utf8_string void* parser_get_til_whitespace(parser_state* p) {
     void* next_cp;
 
     next_cp = utf8codepoint(p->current_cp_pos, &current_cp);
-    while (!isspace(current_cp) && current_cp != CHAR_EOS) {
+    while (!isspace(current_cp) && current_cp != CHAR_EOS && current_cp != (int32_t)')' && current_cp != (int32_t)';') {
         blen += utf8codepointsize(current_cp);
         cpcount += 1;
         next_cp = utf8codepoint(next_cp, &current_cp);
     }
 
     buffer = calloc(blen, 1);
-    utf8ncpy(buffer, p->current_cp_pos, blen);
+    utf8ncpy(buffer, p->current_cp_pos, blen - 1);
 
-    while (!isspace(p->current_cp) && p->current_cp != CHAR_EOS) // now consume the parser's characters
+    while (!isspace(p->current_cp) && p->current_cp != CHAR_EOS && p->current_cp != (int32_t)')' && p->current_cp != (int32_t)';') // now consume the parser's characters
         parser_next(p);
     // leave the space in there as we should call "skip_wc" after this func
 
@@ -171,7 +182,7 @@ utf8_string void* parser_get_til_dquote(parser_state* p) {
     }
 
     buffer = calloc(blen, 1);
-    utf8ncpy(buffer, p->current_cp_pos, blen);
+    utf8ncpy(buffer, p->current_cp_pos, blen - 1);
 
     while (p->current_cp != '"' && p->current_cp != CHAR_EOS) // now consume the parser's characters
         parser_next(p);
@@ -233,13 +244,18 @@ num parser_parse_num(utf8_string void* input, int* ok) {
         ival *= 10;
         ival += cp - (int32_t)'0';
         ic++;
+
+        next_cp = utf8codepoint(next_cp, &cp);
     }
 
     if (cp == (int32_t)'.') {
+        next_cp = utf8codepoint(next_cp, &cp);
         while (isdigit(cp)) {
             dval *= 10;
             dval += (cp - (int32_t)'0');
             dc++;
+
+            next_cp = utf8codepoint(next_cp, &cp);
         }
         dval = dval / pow(10, (double)dc);
     }
@@ -259,19 +275,80 @@ num parser_parse_num(utf8_string void* input, int* ok) {
     return ret;
 }
 
+void print_parser_state(parser_state* p) {
+    printf("line: %d; buff = %s; next %s;\n", p->line, p->buffer, p->next_cp);
+    putc(p->current_cp, stdout);
+}
+
+void print_expr(snode* expr) {
+    if (!expr) {
+        printf("(null)");
+        return;
+    }
+
+    switch(expr->type) {
+        case ATYPE_NUMBER:
+            if (expr->data.nvalue.type == NTYPE_INTEGER)
+                printf("i%d", expr->data.nvalue.data.ivalue);
+            else
+                printf("d%lf", expr->data.nvalue.data.dvalue);
+            break;
+        case ATYPE_STRING:
+            printf("\"%s\"", expr->data.string);
+            break;
+        case ATYPE_SYMBOL:
+            printf("%s", expr->data.symbol);
+            break;
+        case ATYPE_CELL:
+            printf("(");
+            print_expr(expr->car);
+            printf(" . ");
+            print_expr(expr->cdr);
+            printf(")");
+            break;
+        default:
+            break;
+    }
+}
+
 snode* parser_parse_sexp_element(parser_state* p) {
     int32_t cp;
     snode* root;
+    snode** c_cell;
     void* tmp_buffer;
     int ok;
 
     cp = p->current_cp;
 
     if (cp == (int32_t)'(') { // is a list
-        
+        c_cell = &root;
+
+        parser_next(p); // consume '('
+
+        while (p->current_cp != (int32_t)')') {
+            *c_cell = snode_new(ATYPE_CELL, NULL, NULL);
+            parser_skip_wc(p);
+
+            (*c_cell)->car = parser_parse_sexp_element(p);
+
+            if ((*c_cell)->car == NULL) { // end of list case
+                free(*c_cell);
+                break;
+            }
+
+            c_cell = &((*c_cell)->cdr);
+        }
+        (*c_cell) = NULL;
+
+        // consume the last ')'
+        parser_next(p);
+
+        return root;
     } else if (cp == (int32_t)')') { // end of list
         return NULL;
     } else if (cp == (int32_t)'"') { // is a string literal
+        parser_next(p);
+
         tmp_buffer = parser_get_til_dquote(p);
 
         root = snode_new(ATYPE_STRING, NULL, NULL);
@@ -315,36 +392,9 @@ snode* parse_expr(const char* input) {
 
     ret = parser_parse_sexp_element(p);
 
-    print_parser_state(p);
+    //print_parser_state(p);
 
     return ret;
-}
-
-void print_parser_state(parser_state* p) {
-    printf("line: %d; buff = %s; next %s;\n", p->line, p->buffer, p->next_cp);
-    putc(p->current_cp, stdout);
-}
-
-void print_expr(snode* expr) {
-    if (!expr)
-        puts("(null)");
-
-    switch(expr->type) {
-        case ATYPE_NUMBER:
-            if (expr->data.nvalue.type == NTYPE_INTEGER)
-                printf("%d", expr->data.nvalue.data.ivalue);
-            else
-                printf("%lf", expr->data.nvalue.data.dvalue);
-            break;
-        case ATYPE_STRING:
-            printf("\"%s\"", expr->data.string);
-            break;
-        case ATYPE_SYMBOL:
-            printf("symbol: %s", expr->data.symbol);
-            break;
-        default:
-            break;
-    }
 }
 
 char* readline(FILE* input) {
@@ -379,6 +429,7 @@ int main(int argc, char** argv) {
         }
 
         print_expr(parse_expr(input));
+        printf("\n");
 
         free(input);
         input = NULL;
