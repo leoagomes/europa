@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "vcruntime.h": "c",
+        "eu_ast.h": "c"
+    }
+}
