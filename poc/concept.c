@@ -16,6 +16,22 @@
 
 typedef struct snode snode;
 typedef struct number num;
+typedef struct procdata procdata;
+typedef struct environment environment;
+typedef struct parser_state parser_state;
+typedef snode* (*native_proc)(snode*, environment*);
+
+#define PROCFLAG_NATIVE (1 << 0)
+#define PROCFLAG_NO_EVAL_ARGS (1 << 1)
+
+struct procdata {
+    int flags;
+
+    union {
+        native_proc native;
+        snode* lang;
+    } data;
+};
 
 typedef enum number_type {
     NTYPE_INTEGER,
@@ -33,9 +49,11 @@ struct number {
 typedef enum sn_type {
     ATYPE_CELL,
     ATYPE_SYMBOL,
-    //ATYPE_QSYMBOL,
     ATYPE_NUMBER,
-    ATYPE_STRING
+    ATYPE_BOOLEAN,
+    ATYPE_STRING,
+    ATYPE_PROCEDURE,
+    ATYPE_ERROR
 } sn_type;
 
 struct snode {
@@ -44,14 +62,14 @@ struct snode {
         void* symbol;
         void* string;
         num nvalue;
+        procdata* proc;
+        int boolvalue;
     } data;
 
-    int quoted;
-
+    int quotes;
     snode *car, *cdr;
 };
 
-typedef struct parser_state parser_state;
 struct parser_state {
     void* buffer;
     int32_t current_cp;
@@ -64,12 +82,23 @@ struct parser_state {
     int32_t expected_cp;
 };
 
-typedef struct environment environment;
+struct env_hl_cell {
+    int32_t hash;
+    void* key;
+    snode* value;
+
+    struct env_hl_cell* next;
+};
+
 struct environment {
     environment* up_env;
-
-
+    struct env_hl_cell* list;
 };
+
+#define procdata_is_native(p) (((p)->flags & PROCFLAG_NATIVE) != 0)
+#define procdata_is_no_eval(p) (((p)->flags & PROCFLAG_NO_EVAL_ARGS) != 0)
+
+procdata* procdata_new(int flags, snode* lang, native_proc native);
 
 void parser_state_init(parser_state* parser, const void* input) {
     parser->buffer = malloc(utf8size(input));
@@ -83,8 +112,6 @@ void parser_state_init(parser_state* parser, const void* input) {
 
     parser->has_error = FALSE;
     parser->expected_cp = -1;
-
-    parser->quoted = FALSE;
 }
 
 void parser_state_terminate(parser_state* p) {
@@ -203,26 +230,26 @@ snode* snode_new(int type, snode* car, snode* cdr) {
 
 void snode_release(snode** node) { //should be a simple tree trasversal with freeing algorithm
     snode* tmp;
+
+    if (node == NULL || *node == NULL)
+        return;
+
     tmp = *node;
 
-    if (tmp->car != NULL) {
-        snode_release(&(tmp->car));
-    }
-    if (tmp->cdr != NULL) {
-        snode_release(&(tmp->car));
-    }
+    snode_release(&(tmp->car));
+    snode_release(&(tmp->cdr));
 
     if (tmp->type == ATYPE_SYMBOL) {
         free(tmp->data.symbol);
     } else if (tmp->type == ATYPE_STRING) {
         free(tmp->data.string);
+    } else if (tmp->type == ATYPE_PROCEDURE && !procdata_is_native(tmp->data.proc)) {
+        snode_release(&(tmp->data.proc->data.lang)); // should implement a GC at some point and then put this on the GC
     }
 
     *node = NULL;
     free(tmp);
 }
-
-
 
 num parser_parse_num(utf8_string void* input, int* ok) {
     int ic = 0, dc = 0;
@@ -306,6 +333,20 @@ void print_expr(snode* expr) {
             print_expr(expr->cdr);
             printf(")");
             break;
+        case ATYPE_ERROR:
+            printf("ERROR: %s", expr->data.string);
+            break;
+        case ATYPE_PROCEDURE:
+            printf("#<procedure: ");
+            if (procdata_is_native(expr->data.proc)) {
+                printf("%x>", expr->data.proc->data.native);
+            } else {
+                printf("lang>");
+            }
+            break;
+        case ATYPE_BOOLEAN:
+            printf("#%c", (expr->data.boolvalue ? 't' : 'f'));
+            break;
         default:
             break;
     }
@@ -357,8 +398,24 @@ snode* parser_parse_sexp_element(parser_state* p) {
         return root;
     } else if (isdigit(cp)) { // is a number
         root = snode_new(ATYPE_NUMBER, NULL, NULL);
-        root->data.nvalue = parser_parse_num(parser_get_til_whitespace(p), &ok);
+        void* tmp = parser_get_til_whitespace(p);
+
+        root->data.nvalue = parser_parse_num(tmp, &ok);
+
+        free(tmp);
         return root;
+    } else if (cp == (int32_t)'#') {
+        parser_next(p);
+
+        root = snode_new(ATYPE_BOOLEAN, NULL, NULL);
+
+        if (p->current_cp == (int32_t)'t' || p->current_cp == (int32_t)'f') {
+            root->data.boolvalue = (p->current_cp == (int32_t)'t');
+            parser_next(p);
+            return root;
+        }
+
+        return NULL;
     } else if (cp == (int32_t)'.') { // is a dotted pair?
         // *REAL* TODO
     } else if (cp == '\'') { // is a quoted expr
@@ -374,6 +431,13 @@ snode* parser_parse_sexp_element(parser_state* p) {
     }
 
     return NULL; // shouldn't get to here, I think (?)
+}
+
+void parser_terminate(parser_state* p) {
+    if (!p)
+        return;
+
+    free(p->buffer);
 }
 
 snode* parse_expr(const char* input) {
@@ -394,7 +458,391 @@ snode* parse_expr(const char* input) {
 
     //print_parser_state(p);
 
+    parser_state_terminate(&parser);
+
     return ret;
+}
+
+snode* snode_deep_copy(snode* node) {
+    snode* new_node;
+
+    if (!node)
+        return NULL;
+
+    new_node = snode_new(node->type, NULL, NULL);
+    switch(node->type) {
+        case ATYPE_NUMBER:
+            new_node->data.nvalue = node->data.nvalue;
+            break;
+        case ATYPE_STRING:
+            new_node->data.string = utf8dup(node->data.string);
+            break;
+        case ATYPE_SYMBOL:
+            new_node->data.symbol = utf8dup(node->data.symbol);
+            break;
+        case ATYPE_BOOLEAN:
+            new_node->data.boolvalue = node->data.boolvalue;
+            break;
+        case ATYPE_CELL:
+            new_node->car = snode_deep_copy(node->car);
+            new_node->cdr = snode_deep_copy(node->cdr);
+            break;
+        case ATYPE_PROCEDURE:
+            new_node->data.proc = procdata_new(node->data.proc->flags, node->data.proc->data.lang, node->data.proc->data.native);
+
+            break;
+        default:
+            break;
+    }
+
+    return new_node;
+}
+
+environment* env_new(environment* up_env) {
+    environment* env;
+
+    env = (environment*)malloc(sizeof(*env));
+    env->up_env = up_env;
+    env->list = NULL;
+
+    return env;
+}
+
+struct env_hl_cell* hlc_new(void* key, snode* value, struct env_hl_cell* next) {
+    struct env_hl_cell* cell;
+
+    cell = (struct env_hl_cell*)malloc(sizeof(*cell));
+    cell->key = utf8dup(key);
+    cell->value = snode_deep_copy(value);
+    cell->next = next;
+
+    return cell;
+}
+
+int env_push(environment* env, void* key, snode* value) {
+    struct env_hl_cell *ccell, *pcell;
+    int ret_result = -1;
+
+    if (env->list == NULL) {
+        env->list = hlc_new(key, value, NULL);
+        return TRUE;
+    }
+
+    ccell = env->list;
+    pcell = NULL;
+
+    do {
+        ret_result = utf8cmp(key, ccell->key);
+        pcell = ccell;
+        ccell = ccell->next;
+    } while (ret_result < 0 && ccell != NULL);
+
+    if (ret_result == 0) {
+        return FALSE;
+    }
+
+    pcell->next = hlc_new(key, value, ccell);
+
+    return TRUE;
+}
+
+snode* env_get(environment* env, void* key) { // NOTE, DO NOT FREE
+    struct env_hl_cell *ccell;
+
+    ccell = env->list;
+    while (ccell != NULL) {
+        if (utf8cmp(key, ccell->key) == 0)
+            return (ccell->value);
+
+        ccell = ccell->next;
+    }
+
+    if (env->up_env != NULL) {
+        return env_get(env->up_env, key);
+    }
+
+    return NULL;
+}
+
+int env_set(environment* env, void* key, snode* value) {
+    struct env_hl_cell *ccell;
+
+    ccell = env->list;
+    while (ccell != NULL) {
+        if (utf8cmp(ccell->key, key) == 0) {
+            snode_release(&(ccell->value));
+            ccell->value = value;
+
+            return TRUE;
+        }
+
+        ccell = ccell->next;
+    }
+
+    if (env->up_env != NULL) {
+        return env_set(env->up_env, key, value);
+    }
+
+    return FALSE;
+}
+
+void rec_delete_hcells(struct env_hl_cell* cell) {
+    if (cell == NULL)
+        return;
+
+    rec_delete_hcells(cell->next);
+
+    free(cell->key);
+    snode_release(&(cell->value));
+    free(cell);
+}
+
+void env_delete(environment* env, int delete_up) {
+    if (env == NULL)
+        return;
+
+    rec_delete_hcells(env->list);
+
+    if (delete_up)
+        env_delete(env->up_env, delete_up);
+
+    free(env);
+}
+
+snode* snode_new_error(const void* error_str) {
+    snode* node;
+
+    node = snode_new(ATYPE_ERROR, NULL, NULL);
+    node->data.string = utf8dup(error_str);
+
+    return node;
+}
+
+snode* eval(snode*,environment*);
+
+snode* eval_if(snode* expr, environment* env) {
+    snode *eval_ret, *tmp;
+
+    if (expr->cdr == NULL)
+        return snode_new_error("NULL cdr when evaling if.");
+
+    tmp = expr->cdr->car;
+    eval_ret = eval(tmp, env);
+
+    if (eval_ret->type != ATYPE_BOOLEAN) {
+        snode_release(&eval_ret);
+        return snode_new_error("Expression does not eval to boolean.");
+    }
+
+    if (eval_ret->data.boolvalue) {
+        tmp = expr->cdr->cdr;
+        if (!tmp || !tmp->car) {
+            snode_release(&eval_ret);
+            return snode_new_error("Missing #t arm on if");
+        }
+
+        tmp = tmp->car;
+        
+        snode_release(&eval_ret);
+
+        return eval(tmp, env);
+    } else {
+        tmp = expr->cdr->cdr;
+        if (!tmp || !tmp->cdr || !tmp->cdr->car) {
+            snode_release(&eval_ret);
+            return snode_new_error("Missing #f arm on if");
+        }
+
+        tmp = tmp->cdr->car;
+        
+        snode_release(&eval_ret);
+
+        return eval(tmp, env);
+    }
+
+    return NULL;
+}
+
+snode* eval_define(snode* expr, environment* env) {
+    snode* tmp;
+    void* key;
+    snode* value;
+
+    tmp = expr->cdr;
+
+    if (!tmp || !tmp->car)
+        return snode_new_error("Missing symbol name.");
+
+    key = tmp->car->data.symbol;
+
+    if (!tmp || !tmp->cdr || !tmp->cdr->car)
+        return snode_new_error("Missing value.");
+
+    tmp = expr->cdr->cdr->car;
+
+    value = eval(tmp, env);
+
+    env_push(env, key, value);
+
+    return value;
+}
+
+snode* eval_set(snode* expr, environment* env) {
+    snode* tmp;
+    void* key;
+    snode* value;
+
+    tmp = expr->cdr;
+
+    if (!tmp || !tmp->car)
+        return snode_new_error("Missing symbol.");
+    
+    if (!tmp || !tmp->cdr || !tmp->cdr->car)
+        return snode_new_error("Missing value.");
+
+    if (tmp->car->type != ATYPE_SYMBOL)
+        return snode_new_error("Set value not symbol.");
+
+    key = tmp->car->data.symbol;
+
+    value = eval(tmp->cdr->car, env);
+
+    env_set(env, key, snode_deep_copy(value));
+
+    return value;
+}
+
+snode* eval_lambda(snode* expr, environment* env) {
+    snode* tmp;
+    return NULL;
+}
+
+snode* eval_list_rec(snode* expr, environment* env) {
+    snode* node;
+
+    if (expr == NULL)
+        return NULL;
+
+    node = snode_new(ATYPE_CELL, eval(expr->car, env), eval_list_rec(expr->cdr, env));
+
+    return node;
+}
+
+snode* eval(snode* expr, environment* env) {
+    snode *tmp, *procnode;
+    void* tmpstr;
+
+    if (expr == NULL || env == NULL)
+        return NULL;
+
+    if (expr->quotes > 0) { //TODO
+        tmp = snode_deep_copy(expr);
+        (tmp->quotes)--;
+
+        return tmp;
+    }
+
+    switch (expr->type) {
+        case ATYPE_NUMBER:
+        case ATYPE_ERROR:
+        case ATYPE_STRING:
+        case ATYPE_BOOLEAN:
+            return snode_deep_copy(expr);
+        case ATYPE_SYMBOL:
+            return snode_deep_copy(env_get(env, expr->data.symbol));
+        case ATYPE_CELL:
+        case ATYPE_PROCEDURE:
+            tmp = expr->car;
+
+            if (tmp == NULL) {
+                tmp = snode_new(ATYPE_ERROR, NULL, NULL);
+                tmp->data.string = utf8dup("List/Procedure has NULL car.");
+                return tmp;
+            }
+
+            // resolve what to run if it is a symbol
+            if (tmp->type == ATYPE_SYMBOL) {
+                tmpstr = tmp->data.symbol;
+                procnode = env_get(env, tmpstr);
+
+                if (procnode == NULL || (procnode->type != ATYPE_PROCEDURE))
+                    return snode_new_error("No such procedure.");
+
+                if (procdata_is_native(procnode->data.proc)) { // native C procedure
+                    if (procdata_is_no_eval(procnode->data.proc)) { // should we eval args?
+                        return (procnode->data.proc->data.native)(expr, env);
+                    } else { // we need to eval args
+                        snode* evald_args = eval_list_rec(expr->cdr, env);
+                        tmp = (procnode->data.proc->data.native)(evald_args, env);
+                        snode_release(&evald_args);
+                        return tmp;
+                    }
+                } else { // APPLY here?
+                    
+                }
+            }
+        default:
+            break;
+    }
+
+    return NULL;
+}
+
+procdata* procdata_new(int flags, snode* lang, native_proc native) {
+    procdata* p;
+
+    p = (procdata*)malloc(sizeof(*p));
+    if (!p)
+        return NULL;
+
+    p->flags = flags;
+    
+    if (procdata_is_native(p))
+        p->data.native = native;
+    else
+        p->data.lang = snode_deep_copy(lang);
+
+    return p;
+}
+
+void procdata_release(procdata* p) {
+    if (!p)
+        return;
+
+    if (!procdata_is_native(p))
+        snode_release(&(p->data.lang));
+
+    free(p);
+}
+
+void env_init_defaults(environment* env) {
+    snode tmp;
+    procdata tmppd;
+
+    // common snode data
+    tmp.type = ATYPE_PROCEDURE;
+    tmp.data.proc = &tmppd;
+
+    // common procdata
+    tmppd.flags = (PROCFLAG_NATIVE | PROCFLAG_NO_EVAL_ARGS);
+
+    // if
+    tmppd.data.native = eval_if;
+    env_push(env, "if", &tmp);
+
+    // begin // TODO
+
+    // define
+    tmppd.data.native = eval_define;
+    env_push(env, "define", &tmp);
+
+    // set!
+    tmppd.data.native = eval_set;
+    env_push(env, "set!", &tmp);
+
+    // lambda
+    tmppd.data.native = eval_lambda;
+    env_push(env, "lambda", &tmp);
 }
 
 char* readline(FILE* input) {
@@ -418,7 +866,19 @@ char* readline(FILE* input) {
 int main(int argc, char** argv) {
     int done = 0;
     char* input = NULL;
-    snode* expr;
+    snode* expr, *evald;
+    environment* env;
+    snode* test;
+
+    test = snode_new(ATYPE_STRING, NULL, NULL);
+    test->data.string = utf8dup("HE GIVING ME THAT GOOD SHIT.");
+
+    env = env_new(NULL);
+    env_push(env, "test", test);
+
+    env_init_defaults(env);
+
+    snode_release(&test);
 
     while (!done) {
         printf("> ");
@@ -428,12 +888,24 @@ int main(int argc, char** argv) {
             done = 1;
         }
 
-        print_expr(parse_expr(input));
+        expr = parse_expr(input);
+
+        printf("expr: ");
+        print_expr(expr);
         printf("\n");
 
+        printf("eval'd: ");
+        evald = eval(expr, env);
+        print_expr(evald);
+        printf("\n");
+
+        snode_release(&expr);
+        snode_release(&evald);
         free(input);
         input = NULL;
     }
+
+    env_delete(env, TRUE);
 
     return 0;
 }
