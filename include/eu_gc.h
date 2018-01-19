@@ -1,6 +1,7 @@
 #ifndef __EUROPA_GC_H__
 #define __EUROPA_GC_H__
 
+#include "eu_commons.h"
 #include "eu_int.h"
 #include "eu_object.h"
 
@@ -20,7 +21,7 @@ struct europa_gc {
 	eu_realloc realloc;
 	eu_free free;
 
-	eu_gcobj* last_obj;
+	eu_gcobj *last_obj;
 };
 
 eu_gcobj* eugc_new_object(europa_gc* gc, eu_byte type, eu_uint size);
