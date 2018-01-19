@@ -1,5 +1,8 @@
 #include "eu_gc.h"
 
+#include "eu_string.h"
+#include "eu_symbol.h"
+
 #define eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL,(s)))
 #define eugc_realloc(gc,ptr,s) ((gc)->realloc((gc)->ud, (ptr), (s))
 #define eugc_free(gc,ptr) (gc)->free((gc)->ud, (ptr))
@@ -7,7 +10,7 @@
 #define eugco_markwhite(obj) ((obj)->color = EUGC_COLOR_WHITE)
 #define eugco_markgrey(obj) ((obj)->color = EUGC_COLOR_GREY)
 #define eugco_markblack(obj) ((obj)->color = EUGC_COLOR_BLACK)
-
+#define _cast(a,b) (((a))(b))
 eu_gcobj* eugc_new_object(europa_gc* gc, eu_byte type, size_t size) {
 	eu_gcobj* obj;
 
@@ -35,7 +38,7 @@ void eugc_sweep(europa_gc* gc) {
 
 	prev_was_white = 0;
 	last_black = NULL;
-	current = gc->start;
+	current = gc->last_obj;
 
 	while (current != NULL) {
 		switch (current->color) {
@@ -71,5 +74,18 @@ void eugc_sweep(europa_gc* gc) {
 }
 
 
-void eugc_run_destructor(europa_gc* gc, gc_obj* obj) {
+void eugc_run_destructor(europa_gc* gc, eu_gcobj* obj) {
+	switch(obj->type) {
+		case EU_OBJTYPE_STRING:
+			eustr_destroy(gc, eu_gcobj2string(obj));
+			break;
+		case EU_OBJTYPE_SYMBOL:
+			eusym_destroy(gc, eu_gcobj2symbol(obj));
+			break;
+		case EU_OBJTYPE_CELL:
+			eucell_destroy(gc, eu_gcobj2cell(obj));
+		default:
+			break;
+	}
+	gc->free(gc->ud, obj);
 }
