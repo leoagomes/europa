@@ -1,4 +1,4 @@
-#include "eu_cell.h"
+#include "eu_list.h"
 
 #include <stdarg.h>
 
@@ -153,6 +153,37 @@ void eulist_append_list_to_list(europa* s, eu_value target, eu_value val) {
 		eucell_tail(last) = val;
 }
 
+/* WARNING: ASSUMES GIVEN CELL IS A PROPER LIST */
+static eu_cell* _list_reverse(europa* s, eu_cell* original, eu_cell** rhead) {
+	eu_cell *current, *next;
+
+	if (cell == NULL)
+		return NULL;
+
+	/* create a new cell with the same contents as the original cell */
+	current = eucell_new(s, ccar(original), EU_VALUE_NULL);
+
+	/* check if next cell is null (empty list), meaning that this is the
+	 * last cell in the list */
+	if (euvalue_is_null(ccdr(original))) {
+		/* if it is, then and it should be the head of the reversed list */
+		(*rhead) = current;
+	} else {
+		/* if it isn't, then get the next sublist node and point it's cdr to
+		 * this node */
+		next = _list_reverse(s, eu_value2cell(eucell_tail(cell)), rhead);
+		eucell_tail(next).type = EU_TYPE_OBJECT;
+		eucell_tail(next).value.object = eu_cell2gcobj(current);
+	}
+
+	return current;
+}
+
+/* WARNING: ASSUMES GIVEN LIST IS A PROPER LIST */
+eu_value eulist_reverse(europa* s, eu_value original) {
+	
+}
+
 /* helper defines */
 #define __arity_check(s,args,fname,exp) \
 	if ((args) == NULL)
@@ -254,8 +285,6 @@ eu_value euapi_list_append(europa* s, eu_cell* args) {
 
 eu_value euapi_list_reverse(europa* s, eu_cell* args) {
 	__arity_check(s, args, "reverse", 1);
-
-
 }
 
 eu_value euapi_list_list_tail(europa* s, eu_cell* args);

@@ -41,7 +41,10 @@ void euerr_destroy(europa_gc* gc, eu_error* e);
 
 eu_value euerr_tovalue(eu_error* e);
 
+/* TODO: replace bad_value_type by bad_argument_type when applicable */
 eu_error* euerr_bad_value_type(europa* s, eu_value given, eu_byte expected);
+eu_error* euerr_bad_argument_type(europa* s, const char* to, int arg_index,
+	eu_value given, int expected_type);
 /* TODO: replace bad_argument_count by arity_mismatch and remove
  * bad_argument_count */
 eu_error* euerr_bad_argument_count(europa* s, const char* to, int count);

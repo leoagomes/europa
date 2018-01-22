@@ -29,6 +29,19 @@ eu_value euerr_tovalue(eu_error* e) {
 	return v;
 }
 
+eu_error* euerr_bad_argument_type(europa* s, const char* to, int arg_index,
+	eu_value given, int expected_type) {
+	eu_error* err;
+
+	err = euerr_new(s, "bad argument (#%d) to %s, expected type %d", arg_index,
+		to, expected_type);
+	
+	err->et = expected_type;
+	err->gv = given;
+
+	return err;
+}
+
 eu_error* euerr_bad_value_type(europa* s, eu_value given, eu_byte expected) {
 	eu_error* err;
 	

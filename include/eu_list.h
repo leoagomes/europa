@@ -12,6 +12,7 @@ int eulist_length(europa* s, eu_value v);
 eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell);
 eu_cell* eulist_last_cell(europa* s, eu_value list);
 void eulist_append_list_to_list(europa* s, eu_value target, eu_value val);
+eu_value eulist_reverse(europa* s, eu_value original);
 
 /* list procedures from the api (definition at eu_list.c) */
 eu_value euapi_list_is_list(europa* s, eu_cell* args);
