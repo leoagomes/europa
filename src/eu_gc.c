@@ -10,7 +10,7 @@
 #define eugco_markwhite(obj) ((obj)->color = EUGC_COLOR_WHITE)
 #define eugco_markgrey(obj) ((obj)->color = EUGC_COLOR_GREY)
 #define eugco_markblack(obj) ((obj)->color = EUGC_COLOR_BLACK)
-#define _cast(a,b) (((a))(b))
+
 eu_gcobj* eugc_new_object(europa_gc* gc, eu_byte type, size_t size) {
 	eu_gcobj* obj;
 

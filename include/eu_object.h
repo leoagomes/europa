@@ -5,9 +5,13 @@
 #include "eu_int.h"
 
 enum eu_type {
+	EU_TYPE_NUMBER,
+	EU_TYPE_BOOLEAN,
 	EU_TYPE_OBJECT,
 	EU_TYPE_NULL,
+	EU_TYPE_ERROR,
 	EU_TYPE_POINTER,
+	EU_TYPE_CHARACTER,
 	EU_TYPE_CFUNCTION
 };
 
@@ -22,6 +26,7 @@ enum eu_objtype {
 
 typedef struct eu_gcobj eu_gcobj;
 typedef struct eu_value eu_value;
+typedef struct eu_number eu_number;
 
 struct eu_gcobj {
 	EU_COMMON_HEAD;
@@ -29,9 +34,17 @@ struct eu_gcobj {
 
 union eu_values {
 	eu_gcobj* object;
-	long integer;
-	double real;
+	eu_number num;
 	int boolean;
+	int character;
+};
+
+struct eu_number {
+	char is_fixnum;
+	union {
+		int integer;
+		double real;
+	} value;
 };
 
 struct eu_value {
@@ -39,10 +52,24 @@ struct eu_value {
 	eu_byte type;
 };
 
-#define eu_udata2gcobj(u) _cast(eu_gcobj*,s)
-#define eu_table2gcobj(t) _cast(eu_gcobj*,s)
+/* Global object singletons declarations */
+#define EU_VALUE_NULL ((eu_value){ .type = EU_TYPE_NULL , .value = { .object = NULL }})
+#define EU_VALUE_TRUE \
+	((eu_value){ .value = { .boolean = EU_BOOL_TRUE }, .type = EU_TYPE_BOOLEAN})
+#define EU_VALUE_FALSE \
+	((eu_value){ .value = { .boolean = EU_BOOL_FALSE }, .type = EU_TYPE_BOOLEAN})
 
-#define eu_gcobj2udata(o) _cast(eu_udata*,o)
-#define eu_gcobj2table(o) _cast(eu_table*,o)
+
+#define euvalue_is_type(v,t) ((v).type == (t))
+#define euvalue_is_objtype(v,t) \
+	((v).type == EU_TYPE_OBJECT && (v).value.object->type == (t))
+
+#define euvalue_is_null(v) ((v).type == EU_TYPE_NULL)
+#define euobj_is_null(obj) ((obj) == NULL)
+
+eu_value euval_from_boolean(int v);
+
+/* language side api */
+eu_value euapi_value_is_null(europa* s, eu_cell* args);
 
 #endif /* __EUROPA_OBJECTS_H__ */

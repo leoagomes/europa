@@ -1,14 +1,11 @@
-#ifndef __EU_PARSER_H__
-#define __EU_PARSER_H__
+#ifndef __EUROPA_PARSER_H__
+#define __EUROPA_PARSER_H__
 
 
-
-struct eu_parser_state {
-    void* buffer;
-    void* next_cp;
-    long current_cp;
+struct europa_parser {
+    europa* state;
+    eu_inport* input_port;
 };
-
 
 
 
