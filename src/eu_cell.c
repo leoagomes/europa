@@ -73,7 +73,7 @@ void eucell_destroy(europa_gc* gc, eu_cell* cell) {
  * @{
  */
 
-eu_value eulib_cell_car(europa* s, eu_cell* args) {
+eu_value euapi_cell_car(europa* s, eu_cell* args) {
 	if (euobj_is_null(args))
 		return euerr_tovalue(euerr_bad_argument_count(s, "car", 0));
 
