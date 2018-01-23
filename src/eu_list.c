@@ -1,18 +1,18 @@
 /**
  * @file eu_list.c
  * @author Leonardo G.
- * @brief List (and eu_cell based) operations.
+ * @brief List (eu_cell based) operations.
  * 
  * This file contains the implementation of a lot (if not all) list operation
  * functions for the language.
  * 
- * Some of the functions in here are used for the language's standard library;
- * these use the "euapi_" prefix. Beware that some functions here assume that
- * their arguments have already been type-checked.
+ * Some functions in this file assume their arguments are the correct type,
+ * those should be marked.
  * 
  * @todo standardize type checking
  */
 #include "eu_list.h"
+#include "eu_number.h"
 
 #include <stdarg.h>
 
@@ -111,12 +111,12 @@ int eulist_length(europa* s, eu_value v) {
  * 
  * @param s the Europa state.
  * @param list the original list.
- * @param last_cell where to store the copy's last cell object.
+ * @param last_cell_slot where to store the copy's last cell object.
  * @return eu_value The list copy.
  * 
  * @mayerror
  */
-eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell) {
+eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell_slot) {
 	eu_value copy, *copy_slot;
 	eu_cell *original, *current_cell;
 
@@ -161,8 +161,8 @@ eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell) {
 
 	/* current_cell has the value of the last allocated cell 
 	 * and so it has the value of the last cell */
-	if (last_cell != NULL)
-		(*last_cell) = current_cell;
+	if (last_cell_slot != NULL)
+		(*last_cell_slot) = current_cell;
 
 	/* return the copy of the list */
 	return copy;
@@ -310,21 +310,44 @@ eu_value eulist_reverse(europa* s, eu_value original) {
  * @param k the amount of cells to skip.
  * @return eu_value the list's tail.
  * 
+ * @mayerror
  * @nocheckargs
  */
 /* WARNING: ASSUMES GIVEN ARGUMENTS ARE VALID AND OF THE CORRECT TYPES */
-eu_value eulist_tail(europa* s, eu_value list, eu_value k) {
-	eu_value current;
+eu_value eulist_tail(europa* s, eu_value list, int k) {
+	eu_cell* ccell;
+
+	ccell = eu_value2cell(list);
+
+	while (ccell != NULL) {
+		if (k == 0)
+			break;
+		ccell = eu_value2cell(ccdr(ccell));
+		k--;
+	}
+
+	if (cell == NULL && num != 0) {
+		return euerr_tovalue(euerr_new(s, "given list is too small"));
+	}
+
+	return eu_cell2value(ccell);
 }
 
 /* helper defines */
-#define __arity_check(s,args,fname,exp) \
+#define __no_args_check(s,args,fname,exp) \
 	if ((args) == NULL)
 		return euerr_tovalue(euerr_arity_mismatch((s),(fname),(exp),0));
 
+#define __arity_check(s,args,fname,exp) \
+	do { \
+		int l;
+		if ((l = eulist_length(s, eu_cell2value(args))) != (exp)) \
+			return euerr_tovalue(euerr_arity_mismatch((s),(fname),(exp),l)); \
+	} while(0);
+
 /* language API */
 eu_value euapi_list_is_list(europa* s, eu_cell* args) {
-	__arity_check(s, args, "list?");
+	__arity_check(s, args, "list?", 1);
 	return euval_from_boolean(eulist_length(s, ccar(args)) >= 0);
 }
 
@@ -347,7 +370,7 @@ eu_value euapi_list_make_list(europa* s, eu_cell* args) {
 eu_value euapi_list_length(europa* s, eu_cell* args) {
 	int result;
 
-	__arity_check(s, args, "length", 1);
+	__no_args_check(s, args, "length", 1);
 
 	result = eulist_length(s, ccar(args));
 	
@@ -419,7 +442,7 @@ eu_value euapi_list_append(europa* s, eu_cell* args) {
 eu_value euapi_list_reverse(europa* s, eu_cell* args) {
 	eu_value argument, reversed;
 
-	__arity_check(s, args, "reverse", 1);
+	__no_args_check(s, args, "reverse", 1);
 
 	/* get the passed argument */
 	argument = ccar(args);
@@ -435,7 +458,8 @@ eu_value euapi_list_reverse(europa* s, eu_cell* args) {
 }
 
 eu_value euapi_list_list_tail(europa* s, eu_cell* args) {
-
+	eu_cell* list;
+	int k;
 }
 
 eu_value euapi_list_list_ref(europa* s, eu_cell* args);
