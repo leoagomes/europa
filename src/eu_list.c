@@ -1,7 +1,31 @@
+/**
+ * @file eu_list.c
+ * @author Leonardo G.
+ * @brief List (and eu_cell based) operations.
+ * 
+ * This file contains the implementation of a lot (if not all) list operation
+ * functions for the language.
+ * 
+ * Some of the functions in here are used for the language's standard library;
+ * these use the "euapi_" prefix. Beware that some functions here assume that
+ * their arguments have already been type-checked.
+ * 
+ * @todo standardize type checking
+ */
 #include "eu_list.h"
 
 #include <stdarg.h>
 
+/**
+ * @brief Creates a list from passed values.
+ * 
+ * @param s the europa state.
+ * @param count the number of values in the list.
+ * @param ... the eu_value values for the new list.
+ * @return eu_value the newly created list.
+ * 
+ * @wonterror
+ */
 eu_value eulist_make_list(europa* s, int count, ...) {
 	va_list args;
 	int i;
@@ -36,6 +60,23 @@ eu_value eulist_make_list(europa* s, int count, ...) {
 	return list;
 }
 
+/**
+ * @brief Calculates the length of a list.
+ * 
+ * This function calculates the length of a list, taking into account the type
+ * of the given value.
+ * 
+ * @param s the europa state.
+ * @param v the list's head.
+ * @return int the list's length or a code indicating an error.
+ * 
+ * @retval <-2 the given list is a dotted list and its length is -(return + 2)
+ * @retval -2 the given value is not even a pair
+ * @retval -1 the given value is a circular list
+ * @retval >= 0 the list's length
+ * 
+ * @checkargs
+ */
 int eulist_length(europa* s, eu_value v) {
 	int i = 0;
 	eu_value slow, fast;
@@ -62,6 +103,19 @@ int eulist_length(europa* s, eu_value v) {
 	}
 }
 
+/**
+ * @brief Creates a copy of a given list.
+ * 
+ * Creates a copy of the list, returning the new list and the object that
+ * makes the copy's last cell.
+ * 
+ * @param s the Europa state.
+ * @param list the original list.
+ * @param last_cell where to store the copy's last cell object.
+ * @return eu_value The list copy.
+ * 
+ * @mayerror
+ */
 eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell) {
 	eu_value copy, *copy_slot;
 	eu_cell *original, *current_cell;
@@ -114,6 +168,16 @@ eu_value eulist_copy(europa* s, eu_value list, eu_cell** last_cell) {
 	return copy;
 }
 
+/**
+ * @brief Gets the last cell of a list.
+ * 
+ * @param s the Europa state.
+ * @param list the list.
+ * @return eu_cell* the last cell object.
+ * 
+ * @note If given value is null (the empty list) or not a cell, then
+ *       the function will return NULL.
+ */
 eu_cell* eulist_last_cell(europa* s, eu_value list) {
 	eu_cell *ccell, *lcell;
 
@@ -143,6 +207,18 @@ eu_cell* eulist_last_cell(europa* s, eu_value list) {
 	return ccell;
 }
 
+/**
+ * @brief Appends a list to the end of another list.
+ * 
+ * This function appends directly to the given list the given value.
+ * It **does not** copy any of the values, but rather directly modifies
+ * the given list to include a direct copy of the given value to its
+ * last cell's cdr.
+ * 
+ * @param s the Europa state.
+ * @param target the list to which append the value.
+ * @param val the value to append to the list.
+ */
 void eulist_append_list_to_list(europa* s, eu_value target, eu_value val) {
 	eu_cell* last;
 
@@ -153,7 +229,32 @@ void eulist_append_list_to_list(europa* s, eu_value target, eu_value val) {
 		eucell_tail(last) = val;
 }
 
+/**
+ * @private
+ * @brief Reverses a proper list.
+ * 
+ * @param s the Europa state.
+ * @param original the current original list's cell.
+ * @param rhead where to store the returned list's head.
+ * @return eu_cell* the current reversed sublist.
+ * 
+ * @nocheckargs
+ */
 /* WARNING: ASSUMES GIVEN CELL IS A PROPER LIST */
+/*
+ * This is the inner recursive function used to reverse lists.
+ * Because C does not recursion optimizations (this code wouldn't be tail
+ * recursive anyway, probably), it would probably be more performant to
+ * implement this as an iteration. In order to do that, I'd have to implement
+ * a reasonable stack and I have a tendency to overengineer things, so I'd
+ * probably want to make this super generic stack and spend more time creating
+ * a data structure than implementing the algorithm, so I decided to make use
+ * of this beautiful stack C already gives you for free, called the call stack.
+ * 
+ * (I do know, however, that there may be further performance impacts by using
+ * recursion because it could make the branch predictor's job harder, but I
+ * am still too lazy to implement a stack, so...)
+ */
 static eu_cell* _list_reverse(europa* s, eu_cell* original, eu_cell** rhead) {
 	eu_cell *current, *next;
 
@@ -179,9 +280,41 @@ static eu_cell* _list_reverse(europa* s, eu_cell* original, eu_cell** rhead) {
 	return current;
 }
 
+/**
+ * @brief Reverses a given list.
+ * 
+ * @param s the Europa state.
+ * @param original the original list that should be reversed.
+ * @return eu_value the reversed list.
+ * 
+ * @nocheckargs
+ * @wonterror
+ */
 /* WARNING: ASSUMES GIVEN LIST IS A PROPER LIST */
 eu_value eulist_reverse(europa* s, eu_value original) {
-	
+	eu_cell *original_root, *reversed_head, *reversed_last;
+
+	original_root = eu_value2cell(original);
+	reversed_last = _list_reverse(s, original_root, &reversed_head);
+
+	return eu_cell2value(reversed_head);
+}
+
+/**
+ * @brief Gets the tail of a list.
+ * 
+ * Gets the tail of a list, which is the cell in the list after k cells.
+ * 
+ * @param s the Europa state.
+ * @param list the list to get the tail.
+ * @param k the amount of cells to skip.
+ * @return eu_value the list's tail.
+ * 
+ * @nocheckargs
+ */
+/* WARNING: ASSUMES GIVEN ARGUMENTS ARE VALID AND OF THE CORRECT TYPES */
+eu_value eulist_tail(europa* s, eu_value list, eu_value k) {
+	eu_value current;
 }
 
 /* helper defines */
@@ -284,10 +417,27 @@ eu_value euapi_list_append(europa* s, eu_cell* args) {
 }
 
 eu_value euapi_list_reverse(europa* s, eu_cell* args) {
+	eu_value argument, reversed;
+
 	__arity_check(s, args, "reverse", 1);
+
+	/* get the passed argument */
+	argument = ccar(args);
+
+	/* check if it is a proper list */
+	if (!eulist_is_list(s, argument))
+		return euerr_tovalue(euerr_bad_argument_type(s, "reverse", 1, argument,
+			EU_TYPE_CELL));
+
+	/* reverse and return */
+	reversed = eulist_reverse(s, argument);
+	return reversed;
 }
 
-eu_value euapi_list_list_tail(europa* s, eu_cell* args);
+eu_value euapi_list_list_tail(europa* s, eu_cell* args) {
+
+}
+
 eu_value euapi_list_list_ref(europa* s, eu_cell* args);
 eu_value euapi_list_list_set(europa* s, eu_cell* args);
 eu_value euapi_list_memq(europa* s, eu_cell* args);
