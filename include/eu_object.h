@@ -3,6 +3,9 @@
 
 #include "eu_commons.h"
 #include "eu_int.h"
+#include "europa.h"
+
+#define EU_COMMON_HEAD eu_gcobj* next; eu_byte type; eu_byte color
 
 enum eu_type {
 	EU_TYPE_NUMBER,
@@ -21,8 +24,6 @@ enum eu_objtype {
 	EU_OBJTYPE_CELL,
 	EU_OBJTYPE_USERDATA
 };
-
-#define EU_COMMON_HEAD eu_gcobj* next; eu_byte type; eu_byte color
 
 typedef struct eu_gcobj eu_gcobj;
 typedef struct eu_value eu_value;
@@ -53,12 +54,12 @@ struct eu_value {
 };
 
 /* Global object singletons declarations */
-#define EU_VALUE_NULL ((eu_value){ .type = EU_TYPE_NULL , .value = { .object = NULL }})
+#define EU_VALUE_NULL \
+	((eu_value){.type = EU_TYPE_NULL, .value = {.object = NULL}})
 #define EU_VALUE_TRUE \
-	((eu_value){ .value = { .boolean = EU_BOOL_TRUE }, .type = EU_TYPE_BOOLEAN})
+	((eu_value){.value = {.boolean = EU_BOOL_TRUE}, .type = EU_TYPE_BOOLEAN})
 #define EU_VALUE_FALSE \
-	((eu_value){ .value = { .boolean = EU_BOOL_FALSE }, .type = EU_TYPE_BOOLEAN})
-
+	((eu_value){.value = {.boolean = EU_BOOL_FALSE}, .type = EU_TYPE_BOOLEAN})
 
 #define euvalue_is_type(v,t) ((v).type == (t))
 #define euvalue_is_objtype(v,t) \
