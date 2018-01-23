@@ -1,6 +1,13 @@
 {
     "files.associations": {
         "vcruntime.h": "c",
-        "eu_ast.h": "c"
+        "eu_ast.h": "c",
+        "stdarg.h": "c",
+        "eu_list.h": "c",
+        "eu_cell.h": "c",
+        "eu_object.h": "c",
+        "eu_int.h": "c",
+        "eu_commons.h": "c",
+        "eu_number.h": "c"
     }
 }
