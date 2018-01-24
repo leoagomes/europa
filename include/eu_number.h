@@ -34,6 +34,8 @@
 	((eu_value){.type = EU_TYPE_NUMBER, .value {.num = (n)}})
 #define eu_value2number(v) ((v).value.num)
 
+#define euvalue_is_number(v) (v.type == EU_TYPE_NUMBER)
+
 
 eu_value euvalue_from_number(eu_number num);
 eu_value euvalue_from_int(int i);

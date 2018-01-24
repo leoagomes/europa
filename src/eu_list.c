@@ -333,6 +333,34 @@ eu_value eulist_tail(europa* s, eu_value list, int k) {
 	return eu_cell2value(ccell);
 }
 
+/**
+ * @brief Fetches an element from a list.
+ * 
+ * Fetches the kth element from the list. The index is zero based.
+ * 
+ * This function will return an error object if the list is too short.
+ * 
+ * @param s the Europa state.
+ * @param list the list from which to fetch the element.
+ * @param k the index of the element to be fetched.
+ * @return eu_value the value fetched or an error object.
+ * 
+ * @mayerror
+ */
+/* WARNING: ASSUMES GIVEN ARGUMENTS ARE VALID AND OF THE CORRECT TYPES */
+eu_value eulist_ref(europa* s, eu_value list, int k) {
+	eu_cell* ccell;
+
+	ccell = eu_value2cell(list);
+	while (k > 0 && ccell != NULL)
+		ccell = eu_value2cell(ccdr(ccell));
+
+	if (ccell == NULL)
+		return euerr_tovalue(euerr_new(s, "argument #(%d) out of range at list-ref", 2));
+
+	return ccar(ccell);
+}
+
 /* helper defines */
 #define __no_args_check(s,args,fname,exp) \
 	if ((args) == NULL)
@@ -458,16 +486,88 @@ eu_value euapi_list_reverse(europa* s, eu_cell* args) {
 }
 
 eu_value euapi_list_list_tail(europa* s, eu_cell* args) {
-	eu_cell* list;
+	eu_value listv, kv;
 	int k;
+
+	__arity_check(s, args, "list-tail", 2);
+
+#define EU_ERROR_ARG_ISNT_EVEN "argument #(%d) isn't even a %s"
+
+	listv = ccar(args);
+	if (!euvalue_is_cell(listv))
+		return euerr_tovalue(euerr_new(s, EU_ERROR_ARG_ISNT_EVEN, 1,
+			"pair"));
+
+	kv = car(ccdr(args));
+	if (!euvalue_is_number(kv))
+		return euerr_tovalue(euerr_new(s, EU_ERROR_ARG_ISNT_EVEN, 2,
+			"number"))
+	k = eu_value2integer(kv);
+
+	return eulist_tail(s, listv, k);
 }
 
-eu_value euapi_list_list_ref(europa* s, eu_cell* args);
-eu_value euapi_list_list_set(europa* s, eu_cell* args);
+eu_value euapi_list_list_ref(europa* s, eu_cell* args) {
+	eu_value listv, kv;
+
+	__arity_check(s, args, "list-ref", 2);
+
+#define EU_ERROR_ARG_ISNT_EVEN "argument #(%d) isn't even a %s"
+
+	listv = ccar(args);
+	if (!euvalue_is_cell(listv))
+		return euerr_tovalue(euerr_new(s, EU_ERROR_ARG_ISNT_EVEN, 1,
+			"pair"));
+
+	kv = car(ccdr(args));
+	if (!euvalue_is_number(kv))
+		return euerr_tovalue(euerr_new(s, EU_ERROR_ARG_ISNT_EVEN, 2,
+			"number"))
+	k = eu_value2integer(kv);
+
+	return eulist_ref(s, listv, k);
+}
+
+eu_value euapi_list_list_set(europa* s, eu_cell* args) {
+	eu_value listv, kv, objv;
+	eu_cell* cell;
+
+	__arity_check(s, args, "list-set!", 3);
+
+	listv = ccar(args);
+	if (!euvalue_is_cell(listv) && !eulist_is_list(listv))
+		return euerr_tovalue(euerr_bad_argument_type(s, "list-set!", 1, listv,
+			EU_OBJTYPE_CELL));
+
+	kv = car(ccdr(args));
+	if (!euvalue_is_number(kv))
+		return euerr_tovalue(euerr_bad_argument_type(s, "list-set!", 2, kv,
+			EU_TYPE_NUMBER));
+	
+	objv = car(cdr(ccdr(args)));
+
+	cell = eulist_tail(s, listv, eu_value2integer(kv));
+	eucell_set_cdr(cell, objv);
+
+	return listv;
+}
+
 eu_value euapi_list_memq(europa* s, eu_cell* args);
 eu_value euapi_list_memv(europa* s, eu_cell* args);
 eu_value euapi_list_member(europa* s, eu_cell* args);
 eu_value euapi_list_assq(europa* s, eu_cell* args);
 eu_value euapi_list_assv(europa* s, eu_cell* args);
 eu_value euapi_list_assoc(europa* s, eu_cell* args);
-eu_value euapi_list_list_copy(europa* s, eu_cell* args);
+
+eu_value euapi_list_list_copy(europa* s, eu_cell* args) {
+	eu_value listv;
+
+	__arity_check(s, args, "list-copy", 1);
+
+	listv = ccar(args);
+	if (!eulist_is_list(s, listv))
+		return euerr_tovalue(euerr_bad_argument_type(s, "list-copy", 1, listv,
+			EU_TYPE_CELL));
+
+	return eulist_copy(s, listv, NULL);
+}
