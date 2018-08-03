@@ -7,7 +7,7 @@
 typedef struct europa europa;
 
 struct europa {
-	europa_gc* gc;
+	eu_gc* gc;
 };
 
 #define eu_get_gc(s) ((s)->gc)

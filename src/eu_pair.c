@@ -6,6 +6,7 @@
 #include "eu_pair.h"
 
 #include "eu_gc.h"
+#include "eu_error.h"
 
 /** Creates a new (garbage collected) pair.
  * 
@@ -68,83 +69,23 @@ eu_result eupair_destroy(eu_gc* gc, eu_pair* pair) {
 	return EU_RESULT_OK;
 }
 
+/** Gets a hash code for a pair object.
+ * 
+ * @param s the europa state.
+ * @param pair the target pair.
+ * @return the hash of the pair.
+ */
+eu_integer eupair_hash(europa* s, eu_pair* pair) {
+	/* TODO: change behavior when using a moving gc */
+	return cast(eu_integer, pair);
+}
+
 /* the language API */
 
 /**
  * @addtogroup language_library
  * @{
  */
-
-eu_value euapi_cell_car(europa* s, eu_cell* args) {
-	if (euobj_is_null(args))
-		return euerr_tovalue(euerr_bad_argument_count(s, "car", 0));
-
-	if (!euvalue_is_cell(ccar(args)))
-		return euerr_tovalue(euerr_bad_value_type(s, args->head,
-			EU_OBJTYPE_CELL));
-
-	return car(ccar(args));
-}
-
-eu_value euapi_cell_cdr(europa* s, eu_cell* args) {
-	if (!euvalue_is_cell(ccar(args)))
-		return euerr_tovalue(euerr_bad_value_type(s, args->head,
-			EU_OBJTYPE_CELL));
-	
-	return cdr(ccar(args));
-}
-
-eu_value euapi_cell_cons(europa* s, eu_cell* args) {
-	eu_value v;
-	v.type = EU_TYPE_OBJECT;
-	v.value.object = eucell_make_pair(s, ccar(args), car(ccdr(args)));
-	return v;
-}
-
-eu_value euapi_cell_is_pair(europa* s, eu_cell* args) {
-	if (euobj_is_null(args))
-		return euerr_tovalue(euerr_bad_argument_count(s, "pair?", 0));
-
-	return euval_from_boolean(euvalue_is_cell(ccar(args)));
-}
-
-eu_value euapi_cell_set_car(europa* s, eu_cell* args) {
-	eu_value r;
-
-	if (euobj_is_null(args))
-		return euerr_tovalue(euerr_bad_argument_count(s, "set-car!", 0));
-
-	if (!euvalue_is_cell(ccar(args)))
-		return euerr_tovalue(euerr_bad_value_type(s, args->head,
-			EU_OBJTYPE_CELL));
-
-	if (euvalue_is_null(ccdr(args)))
-		return euerr_tovalue(euerr_bad_argument_count(s, "set-cdr!", 1));
-
-	eu_value2cell(ccar(args))->head = car(ccdr(args));
-
-	r.type = EU_TYPE_NULL;
-	return r;
-}
-
-eu_value euapi_cell_set_cdr(europa* s, eu_cell* args) {
-	eu_value r;
-
-	if (euobj_is_null(args))
-		return euerr_tovalue(euerr_bad_argument_count(s, "set-cdr!", 0));
-
-	if (!euvalue_is_cell(ccar(args)))
-		return euerr_tovalue(euerr_bad_value_type(s, args->head,
-			EU_OBJTYPE_CELL));
-
-	if (euvalue_is_null(ccdr(args)))
-		return euerr_tovalue(euerr_bad_argument_count(s, "set-cdr!", 1));
-
-	eu_value2cell(ccar(args))->tail = car(ccdr(args));
-
-	r.type = EU_TYPE_NULL;
-	return r;
-}
 
 /**
  * @}

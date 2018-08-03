@@ -65,6 +65,7 @@ eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root) {
 #define eugco_markwhite(obj) ((obj)->mark = EUGC_COLOR_WHITE)
 #define eugco_markgrey(obj) ((obj)->mark = EUGC_COLOR_GREY)
 #define eugco_markblack(obj) ((obj)->mark = EUGC_COLOR_BLACK)
+#define eugco_mark(obj) ((obj)->mark)
 
 /** Performs a naive mark on all objects.
  * 
@@ -80,6 +81,10 @@ eu_result eugc_naive_mark(eu_gc* gc, eu_gcobj* obj) {
 		return EU_RESULT_NULL_ARGUMENT;
 
 	if (obj == NULL)
+		return EU_RESULT_OK;
+
+	/* skip current object if it isn't white */
+	if (eugco_mark(obj) != EUGC_COLOR_WHITE)
 		return EU_RESULT_OK;
 
 	/* mark current object grey */

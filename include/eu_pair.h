@@ -41,13 +41,8 @@ eu_pair* eupair_new(europa* s, eu_value head, eu_value tail);
 eu_result eupair_mark(eu_gc* gc, eu_gcmark mark, eu_pair* pair);
 eu_result eupair_destroy(eu_gc* gc, eu_pair* pair);
 
-/* the language API */
-eu_value euapi_cell_car(europa* s, eu_cell* args);
-eu_value euapi_cell_cdr(europa* s, eu_cell* args);
-eu_value euapi_cell_cons(europa* s, eu_cell* args);
-eu_value euapi_cell_pair(europa* s, eu_cell* args);
-eu_value euapi_cell_set_car(europa* s, eu_cell* args);
-eu_value euapi_cell_set_cdr(europa* s, eu_cell* args);
+eu_integer eupair_hash(europa* s, eu_pair* pair);
 
+/* the language API */
 
 #endif /* __EUROPA_PAIR_H__ */

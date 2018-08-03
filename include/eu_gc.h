@@ -41,8 +41,8 @@ struct europa_gc {
 
 eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, size_t size);
 
+/* naive mark and sweep */
 eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root);
-
 eu_result eugc_naive_mark(eu_gc* gc, eu_gcobj* root);
 eu_result eugc_naive_sweep(eu_gc* gc);
 
