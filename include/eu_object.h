@@ -1,76 +1,127 @@
-#ifndef __EUROPA_OBJECTS_H__
-#define __EUROPA_OBJECTS_H__
+/**
+ * @file eu_object.h
+ *
+ * @brief Value and (garbage collected) objects header.
+ * @author Leonardo G.
+ */
+#ifndef __EUROPA_OBJECT_H__
+#define __EUROPA_OBJECT_H__
 
 #include "eu_commons.h"
 #include "eu_int.h"
 #include "europa.h"
 
-#define EU_COMMON_HEAD eu_gcobj* next; eu_byte type; eu_byte color
+/* type definitions */
+typedef struct europa_gcobj eu_gcobj;
+typedef struct europa_value eu_value;
 
+/* internal value representation. */
+/** enum representing the possible types for tagged value */
 enum eu_type {
-	EU_TYPE_NUMBER,
+	EU_TYPE_NULL = 0,
 	EU_TYPE_BOOLEAN,
-	EU_TYPE_OBJECT,
-	EU_TYPE_NULL,
-	EU_TYPE_ERROR,
-	EU_TYPE_POINTER,
+	EU_TYPE_NUMBER,
 	EU_TYPE_CHARACTER,
-	EU_TYPE_CFUNCTION
+	EU_TYPE_CPOINTER,
+
+	EU_TYPE_PAIR,
+	EU_TYPE_SYMBOL,
+	EU_TYPE_STRING,
+	EU_TYPE_VECTOR,
+	EU_TYPE_BYTEVECTOR,
+	EU_TYPE_PROCEDURE,
+	EU_TYPE_EXCEPTION,
+	EU_TYPE_ENVIRONMENT,
+	EU_TYPE_PORT,
+
+	EU_TYPE_USERDATA
 };
 
-enum eu_objtype {
-	EU_OBJTYPE_STRING,
-	EU_OBJTYPE_SYMBOL,
-	EU_OBJTYPE_CELL,
-	EU_OBJTYPE_USERDATA
-};
+/** flag to signal if a type is garbage collected */
+#define EU_TYPEFLAG_COLLECTABLE (1 << 7)
+/** extra flag to be used by each type in the way it prefers. */
+#define EU_TYPEFLAG_EXTRA (1 << 6)
 
-typedef struct eu_gcobj eu_gcobj;
-typedef struct eu_value eu_value;
-typedef struct eu_number eu_number;
+/** helper mask to check for types */
+#define EU_TYPEMASK (0xFF ^ (EU_TYPEFLAG_COLLECTABLE | EU_TYPEFLAG_EXTRA))
 
-struct eu_gcobj {
-	EU_COMMON_HEAD;
-};
-
+/** union of values for language types */
 union eu_values {
-	eu_gcobj* object;
-	eu_number num;
-	int boolean;
-	int character;
+	eu_gcobj* object; /*!< garbage collected objects */
+
+	eu_integer i; /*!< (fixnum) integer number value */
+	eu_real r; /*!< (double precision) real number value */
+
+	int boolean; /*!< booleans */
+	int character; /*!< characters */
+	void* p; /*!< (unmanaged) c pointer */
 };
 
-struct eu_number {
-	char is_fixnum;
-	union {
-		int integer;
-		double real;
-	} value;
+/** internal value representation structure */
+struct europa_value {
+	union eu_values value; /*!< value itself */
+	eu_byte type; /*!< the value's type */
 };
 
-struct eu_value {
-	union eu_values value;
-	eu_byte type;
+/* garbage collected objects */
+
+/** common fields to all garbage collected objects. */
+#define EU_OBJ_COMMON_HEADER \
+	eu_gcobj* next;\
+	eu_byte type;\
+	eu_byte mark
+
+/** Garbage Collected object abstraction. */
+struct europa_gcobj {
+	EU_OBJ_COMMON_HEADER;
 };
 
 /* Global object singletons declarations */
+/** value struct initialization definition for the null object */
 #define EU_VALUE_NULL \
-	((eu_value){.type = EU_TYPE_NULL, .value = {.object = NULL}})
+	{.type = EU_TYPE_NULL, .value = {.object = NULL}}
+/** effective null value singleton */
+extern eu_value _null;
+
+/** value struct initialization definition for the true object */
 #define EU_VALUE_TRUE \
-	((eu_value){.value = {.boolean = EU_BOOL_TRUE}, .type = EU_TYPE_BOOLEAN})
+	{.value = {.boolean = EU_TRUE}, .type = EU_TYPE_BOOLEAN}
+/** effective true value singleton */
+extern eu_value _true;
+
+/** value struct initialization definition for the true object */
 #define EU_VALUE_FALSE \
-	((eu_value){.value = {.boolean = EU_BOOL_FALSE}, .type = EU_TYPE_BOOLEAN})
+	{.value = {.boolean = EU_FALSE}, .type = EU_TYPE_BOOLEAN}
+/** effective false value singleton */
+extern eu_value _false;
 
-#define euvalue_is_type(v,t) ((v).type == (t))
-#define euvalue_is_objtype(v,t) \
-	((v).type == EU_TYPE_OBJECT && (v).value.object->type == (t))
+/* function declarations */
 
-#define euvalue_is_null(v) ((v).type == EU_TYPE_NULL)
-#define euobj_is_null(obj) ((obj) == NULL)
+/** gets the object type */
+#define _euvalue_type(v) (((v)->type) & EU_TYPEMASK)
+/** checks if a value is null */
+#define _euvalue_is_null(v) (_euvalue_type(v) == EU_TYPE_NULL)
+/** checks if a value is of a given type */
+#define _euvalue_is_type(v, t) (_euvalue_type(v) == (t))
+/** checks if a value is collectable */
+#define _euvalue_is_collectable(v) ((v)->type & EU_TYPEFLAG_COLLECTABLE)
+/** gets the object from a value */
+#define _euvalue_to_obj(v) ((v)->value.object)
 
-eu_value euval_from_boolean(int v);
+/** gets the object type */
+#define _euobj_type(o) ((o)->type & EU_TYPEMASK)
+/** checks if an object is null */
+#define _euobj_is_null(o) ((o) == NULL)
+/** checks if an object is of a given type */
+#define _euobj_is_type(o, t) (_euobj_type(o) == (t))
+
+/* value functions */
+eu_bool euvalue_is_null(eu_value* value);
+eu_bool euvalue_is_type(eu_value* value, eu_byte type);
+
+eu_bool euobj_is_null(eu_gcobj* obj);
+eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type);
 
 /* language side api */
-eu_value euapi_value_is_null(europa* s, eu_cell* args);
 
-#endif /* __EUROPA_OBJECTS_H__ */
+#endif /* __EUROPA_OBJECT_H__ */

@@ -1,69 +1,71 @@
 /**
- * @file eu_cell.c
- * @brief Cell related operations.
+ * @file eu_pair.c
+ * @brief Pair (cons cell) related operations.
  * @author Leonardo G.
- * 
- * This file contains the implementation of functions that operate on eu_cells.
  */
-#include "eu_cell.h"
-#include "eu_error.h"
+#include "eu_pair.h"
 
-/**
- * @brief Creates a new (garbage collected) cell.
+#include "eu_gc.h"
+
+/** Creates a new (garbage collected) pair.
  * 
  * @param s the Europa state.
- * @param head the value to be set as the new cell's head (or car).
- * @param tail the value to be set as the new cell's tail (or cdr).
- * @return eu_cell* the cell object or NULL on error.
+ * @param head the pointer to a value structure which will be copied to the
+ * pair's head (car).
+ * @param tail the pointer to a value structure which will be copied to the
+ * pair's tail (cdr).
+ * @return the newly allocated pair.
  */
-eu_cell* eucell_new(europa* s, eu_value head, eu_value tail) {
+eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
 	eu_gcobj* obj;
-	eu_cell* cell;
+	eu_pair* pair;
 
-	obj = eugc_new_object(eu_get_gc(s), EU_OBJTYPE_CELL, eucell_size());
-	if (obj == NULL)
+	pair = cast(eu_pair*,eugc_new_object(s->gc, EU_TYPE_PAIR, sizeof(eu_pair)));
+	if (pair == NULL)
 		return NULL;
 
-	cell = eu_gcobj2cell(obj);
+	pair->head = *head;
+	pair->tail = *tail;
 
-	cell->head = head;
-	cell->tail = tail;
-
-	return cell;
+	return pair;
 }
 
-/**
- * @brief Marks the cell's garbage collected objects.
+/** Calls the garbage collector's mark function on the pair's fields.
  * 
- * Marks this cell and the objects it references as achievable and not to be
- * collected.
- * 
- * @param gc the garbage collector instance to use in collection.
- * @param cell the cell to mark.
+ * @param gc the garbage collector structure.
+ * @param pair the pair to process.
+ * @result the result of running the procedure.
  */
-void eucell_mark(europa_gc* gc, eu_cell* cell) {
-	/* change color to grey */
-	cell->color = EUGC_COLOR_GREY;
+eu_result eupair_mark(eu_gc* gc, eu_gcmark mark, eu_pair* pair) {
+	eu_result res;
 
-	/* TODO: remove recursions */
-	if (cell->head.type == EU_TYPE_OBJECT)
-		eugc_mark(gc, cell->head.value.object);
-	if (cell->tail.type == EU_TYPE_OBJECT)
-		eugc_mark(gc, cell->tail.value.object);
+	if (gc == NULL || pair == NULL)
+		return EU_RESULT_NULL_ARGUMENT;
 
-	cell->color = EUGC_COLOR_BLACK;
+	/* try and mark head */
+	if (_euvalue_is_collectable(&(pair->head))) {
+		if ((res = mark(gc, _euvalue_to_obj(&(pair->head)))))
+			return res;
+	}
+
+	/* try and mark tail */
+	if (_euvalue_is_collectable(&(pair->tail))) {
+		if ((res = mark(gc, _euvalue_to_obj(&(pair->tail)))))
+			return res;
+	}
+
+	return EU_RESULT_OK;
 }
 
-/**
- * @brief Frees resources associated to the cell.
+/** Releases any other resources associated to this pair that is not
+ * automatically collected.
  * 
- * Frees (or closes) the resources used by the cell that are not managed by the
- * garbage collector.
- * 
- * @param gc the garbage collector instance.
- * @param cell the cell to destroy.
+ * @param gc the garbage collector structure.
+ * @param pair the pair to "destroy".
+ * @return the result of the destruction.
  */
-void eucell_destroy(europa_gc* gc, eu_cell* cell) {
+eu_result eupair_destroy(eu_gc* gc, eu_pair* pair) {
+	return EU_RESULT_OK;
 }
 
 /* the language API */
