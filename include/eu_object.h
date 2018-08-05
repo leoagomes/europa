@@ -9,7 +9,6 @@
 
 #include "eu_commons.h"
 #include "eu_int.h"
-#include "europa.h"
 
 /* type definitions */
 typedef struct europa_gcobj eu_gcobj;
@@ -50,7 +49,7 @@ union eu_values {
 	eu_gcobj* object; /*!< garbage collected objects */
 
 	eu_integer i; /*!< (fixnum) integer number value */
-	eu_real r; /*!< (double precision) real number value */
+	eu_real r; /*!< (floating) real number value */
 
 	int boolean; /*!< booleans */
 	int character; /*!< characters */

@@ -1,7 +1,5 @@
 #include "eu_object.h"
 
-#include "eu_error.h"
-
 /* global "singleton" declarations */
 eu_value _null = EU_VALUE_NULL;
 eu_value _true = EU_VALUE_TRUE;

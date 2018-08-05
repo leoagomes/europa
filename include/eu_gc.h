@@ -6,7 +6,7 @@
 #include "eu_object.h"
 
 /** The realloc-like function provided to the garbage collector. */
-typedef void* (*eu_realloc)(void* ud, void* ptr, size_t amount);
+typedef void* (*eu_realloc)(void*, void*, unsigned long long);
 
 /** GC structure definition */
 typedef struct europa_gc eu_gc;
@@ -39,7 +39,10 @@ struct europa_gc {
 
 /* function declarations */
 
-eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, size_t size);
+eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
+eu_result eugc_destroy(eu_gc* gc);
+
+eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, unsigned long long size);
 
 /* naive mark and sweep */
 eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root);

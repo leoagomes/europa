@@ -1,7 +1,7 @@
 #include "eu_gc.h"
 
 #include "eu_pair.h"
-
+#include "eu_symbol.h"
 
 /* helper macros to translate semantically to stdlib functions */
 #define eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL, (s)))
@@ -13,6 +13,55 @@ eu_result eugco_destroy(eu_gc* gc, eu_gcobj* obj);
 
 /* function definitions */
 
+/** Initializes the GC structure.
+ * 
+ * @param gc A pointer to the garbage collection structure.
+ * @param ud The userdata pointer to be passed to the realloc-like function.
+ * @return Whether initializing the data was successful.
+ */
+eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
+	if (gc == NULL)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	gc->realloc = rlc;
+	gc->ud = ud;
+
+	/* initializing the list of objects. */
+	gc->last_obj = NULL;
+
+	return EU_RESULT_OK;
+}
+
+/** Destroys the GC context, collecting all objects.
+ * 
+ * @param gc The GC structure.
+ * @return The result of the operation.
+ */
+eu_result eugc_destroy(eu_gc* gc) {
+	eu_gcobj* currentobj;
+	eu_gcobj* tmp;
+
+	if (gc == NULL)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* destroy all objects */
+	currentobj = gc->last_obj;
+	while (currentobj != NULL) {
+		eugco_destroy(gc, currentobj);
+		currentobj = currentobj->next;
+	}
+
+	/* then free their memories */
+	currentobj = gc->last_obj;
+	while (currentobj != NULL) {
+		tmp = currentobj->next;
+		eugc_free(gc, currentobj);
+		currentobj = tmp;
+	}
+
+	return EU_RESULT_OK;
+}
+
 /** Returns a new gc object of a given size.
  * 
  * Allocates an object of a given size and initializes the object's header.
@@ -20,7 +69,7 @@ eu_result eugco_destroy(eu_gc* gc, eu_gcobj* obj);
  * @param gc The garbage collector structure.
  * @param type The type of the new 
  */
-eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, size_t size) {
+eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, unsigned long long size) {
 	eu_gcobj* obj;
 
 	obj = eugc_malloc(gc, size);
@@ -52,11 +101,11 @@ eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root) {
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* mark */
-	if ((res = eugc_mark(gc, root)))
+	if ((res = eugc_naive_mark(gc, root)))
 		return res;
 
 	/* sweep */
-	if ((res = eugc_sweep(gc)))
+	if ((res = eugc_naive_sweep(gc)))
 		return res;
 
 	return EU_RESULT_OK;
@@ -172,5 +221,34 @@ eu_result eugc_naive_sweep(eu_gc* gc) {
 	return EU_RESULT_OK;
 }
 
+#define checkreturn_result(res, e) \
+	if ((res = (e))) {\
+		return res;\
+	}
+
 eu_result eugco_destroy(eu_gc* gc, eu_gcobj* obj) {
+	eu_result res;
+
+	switch (obj->type) {
+	case EU_TYPE_PAIR:
+		checkreturn_result(res, eupair_destroy(gc, _euobj_to_pair(obj)))
+		break;
+
+	case EU_TYPE_USERDATA:
+	case EU_TYPE_VECTOR:
+	case EU_TYPE_ENVIRONMENT:
+	case EU_TYPE_PROCEDURE:
+		break;
+
+	/* object types that reference no other objects */
+	case EU_TYPE_SYMBOL:
+	case EU_TYPE_STRING:
+	case EU_TYPE_BYTEVECTOR:
+	case EU_TYPE_EXCEPTION:
+	case EU_TYPE_PORT:
+	default:
+		break;
+	}
+
+	return EU_RESULT_OK;
 }

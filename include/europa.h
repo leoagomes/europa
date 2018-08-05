@@ -1,15 +1,20 @@
 #ifndef __EUROPA_H__
 #define __EUROPA_H__
 
-#include "eu_object.h"
+#include "eu_commons.h"
+#include "eu_int.h"
 #include "eu_gc.h"
+#include "eu_object.h"
 
 typedef struct europa europa;
 
 struct europa {
-	eu_gc* gc;
+	/* gc lives in structure */
+	eu_gc gc;
 };
 
-#define eu_get_gc(s) ((s)->gc)
+#define eu_get_gc(s) (&((s)->gc))
 
-#endif
+eu_result eu_init(europa* s);
+
+#endif /* __EUROPA_H__ */

@@ -33,3 +33,7 @@ Closures:
 GC-related:
 
 - http://wiki.luajit.org/New-Garbage-Collector -- check again
+
+Papers:
+
+- The Structure and Performance of Efficient Interpreters
