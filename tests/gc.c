@@ -4,10 +4,9 @@
 #include "munit.h"
 #include "suites.h"
 
-#include "eu_gc.h"
-#include "eu_object.h"
+#include "europa.h"
 
-void* rlike(void* ud, void* ptr, size_t size) {
+void* rlike(void* ud, void* ptr, unsigned long long size) {
 	return realloc(ptr, size);
 }
 
@@ -109,6 +108,7 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 MunitTest gctests[] = {
 	{
 		"/test-object-creation",
+		test_object_creation,
 		gc_setup,
 		gc_teardown,
 		MUNIT_TEST_OPTION_NONE,
@@ -121,10 +121,14 @@ MunitTest gctests[] = {
 		gc_teardown,
 		MUNIT_TEST_OPTION_NONE,
 		NULL,
-	}
-	{0},
+	},
+	{NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
 };
 
 MunitSuite gcsuite = {
 	"/gc",
+	gctests,
+	NULL,
+	1,
+	MUNIT_SUITE_OPTION_NONE,
 };

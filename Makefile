@@ -14,10 +14,10 @@ CFLAGS=-I$(INCLUDE_DIR) -I$(LIB_INCLUDE) -fpic
 
 OBJECTS=eu_gc.o eu_object.o eu_pair.o eu_symbol.o eu_util.o europa.o
 
-all: clean $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE) $(BUILD_DIR)/$(EXECUTABLE)
+all: clean $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE)# $(BUILD_DIR)/$(EXECUTABLE)
 
 clean:
-	rm -rf $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE) $(OBJECTS:%.c=build/%.o)
+	rm -rf $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE) $(OBJECTS:%=$(BUILD_DIR)/%)
 
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	$(CC) -c -o $@ $^ $(CFLAGS)

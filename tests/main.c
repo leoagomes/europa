@@ -3,18 +3,5 @@
 #include "suites.h"
 
 int main(int argc, char* argv[]) {
-	MunitSuite suites[] = {
-		gcsuite,
-		{0},
-	};
-
-	MunitSuite mainsuite = {
-		"/",
-		NULL,
-		suites,
-		1,
-		MUNIT_SUITE_OPTION_NONE,
-	};
-
-	return munit_suite_main(&mainsuite, NULL, argc, argv);
+	return munit_suite_main(&gcsuite, NULL, argc, argv);
 }

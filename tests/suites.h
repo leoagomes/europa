@@ -3,6 +3,6 @@
 
 #include "munit.h"
 
-MunitSuite gcsuite;
+extern MunitSuite gcsuite;
 
 #endif /* __SUITES_H__ */
