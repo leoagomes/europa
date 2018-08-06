@@ -1,3 +1,9 @@
+/** GC module testing file.
+ * 
+ * @file gc.c
+ * @author Leonardo G.
+ * @ingroup tests
+ */
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -6,13 +12,41 @@
 
 #include "europa.h"
 
+/* This file holds tests for the garbage collection facilities of the language.
+ * List of tests:
+ * 
+ * - [x] object creation (eugc_new_object)
+ * 
+ * - [ ] naive mark (eugc_naive_mark)
+ * - [x] naive sweep (eugc_naive_sweep)
+ * - [ ] naive collect (eugc_naive_collect)
+ *
+ * The tests also test mark and destroy functions for primitive types:
+ * 
+ * - [ ] pair
+ * - [ ] symbol
+ */
+
+
+/** Realloc-like function to be used by the garbage collector.
+ * 
+ * @todo Use a function provided by an auxilary library (to implement).
+ */
 void* rlike(void* ud, void* ptr, unsigned long long size) {
 	return realloc(ptr, size);
 }
 
+/** Sets up an Europa state with a correctly intialized GC.
+ * 
+ * @returns An Europa state with a gc that works properly.
+ */
 static void* gc_setup(MunitParameter params[], void* user_data) {
 	europa* s;
 
+	/* we need to allocate memory for the state, because it tries to leave
+	 * memory management to the GC
+	 * 
+	 * TODO: maybe sometime use something provided by an auxilary library */
 	s = (europa*)malloc(sizeof(europa));
 	if (s == NULL)
 		return NULL;
@@ -23,6 +57,10 @@ static void* gc_setup(MunitParameter params[], void* user_data) {
 	return s;
 }
 
+/** Properly tears down a gc test.
+ * 
+ * At the moment this only destroys the europa state originally provided.
+ */
 void gc_teardown(void* fixture) {
 	europa* s;
 
@@ -35,6 +73,11 @@ void gc_teardown(void* fixture) {
 	free(s);
 }
 
+/** Tests whether the GC can allocate memory for an object.
+ * 
+ * It creates a new managed block and tries to write something to it and read
+ * from it.
+ */
 MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	europa* s;
 
@@ -50,9 +93,17 @@ MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	/* make sure something was allocated */
 	munit_assert_ptr_not_null(obj);
 
+	obj->mark = 10;
+	munit_assert(obj->mark == 10);
+
 	return MUNIT_OK;
 }
 
+/** Tests whether the naive sweep algorithm correctly releases objects.
+ * 
+ * The test creates 4 objects, marks 2, does a naive sweep and verifies
+ * that the only lasting objects were the marked ones.
+ */
 MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	europa* s;
 	eu_gcobj* obj[4];

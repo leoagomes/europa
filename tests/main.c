@@ -1,3 +1,10 @@
+/** Testing code main file.
+ * 
+ * @file main.c
+ * @author Leonardo G.
+ * 
+ * @defgroup tests Tests
+ */
 #include "munit.h"
 
 #include "suites.h"
