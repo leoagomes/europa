@@ -68,5 +68,19 @@ another look at the structures I have implemented up to now. It appears that I
 didn't do as poor a job as I thought I had done with regards to alignment, so I
 don't seem to have to change anything.
 
-#### Effective symbol implementation
+### 8/6/2019
+
+I figured since I had a gc that seemed to work, I would try to start wirting
+tests. I found [munit](https://nemequ.github.io/munit/) very useful, and even
+though I imagine it is not 100% needed to test the code and that it will probably
+force me into a code structure I might not like in the future, I believe it will
+help me save some time right now. Also, I plan to keep testing code completely
+separate from language code.
+
+#### First test
+
+The first test I wrote was for two functions of the GC. Allocating memory blocks
+and freeing unmarked blocks from memory are now tested and appear to work fine.
+I can now focus on writing more of the core structures. I'll maybe try TDD'ing
+their development.
 

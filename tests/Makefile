@@ -16,8 +16,11 @@ all: clean $(EXECUTABLE)
 $(EXECUTABLE): $(SOURCES) $(OBJECTS)
 	$(CC) -o $@ $^ $(MUNIT_SOURCE) $(LIBRARY) $(CFLAGS)
 
-gc.o: gc.c
+%.o: %.c
 	$(CC) -c -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -rf $(EXECUTABLE)
+	rm -rf $(EXECUTABLE) $(OBJECTS)
+
+debug: CFLAGS+=-g
+debug: all
