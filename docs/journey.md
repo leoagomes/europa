@@ -84,3 +84,68 @@ and freeing unmarked blocks from memory are now tested and appear to work fine.
 I can now focus on writing more of the core structures. I'll maybe try TDD'ing
 their development.
 
+#### Marking and Destorying
+
+My next goal is then to create all mark and destroy functions for all primitive
+types (when needed, of course).
+
+#### Closures?
+
+I started thinking if it isn't time I check on closure/function implementations.
+Also figure out what I want to do with environments. What if environments were
+just like lua tables? What if there was something like meta-environments and
+they made environments behave like tables in lua. It'd make sense because they
+would be somewhat made with the sole purpose of accessing variables quickly.
+
+### 8/7/2019
+
+I guess I need to find more papers about Scheme itself and try to understand
+how they implement environments, closures, etc and why.
+
+Some, perhaps most, papers cover compilers, not interpreters, with problems like
+fitting Scheme constructs into a target language (most of the times C), and
+analyzing variable scopes in order to properly handle closures, but not exactly
+_implementing_ them. Maybe it would be a good idea to try and find other
+scripting languages that have closures and check out how they do it.
+
+Looking at [Gravity](https://github.com/marcobambini/gravity) I found a reference
+to "Closures in Lua", so I'm going to take a look at it. Also
+[Wren](http://wren.io/) seems interesting, so I'll take a look at that as well.
+I've also downloaded [Guile](https://www.gnu.org/software/guile/) and
+[Chibi Scheme](https://github.com/ashinn/chibi-scheme) sources.
+
+Guile's documetation wasn't as helpful as I thought it would be; apparently
+Guile does some bit twiddling in order to get maximum performance, which is
+respectable and may someday be a goal, but at the moment I want to try to
+reduce the bug surface area and at the same time maintain something that is also
+core for Lua, which is ANSI C compatibility. There is some documentation on its
+virtual machine which might be helpful in the future. Perhaps even reading it
+_now_ will help me figure out a thing or two about how I'd like to go about
+implementing code execution.
+
+### 8/8/2019
+
+Lua's documentation on closure (via the "Closures in Lua paper") is really
+interesting, but it does emphasize that the final approach taken on Lua focused
+on the performance impacts upvalues would take on imperative languages. Scheme
+is a "functional first" language in the sense that it can behave imperatively,
+but should be (and mostly is) used "functionally". I do feel like I have more
+of an idea on how to implement functions and closures and their execution, but
+I'll first check out two papers: "Compiling a functional language" by Luca
+Cardelli and "The mechanical evaluation of expressions" by P. J. Landin.
+
+
+## Notes Area
+
+What I need to do _now_:
+
+-> implement **mark** and **destroy** "methods" for all primitives
+-> write tests for these.
+-> write last tests for the GC
+
+What I need to do after:
+
+-> closure implementation
+-> try to figure out an execution method (and function calling API)
+-> maybe check on continuations and their implemnetations.
+   +-> find references in the paper about implementation strategies.

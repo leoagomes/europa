@@ -66,8 +66,8 @@ struct europa_value {
 
 /** common fields to all garbage collected objects. */
 #define EU_OBJ_COMMON_HEADER \
-	eu_gcobj* next;\
-	eu_byte type;\
+	eu_gcobj* next; /*!< last object allocated by the gc */\
+	eu_byte type; /*!< the type of the object */ \
 	eu_byte mark
 
 /** Garbage Collected object abstraction. */
@@ -103,7 +103,7 @@ extern eu_value _false;
 /** checks if a value is of a given type */
 #define _euvalue_is_type(v, t) (_euvalue_type(v) == (t))
 /** checks if a value is collectable */
-#define _euvalue_is_collectable(v) ((v)->type & EU_TYPEFLAG_COLLECTABLE)
+#define _euvalue_is_collectable(v) (((v)->type) & EU_TYPEFLAG_COLLECTABLE)
 /** gets the object from a value */
 #define _euvalue_to_obj(v) ((v)->value.object)
 

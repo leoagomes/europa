@@ -25,11 +25,14 @@ The following items must be implemented:
 - [x] Pairs
   * [x] GC methods
   * [ ] Library
-- [ ] Symbols
+- [x] Symbols
+  * [x] GC methods
   * [ ] Library
-- [ ] Strings
+- [x] Strings
+  * [x] GC methods
   * [ ] Library
-- [ ] Vectors
+- [x] Vectors
+  * [x] GC methods
   * [ ] Library
 - [ ] Bytevectors
   * [ ] Library

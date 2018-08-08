@@ -10,7 +10,7 @@ SO_FILE=europa.so
 A_FILE=europa.a
 EXECUTABLE=europa
 
-CFLAGS=-I$(INCLUDE_DIR) -I$(LIB_INCLUDE) -fpic
+CFLAGS=-I$(INCLUDE_DIR) -I$(LIB_INCLUDE) -fpic -pedantic
 
 OBJECTS=eu_gc.o eu_object.o eu_pair.o eu_symbol.o eu_util.o europa.o
 

@@ -29,6 +29,8 @@ Closures:
 - https://www.cs.tufts.edu/~nr/cs257/archive/roberto-ierusalimschy/closures-draft.pdf
 - https://www.lua.org/doc/jucs17.pdf
 
+- An Efficient Environment Allocation Scheme in an Interpreter for a Lexically-scoped LISP, Drew McDermott
+
 
 GC-related:
 
@@ -37,3 +39,7 @@ GC-related:
 Papers:
 
 - The Structure and Performance of Efficient Interpreters
+
+Data Structures:
+
+- Comment on Brent's Scatter Storage Algorithm, Jerome A. Feldman

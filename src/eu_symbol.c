@@ -10,7 +10,7 @@
 #include "eu_util.h"
 #include "utf8.h"
 
-/**
+/*
  * Symbols:
  * 
  * The symbol internal structure is effectively
@@ -53,7 +53,32 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
 	/* copy the text */
 	memcpy(&(sym->_text), text, text_size);
 	/* calculate hash */
-	sym->hash = eutil_cstr_hash(&(sym->_text));
+	sym->hash = eutil_cstr_hash(_eusymbol_text(sym));
 
 	return sym;
+}
+
+/** Returns the address of the utf-8 text buffer.
+ * 
+ * @param sym The symbol structure.
+ * @return The managed utf-8 string.
+ * 
+ * @remarks The buffer will be managed by the GC and it will not outlive the
+ * object, so if you need a lasting copy of it, make it yourself.
+ */
+void* eusymbol_text(eu_symbol* sym) {
+	if (sym == NULL)
+		return NULL;
+	return _eusymbol_text(sym);
+}
+
+/** Returns the object's hash.
+ * 
+ * @param sym The symbol object.
+ * @return The obejct's hash.
+ */
+eu_integer eusymbol_hash(eu_symbol* sym) {
+	if (sym == NULL)
+		return 0;
+	return _eusymbol_hash(sym);
 }
