@@ -26,7 +26,7 @@ eu_string* eustring_new(europa* s, void* text) {
 
 	/* allocate enough memory for text data and structure data */
 	size_t text_size = utf8size(text);
-	str = eugc_new_object(eu_get_gc(s), EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE,
+	str = eugc_new_object(_eu_get_gc(s), EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_string) + text_size);
 
 	if (str == NULL)
@@ -64,4 +64,16 @@ eu_integer eustring_hash(eu_string* str) {
 	if (str == NULL)
 		return 0;
 	return _eustring_hash(str);
+}
+
+/** Calculates a string's hash and sets its hash field to it.
+ * 
+ * @param str The target string.
+ * @return The recalculated hash.
+ */
+eu_integer eustring_rehash(eu_string* str) {
+	if (str == NULL)
+		return 0;
+	str->hash = eutil_cstr_hash(_eustring_text(str));
+	return str->hash;
 }

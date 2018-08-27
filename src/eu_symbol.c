@@ -16,9 +16,9 @@
  * The symbol internal structure is effectively
  * struct symbol {
  *   // common header
- *   gcobj* next;
- *   byte type;
- *   byte mark;
+ *   gcobj* _next;
+ *   byte _type;
+ *   byte _mark;
  * 
  *   // structure data
  *   integer hash;
@@ -45,7 +45,7 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
 
 	size_t text_size = utf8size(text);
 
-	sym = (eu_symbol*)eugc_new_object(eu_get_gc(s), EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
+	sym = (eu_symbol*)eugc_new_object(_eu_get_gc(s), EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_symbol) + text_size);
 	if (sym == NULL)
 		return NULL;

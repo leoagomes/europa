@@ -4,6 +4,7 @@
 eu_value _null = EU_VALUE_NULL;
 eu_value _true = EU_VALUE_TRUE;
 eu_value _false = EU_VALUE_FALSE;
+eu_value _eof = EU_VALUE_EOF;
 
 /** Checks whether a value is of a given type.
  * 

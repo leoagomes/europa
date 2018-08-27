@@ -37,6 +37,11 @@ struct europa_gc {
 	eu_gcobj* last_obj; /*!< the last object created by the garbage collector */
 };
 
+/* helper macros to translate semantically to stdlib functions */
+#define eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL, (s)))
+#define eugc_realloc(gc,ptr,s) ((gc)->realloc((gc)->ud, (ptr), (s)))
+#define eugc_free(gc,ptr) ((gc)->realloc((gc)->ud, (ptr), 0))
+
 /* function declarations */
 
 eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);

@@ -1,0 +1,80 @@
+#ifndef __EUROPA_PORT_H__
+#define __EUROPA_PORT_H__
+
+#include "europa.h"
+
+#include "eu_int.h"
+#include "eu_commons.h"
+#include "eu_object.h"
+#include "eu_string.h"
+
+/* type definitions */
+typedef struct europa_port eu_port;
+
+/* things that are common to all ports */
+#define EU_PORT_COMMON_HEADER \
+	EU_OBJ_COMMON_HEADER; \
+	eu_byte flags; \
+	eu_byte type
+
+#define EU_PORT_FLAG_INPUT 0x01
+#define EU_PORT_FLAG_OUTPUT 0x02
+#define EU_PORT_FLAG_TEXTUAL 0x04
+#define EU_PORT_FLAG_BINARY 0x08
+
+enum eu_port_type {
+	EU_PORT_TYPE_FILE,
+	EU_PORT_TYPE_MEMORY,
+	EU_PORT_TYPE_VIRTUAL,
+};
+
+struct europa_port {
+	EU_PORT_COMMON_HEADER;
+};
+
+/* function declarations */
+eu_result euport_mark(eu_gc* gc, eu_gcmark mark, eu_port* pair);
+eu_result euport_destroy(eu_gc* gc, eu_port* pair);
+eu_integer euport_hash(europa* s, eu_port* pair);
+
+/* internal functions */
+/* input */
+int euport_read_char(europa* s, eu_port* port);
+int euport_peek_char(europa* s, eu_port* port);
+eu_string* euport_read_line(europa* s, eu_port* port);
+eu_bool euport_char_ready(europa* s, eu_port* port);
+eu_string* euport_read_string(europa* s, eu_port* port);
+eu_byte euport_read_u8(europa* s, eu_port* port);
+eu_byte euport_peek_u8(europa* s, eu_port* port);
+eu_bool euport_u8_ready(europa* s, eu_port* port);
+
+/* output */
+
+/* language interface */
+
+/* input */
+eu_result euapi_port_read(europa* s);
+eu_result euapi_port_read_char(europa* s);
+eu_result euapi_port_peek_char(europa* s);
+eu_result euapi_port_read_line(europa* s);
+eu_result euapi_port_char_ready(europa* s);
+eu_result euapi_port_read_string(europa* s);
+eu_result euapi_port_read_u8(europa* s);
+eu_result euapi_port_peek_u8(europa* s);
+eu_result euapi_port_u8_ready(europa* s);
+eu_result euapi_port_read_bytevector(europa* s);
+eu_result euapi_port_read_bytevectorB(europa* s);
+
+/* output */
+eu_result euapi_port_write(europa* s);
+eu_result euapi_port_write_shared(europa* s);
+eu_result euapi_port_write_simple(europa* s);
+eu_result euapi_port_display(europa* s);
+eu_result euapi_port_newline(europa* s);
+eu_result euapi_port_write_char(europa* s);
+eu_result euapi_port_write_u8(europa* s);
+eu_result euapi_port_write_bytevector(europa* s);
+eu_result euapi_port_flush(europa* s);
+
+
+#endif

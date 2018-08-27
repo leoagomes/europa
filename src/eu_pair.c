@@ -20,7 +20,7 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
 	eu_gcobj* obj;
 	eu_pair* pair;
 
-	pair = cast(eu_pair*,eugc_new_object(eu_get_gc(s), EU_TYPE_PAIR, sizeof(eu_pair)));
+	pair = cast(eu_pair*,eugc_new_object(_eu_get_gc(s), EU_TYPE_PAIR, sizeof(eu_pair)));
 	if (pair == NULL)
 		return NULL;
 

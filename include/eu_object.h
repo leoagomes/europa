@@ -22,6 +22,7 @@ enum eu_type {
 	EU_TYPE_NUMBER,
 	EU_TYPE_CHARACTER,
 	EU_TYPE_CPOINTER,
+	EU_TYPE_EOF,
 
 	EU_TYPE_PAIR,
 	EU_TYPE_SYMBOL,
@@ -66,9 +67,9 @@ struct europa_value {
 
 /** common fields to all garbage collected objects. */
 #define EU_OBJ_COMMON_HEADER \
-	eu_gcobj* next; /*!< last object allocated by the gc */\
-	eu_byte type; /*!< the type of the object */ \
-	eu_byte mark
+	eu_gcobj* _next; /*!< last object allocated by the gc */\
+	eu_byte _type; /*!< the type of the object */ \
+	eu_byte _mark
 
 /** Garbage Collected object abstraction. */
 struct europa_gcobj {
@@ -94,6 +95,12 @@ extern eu_value _true;
 /** effective false value singleton */
 extern eu_value _false;
 
+/** value struct initialization definition for the EOF object */
+#define EU_VALUE_EOF \
+	{.type = EU_TYPE_EOF}
+/** effective eof singleton */
+extern eu_value _eof;
+
 /* function declarations */
 
 /** gets the object type */
@@ -108,7 +115,7 @@ extern eu_value _false;
 #define _euvalue_to_obj(v) ((v)->value.object)
 
 /** gets the object type */
-#define _euobj_type(o) ((o)->type & EU_TYPEMASK)
+#define _euobj_type(o) ((o)->_type & EU_TYPEMASK)
 /** checks if an object is null */
 #define _euobj_is_null(o) ((o) == NULL)
 /** checks if an object is of a given type */

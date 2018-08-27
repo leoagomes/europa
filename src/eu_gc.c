@@ -3,11 +3,6 @@
 #include "eu_pair.h"
 #include "eu_symbol.h"
 
-/* helper macros to translate semantically to stdlib functions */
-#define eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL, (s)))
-#define eugc_realloc(gc,ptr,s) ((gc)->realloc((gc)->ud, (ptr), (s)))
-#define eugc_free(gc,ptr) ((gc)->realloc((gc)->ud, (ptr), 0))
-
 /* forward function declarations */
 eu_result eugco_destroy(eu_gc* gc, eu_gcobj* obj);
 
@@ -48,13 +43,13 @@ eu_result eugc_destroy(eu_gc* gc) {
 	currentobj = gc->last_obj;
 	while (currentobj != NULL) {
 		eugco_destroy(gc, currentobj);
-		currentobj = currentobj->next;
+		currentobj = currentobj->_next;
 	}
 
 	/* then free their memories */
 	currentobj = gc->last_obj;
 	while (currentobj != NULL) {
-		tmp = currentobj->next;
+		tmp = currentobj->_next;
 		eugc_free(gc, currentobj);
 		currentobj = tmp;
 	}
@@ -76,11 +71,11 @@ eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, unsigned long long size) {
 	if (!obj)
 		return NULL;
 
-	obj->next = gc->last_obj;
+	obj->_next = gc->last_obj;
 	gc->last_obj = obj;
-	obj->mark = EUGC_COLOR_WHITE;
+	obj->_mark = EUGC_COLOR_WHITE;
 
-	obj->type = type;
+	obj->_type = type;
 
 	return obj;
 }
@@ -111,10 +106,10 @@ eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root) {
 	return EU_RESULT_OK;
 }
 
-#define eugco_markwhite(obj) ((obj)->mark = EUGC_COLOR_WHITE)
-#define eugco_markgrey(obj) ((obj)->mark = EUGC_COLOR_GREY)
-#define eugco_markblack(obj) ((obj)->mark = EUGC_COLOR_BLACK)
-#define eugco_mark(obj) ((obj)->mark)
+#define eugco_markwhite(obj) ((obj)->_mark = EUGC_COLOR_WHITE)
+#define eugco_markgrey(obj) ((obj)->_mark = EUGC_COLOR_GREY)
+#define eugco_markblack(obj) ((obj)->_mark = EUGC_COLOR_BLACK)
+#define eugco_mark(obj) ((obj)->_mark)
 
 /** Performs a naive mark on all objects.
  * 
@@ -179,12 +174,12 @@ eu_result eugc_naive_sweep(eu_gc* gc) {
 	last_next = &(gc->last_obj);
 
 	while (current != NULL) {
-		switch (current->mark) {
+		switch (current->_mark) {
 		/* remove objects that couldn't be reached during the mark stage */
 		case EUGC_COLOR_WHITE:
 			/* point the last node's "next" to the current's next, removing it
 			 * from the object list */
-			*last_next = current->next;
+			*last_next = current->_next;
 
 			/* run the object's destructor */
 			res = eugco_destroy(gc, current);
@@ -202,17 +197,17 @@ eu_result eugc_naive_sweep(eu_gc* gc) {
 			eugco_markwhite(current);
 			/* save the current "next" as the place to put the address of the
 			 * next black-turned-white object in the object list */
-			last_next = &(current->next);
+			last_next = &(current->_next);
 
 			/* go to next object */
-			current = current->next;
+			current = current->_next;
 			break;
 
 		/* finding a grey node during sweep is an error */
 		/* finding a node with a different color is also an error */
 		case EUGC_COLOR_GREY:
 		default:
-			current = current->next;
+			current = current->_next;
 			/* TODO: report error (return error?)*/
 			break;
 		}
@@ -229,7 +224,7 @@ eu_result eugc_naive_sweep(eu_gc* gc) {
 eu_result eugco_destroy(eu_gc* gc, eu_gcobj* obj) {
 	eu_result res;
 
-	switch (obj->type) {
+	switch (obj->_type) {
 	case EU_TYPE_PAIR:
 		checkreturn_result(res, eupair_destroy(gc, _euobj_to_pair(obj)))
 		break;

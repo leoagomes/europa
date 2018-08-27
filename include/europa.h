@@ -13,7 +13,7 @@ struct europa {
 	eu_gc gc;
 };
 
-#define eu_get_gc(s) (&((s)->gc))
+#define _eu_get_gc(s) (&((s)->gc))
 
 eu_result eu_init(europa* s);
 

@@ -21,8 +21,12 @@ typedef double eu_real;
 typedef int eu_result; /*!< c function result type */
 enum {
 	EU_RESULT_OK = 0,
+	EU_RESULT_ERROR,
 	EU_RESULT_BAD_ARGUMENT,
 	EU_RESULT_NULL_ARGUMENT,
+	EU_RESULT_BAD_RESOURCE,
+	EU_RESULT_INVALID,
+	EU_RESULT_BAD_ALLOC,
 };
 
 #endif /* __EUROPA_INTEGER_H__ */
