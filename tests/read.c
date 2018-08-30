@@ -1,0 +1,106 @@
+/** first reader testing module
+ * 
+ * @file read.c
+ * @author Leonardo G.
+ * @ingroup tests
+ */
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "munit.h"
+#include "suites.h"
+#include "helpers.h"
+
+#include "europa.h"
+#include "eu_port.h"
+#include "ports/eu_mport.h"
+#include "ports/eu_fport.h"
+
+static void* read_setup(MunitParameter params[], void* user_data) {
+	europa* s;
+
+	s = bootstrap_default_instance();
+
+	return s;
+}
+
+static void read_teardown(void* fixture) {
+	europa* s;
+	s = (europa*)fixture;
+	if (s)
+		free(s);
+}
+
+MunitResult test_read_booleans(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_result res;
+	eu_value out;
+
+	eu_mport* port;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#t #true #tru #truest");
+
+	/* #t */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_BOOLEAN);
+	munit_assert_int(out.value.boolean, ==, EU_TRUE);
+
+	/* #true */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_BOOLEAN);
+	munit_assert_int(out.value.boolean, ==, EU_TRUE);
+
+	/* #tru */
+	munit_assert_int(euport_read(s, port, &out), !=, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_ERROR);
+
+	/* #truest */
+	munit_assert_int(euport_read(s, port, &out), !=, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_ERROR);
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#f #false #fals #falsest");
+
+	/* #f */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_BOOLEAN);
+	munit_assert_int(out.value.boolean, ==, EU_FALSE);
+
+	/* #false */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_BOOLEAN);
+	munit_assert_int(out.value.boolean, ==, EU_FALSE);
+
+	/* #fals */
+	munit_assert_int(euport_read(s, port, &out), !=, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_ERROR);
+
+	/* #falsest */
+	munit_assert_int(euport_read(s, port, &out), !=, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(&out), ==, EU_TYPE_ERROR);
+
+	/* let the gc handle the ports */
+
+	return MUNIT_OK;
+}
+
+MunitTest readtests[] = {
+	{
+		"/test-read-boolean",
+		test_read_booleans,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{NULL, NULL, NULL, NULL, MUNIT_TEST_OPTION_NONE, NULL},
+};
+
+MunitSuite readsuite = {
+	"/read",
+	readtests,
+	NULL,
+	1,
+	MUNIT_SUITE_OPTION_NONE,
+};

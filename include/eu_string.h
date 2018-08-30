@@ -1,6 +1,8 @@
 #ifndef __EUROPA_STRING_H__
 #define __EUROPA_STRING_H__
 
+#include <string.h>
+
 #include "europa.h"
 
 #include "eu_commons.h"
@@ -18,8 +20,9 @@ typedef struct europa_string eu_string;
 struct europa_string {
 	EU_OBJ_COMMON_HEADER;
 
+	eu_integer size;
 	eu_integer hash; /*!< the string hash. */
-	eu_byte _text; /*!< the first byte of the string's text. */
+	char _text; /*!< the first byte of the string's text. */
 };
 
 /* conversion macros */
@@ -36,12 +39,16 @@ struct europa_string {
 
 #define _eustring_text(s) (&((s)->_text))
 #define _eustring_hash(s) ((s)->hash)
+#define _eustring_size(s) ((s)->size)
 
 /* function declarations */
 
 eu_string* eustring_new(europa* gc, void* text);
+eu_string* eustring_withsize(europa* s, size_t textsize);
 
 void* eustring_text(eu_string* str);
 eu_integer eustring_hash(eu_string* str);
+eu_integer eustring_rehash(eu_string* str);
+eu_integer eustring_size(eu_string* str);
 
 #endif /* __EUROPA_STRING_H__ */

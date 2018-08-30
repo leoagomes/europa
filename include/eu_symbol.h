@@ -17,7 +17,7 @@ struct europa_symbol {
 	eu_integer hash;
 	void* text;
 
-	eu_byte _text;
+	char _text;
 };
 
 /* conversion macros */

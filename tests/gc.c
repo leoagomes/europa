@@ -9,6 +9,7 @@
 
 #include "munit.h"
 #include "suites.h"
+#include "helpers.h"
 
 #include "europa.h"
 
@@ -27,15 +28,6 @@
  * - [ ] symbol
  */
 
-
-/** Realloc-like function to be used by the garbage collector.
- * 
- * @todo Use a function provided by an auxilary library (to implement).
- */
-void* rlike(void* ud, void* ptr, unsigned long long size) {
-	return realloc(ptr, size);
-}
-
 /** Sets up an Europa state with a correctly intialized GC.
  * 
  * @returns An Europa state with a gc that works properly.
@@ -43,16 +35,7 @@ void* rlike(void* ud, void* ptr, unsigned long long size) {
 static void* gc_setup(MunitParameter params[], void* user_data) {
 	europa* s;
 
-	/* we need to allocate memory for the state, because it tries to leave
-	 * memory management to the GC
-	 * 
-	 * TODO: maybe sometime use something provided by an auxilary library */
-	s = (europa*)malloc(sizeof(europa));
-	if (s == NULL)
-		return NULL;
-
-	eugc_init(&(s->gc), NULL, rlike);
-	eu_init(s);
+	s = bootstrap_default_instance();
 
 	return s;
 }
@@ -68,9 +51,7 @@ void gc_teardown(void* fixture) {
 		return;
 
 	s = (europa*)fixture;
-
-	eugc_destroy(_eu_get_gc(s));
-	free(s);
+	terminate_default_instance(s);
 }
 
 /** Tests whether the GC can allocate memory for an object.

@@ -39,14 +39,17 @@ eu_integer euport_hash(europa* s, eu_port* pair);
 
 /* internal functions */
 /* input */
-int euport_read_char(europa* s, eu_port* port);
-int euport_peek_char(europa* s, eu_port* port);
-eu_string* euport_read_line(europa* s, eu_port* port);
-eu_bool euport_char_ready(europa* s, eu_port* port);
-eu_string* euport_read_string(europa* s, eu_port* port);
-eu_byte euport_read_u8(europa* s, eu_port* port);
-eu_byte euport_peek_u8(europa* s, eu_port* port);
-eu_bool euport_u8_ready(europa* s, eu_port* port);
+eu_result euport_read_char(europa* s, eu_port* port, int* out);
+eu_result euport_peek_char(europa* s, eu_port* port, int* out);
+eu_result euport_read_line(europa* s, eu_port* port, eu_value* out);
+eu_result euport_char_ready(europa* s, eu_port* port, int* ready);
+eu_result euport_read_string(europa* s, eu_port* port, int k, eu_value* out);
+eu_result euport_read_u8(europa* s, eu_port* port, eu_value* out);
+eu_result euport_peek_u8(europa* s, eu_port* port, eu_value* out);
+eu_result euport_u8_ready(europa* s, eu_port* port, int* ready);
+
+eu_result euport_read(europa* s, eu_port* port, eu_value* out);
+
 
 /* output */
 

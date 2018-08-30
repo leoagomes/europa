@@ -4,5 +4,6 @@
 #include "munit.h"
 
 extern MunitSuite gcsuite;
+extern MunitSuite readsuite;
 
 #endif /* __SUITES_H__ */

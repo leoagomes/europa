@@ -2,6 +2,7 @@
 
 #include "utf8.h"
 #include "eu_gc.h"
+#include "eu_number.h"
 
 /** Opens a new file port.
  * 
@@ -31,8 +32,8 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
 		return NULL;
 
 	/* allocate the garbage collected port */
-	port = eugc_new_object(_eu_get_gc(s), EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_fport));
+	port = _euobj_to_fport(eugc_new_object(_eu_get_gc(s), EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(eu_fport)));
 	if (port == NULL)
 		return NULL;
 
@@ -104,7 +105,7 @@ static eu_result _read_utf8_codepoint(eu_fport* port, int* out) {
 	first_char = fgetc(file);
 
 	/* return immediately if char is EOF or in the ASCII space*/
-	if (first_char == EOF || first_char & 0x80 == 0) {
+	if (first_char == EOF || (first_char & 0x80) == 0) {
 		*out = first_char;
 		return EU_RESULT_OK;
 	}
@@ -183,7 +184,7 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
 	first_char = fgetc(file);
 
 	/* return immediately if char is EOF or in the ASCII space*/
-	if (first_char == EOF || first_char & 0x80 == 0) {
+	if (first_char == EOF || (first_char & 0x80) == 0) {
 		*out = first_char;
 		ungetc(first_char, file); /* unget the char first */
 		return EU_RESULT_OK;
@@ -251,7 +252,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	int pos;
 
 	/* validate arguments */
-	if (!s || !port || !line)
+	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* check if file is valid */
@@ -299,7 +300,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 
 	/* create a managed copy of the string */
 	out->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;
-	out->value.object = _eustring_to_obj(eustring_new(_eu_get_gc(s), buf));
+	out->value.object = _eustring_to_obj(eustring_new(s, buf));
 
 	/* free the buffer */
 	eugc_free(_eu_get_gc(s), buf);
@@ -362,12 +363,14 @@ eu_result eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 
 	/* set out */
 	out->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;
-	out->value.object = str;
+	out->value.object = _eustring_to_obj(str);
 
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_read_u8(europa* s, eu_fport* port, eu_byte* out) {
+eu_result eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
+	eu_byte byte;
+
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -379,26 +382,51 @@ eu_result eufport_read_u8(europa* s, eu_fport* port, eu_byte* out) {
 		return EU_RESULT_OK;
 	}
 
-	fread(out, sizeof(eu_byte), 1, port->file);
+	fread(&byte, sizeof(byte), 1, port->file);
+	_eu_makeint(out, byte);
+
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_byte* out) {
+eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
+	eu_byte byte;
+
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	if (!port->file)
 		return EU_RESULT_BAD_RESOURCE;
 
-	fread(out, sizeof(eu_byte), 1, port->file);
+	if (feof(port->file)) {
+		*out = _eof;
+		return EU_RESULT_OK;
+	}
+
+	fread(&byte, sizeof(eu_byte), 1, port->file);
 	fseek(port->file, -1, SEEK_CUR);
+	_eu_makeint(out, byte);
 
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_u8_ready(europa* s, eu_port* port, int* out) {
+eu_result eufport_u8_ready(europa* s, eu_fport* port, int* out) {
 	/* TODO: implement in a cross-platform manner */
 	*out = EU_FALSE;
 	return EU_RESULT_OK;
 }
 
+eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
+	if (!s || !port || !out)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	if (!port->file)
+		return EU_RESULT_BAD_RESOURCE;
+
+	/* return eof object if EOF is encountered before parsing any object */
+	if (feof(port->file)) {
+		*out = _eof;
+		return EU_RESULT_OK;
+	}
+
+	return EU_RESULT_OK;
+}

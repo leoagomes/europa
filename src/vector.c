@@ -19,8 +19,9 @@ eu_vector* euvector_new(europa* s, eu_integer length) {
 	if(s == NULL || length < 0)
 		return NULL;
 
-	vec = eugc_new_object(_eu_get_gc(s), EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_vector) + (sizeof(eu_value) * (length - 1)));
+	vec = _euobj_to_vector(eugc_new_object(_eu_get_gc(s), 
+		EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(eu_vector) + (sizeof(eu_value) * (length - 1))));
 	if (vec == NULL)
 		return NULL;
 
