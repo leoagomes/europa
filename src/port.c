@@ -13,6 +13,7 @@ eu_result euport_mark(eu_gc* gc, eu_gcmark mark, eu_port* port) {
 		default:
 			break;
 	}
+	return EU_RESULT_ERROR;
 }
 
 eu_result euport_destroy(eu_gc* gc, eu_port* port) {
@@ -25,6 +26,7 @@ eu_result euport_destroy(eu_gc* gc, eu_port* port) {
 		default:
 			break;
 	}
+	return EU_RESULT_ERROR;
 }
 
 eu_integer euport_hash(europa* s, eu_port* port) {
@@ -37,6 +39,7 @@ eu_integer euport_hash(europa* s, eu_port* port) {
 		default:
 			break;
 	}
+	return EU_RESULT_ERROR;
 }
 
 /* internal functions */
@@ -81,4 +84,5 @@ eu_result euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
 		default:
 			break;
 	}
+	return EU_RESULT_ERROR;
 }

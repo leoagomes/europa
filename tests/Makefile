@@ -26,7 +26,7 @@ clean:
 debug: CFLAGS+=-g
 debug: all
 
-tester: clean
+tester: clean $(LIBRARY)
 	gcc -o testing testing.c helpers.c ../build/europa.a -I../lib/include -I../include
 
 $(LIBRARY): # this is library

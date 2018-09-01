@@ -57,7 +57,7 @@ eu_result eumport_read_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (port->next == NULL || port->rpos >= port->size) {
+	if (port->next == NULL || port->rpos >= port->size || *(port->next) == '\0') {
 		*out = EOF;
 		return EU_RESULT_OK;
 	}
@@ -71,7 +71,7 @@ eu_result eumport_peek_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (port->next == NULL || port->rpos >= port->size) {
+	if (port->next == NULL || port->rpos >= port->size || *(port->next) == '\0') {
 		*out = EOF;
 		return EU_RESULT_OK;
 	}
@@ -130,7 +130,7 @@ eu_result eumport_read_line(europa* s, eu_mport* port, eu_value* out) {
 	memcpy(_eustring_text(str), port->next, linesize);
 	cast(char*,&(str->_text))[linesize - 1] = '\0';
 
-	if (res = eustring_rehash(str))
+	if ((res = eustring_rehash(str)))
 		return res;
 
 	out->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;
@@ -190,7 +190,7 @@ eu_result eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out) {
 	memcpy(_eustring_text(str), port->next, size - 1);
 	cast(char*, _eustring_text(str))[size - 1] = '\0';
 
-	if (res = eustring_rehash(str))
+	if ((res = eustring_rehash(str)))
 		return res;
 
 	out->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;

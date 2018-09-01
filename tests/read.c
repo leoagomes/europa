@@ -92,7 +92,7 @@ MunitResult test_read_num_binary(MunitParameter params[], void* fixture) {
 	eu_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
-		"#b1001 #b#e1001 #b#i1001 #b1001.1");
+		"#b1001 #b#e1001 #b-1001 #b#i-1001 #b#i1001 #b1001.1");
 	munit_assert_not_null(port);
 
 	/* #b1001 */
@@ -104,6 +104,16 @@ MunitResult test_read_num_binary(MunitParameter params[], void* fixture) {
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
 	munit_assert_int(out.value.i, ==, 9);
+
+	/* #b-1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, -9);
+
+	/* #b#i-1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, -9.0);
 
 	/* #b#i1001 */
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
@@ -124,28 +134,101 @@ MunitResult test_read_num_octal(MunitParameter params[], void* fixture) {
 	eu_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
-		"#b1001 #b#e1001 #b#i1001 #b1001.1");
+		"#o14 #o#e-14 #o#i14 #o14.4 #o-14.4");
 	munit_assert_not_null(port);
 
-	/* #b1001 */
+	/* #o14 */
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
-	munit_assert_int(out.value.i, ==, 9);
+	munit_assert_int(out.value.i, ==, 12);
 
-	/* #b#e1001 */
+	/* #o#e-14 */
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
-	munit_assert_int(out.value.i, ==, 9);
+	munit_assert_int(out.value.i, ==, -12);
 
-	/* #b#i1001 */
+	/* #o#i14 */
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
-	munit_assert_double(out.value.r, ==, 9.0);
+	munit_assert_double(out.value.r, ==, 12.0);
 
-	/* #b1001.1 */
+	/* #o14.4 */
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
-	munit_assert_double(out.value.r, ==, 9.5);
+	munit_assert_double(out.value.r, ==, 12.5);
+
+	/* #o-14.4 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, -12.5);
+
+	return MUNIT_OK;
+}
+
+MunitResult test_read_num_dec(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"123 -123 #d123 #e-123 #i123 123.45 #d#i123.45");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 123);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, -123);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 123);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, -123);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 123.0);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 123.45);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 123.45);
+
+	return MUNIT_OK;
+}
+
+MunitResult test_read_num_hex(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#xaa #x#eaa #X#iAA #xaA.8");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 170);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 170);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 170.0);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 170.5);
 
 	return MUNIT_OK;
 }
@@ -162,6 +245,30 @@ MunitTest readtests[] = {
 	{
 		"/binary-number",
 		test_read_num_binary,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/octal-number",
+		test_read_num_octal,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/hex-number",
+		test_read_num_hex,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/decimal-number",
+		test_read_num_dec,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

@@ -44,7 +44,7 @@
 #define islpar(c) ((c) == CLPAR)
 #define isrpar(c) ((c) == CRPAR)
 #define isdelimiter(c) (iswhitespace(c) || islineending(c) || islpar(c) || \
-	isrpar(c) || (c) == CDQUOT || (c) == CSCOLON || iseof(c))
+	isrpar(c) || (c) == CDQUOT || (c) == CSCOLON || iseof(c) || (c) == '\0')
 #define iswhitespace(c) ((c) == ' ' || (c) == '\t')
 
 #define isexactness(c) ((c) == 'e' || (c) == 'E' || (c) == 'i' || (c) == 'I')
@@ -71,16 +71,16 @@ struct parser {
 
 /* some helper macros */
 #define _checkreturn(res, cond) \
-	if (res = cond) \
+	if ((res = cond)) \
 		return res
 
 #define errorf(p, fmt, ...) \
 	snprintf(p->buf, AUX_BUFFER_SIZE, "%d:%d: " fmt, p->line, p->col,\
-		##__VA_ARGS__)
+		__VA_ARGS__)
 
 #define seterrorf(p, fmt, ...) \
 	do {\
-		errorf(p, fmt, ##__VA_ARGS__);\
+		errorf(p, fmt, __VA_ARGS__);\
 		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf);\
 	} while(0)
 
@@ -119,7 +119,7 @@ eu_result ppeek(parser* p) {
 
 eu_result padvance(parser* p) {
 	int res;
-	if (res = pconsume(p))
+	if ((res = pconsume(p)))
 		return res;
 	return ppeek(p);
 }
@@ -149,9 +149,9 @@ eu_result pmatchstring(parser* p, void* str) {
 
 	next = utf8codepoint(str, &cp);
 	while (cp && next) {
-		if (res = pmatch(p, cp))
+		if ((res = pmatch(p, cp)))
 			break;
-		if (res = padvance(p))
+		if ((res = padvance(p)))
 			break;
 		next = utf8codepoint(next, &cp);
 	}
@@ -171,9 +171,9 @@ eu_result pmatchstringcase(parser* p, void* str) {
 
 	next = utf8codepoint(str, &cp);
 	while (cp && next) {
-		if (res = pcasematch(p, cp))
+		if ((res = pcasematch(p, cp)))
 			break;
-		if (res = padvance(p))
+		if ((res = padvance(p)))
 			break;
 		next = utf8codepoint(next, &cp);
 	}
@@ -271,7 +271,8 @@ eu_result pread_number(parser* p, eu_value* out) {
 					seterror(p, "Expected radix for number literal.");
 					return EU_RESULT_ERROR;
 				}
-				radix = tolower(p->peek);
+				_checkreturn(res, padvance(p)); /* consume # */
+				radix = tolower(p->current);
 			}
 		} else if (isradix(p->peek)) { /* radix exactness */
 			_checkreturn(res, padvance(p));
@@ -284,7 +285,8 @@ eu_result pread_number(parser* p, eu_value* out) {
 					seterror(p, "Expected exactness for number literal.");
 					return EU_RESULT_ERROR;
 				}
-				exactness = tolower(p->peek);
+				_checkreturn(res,  padvance(p)); /* consume # */
+				exactness = tolower(p->current);
 			}
 		} else { /* this is not a number token, it does not start with a prefix */
 			seterrorf(p, "Unexpected character %c parsing a number (<prefix>).",
@@ -306,7 +308,7 @@ eu_result pread_number(parser* p, eu_value* out) {
 		case 'd': radix = 10; break;
 		case 'b': radix = 2; break;
 		case 'o': radix = 8; break;
-		case 'h': radix = 16; break;
+		case 'x': radix = 16; break;
 		default:
 			seterrorf(p, "Invalid number radix '%c'.", radix);
 			return EU_RESULT_ERROR;
@@ -365,7 +367,7 @@ eu_result pread_number(parser* p, eu_value* out) {
 
 		/* advance a character */
 		_checkreturn(res, padvance(p));
-	} while (!isdelimiter(p->peek));
+	} while (!isdelimiter(p->current));
 
 	if (divideby) { /* in case the resulting number is real */
 		rpart = (eu_real)sign * (rpart + ((eu_real)ipart / (eu_real)divideby));
@@ -401,7 +403,7 @@ eu_result pread_hash(parser* p, eu_value* out) {
 eu_result pskip_linecomment(parser* p) {
 	eu_result res;
 
-	if (res = pmatch(p, CSCOLON))
+	if ((res = pmatch(p, CSCOLON)))
 		return res;
 
 	do {
@@ -534,6 +536,9 @@ eu_result parser_read(parser* p, eu_value* out) {
 	/* check terminals that start with # */
 	if (p->current == CHASH) {
 		return pread_hash(p, out);
+	} else if (isdecimaldigit(p->current) ||
+		(issign(p->current) && isdecimaldigit(p->peek))) {
+		return pread_number(p, out);
 	}
 
 	return EU_RESULT_OK;
@@ -548,7 +553,7 @@ eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
 
 	parser_init(&p, s, port);
 	_checkreturn(res, padvance(&p));
-	if (res = parser_read(&p, out)) {
+	if ((res = parser_read(&p, out))) {
 		out->type = EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE;
 		out->value.object = _euerror_to_obj(p.error);
 		return res;

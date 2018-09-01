@@ -111,7 +111,7 @@ static eu_result _read_utf8_codepoint(eu_fport* port, int* out) {
 	}
 
 	/* check if it is a "middle" UTF-8 character */
-	if ((first_char & 0xC0) ^ 0x80 == 0)
+	if (((first_char & 0xC0) ^ 0x80) == 0)
 		return EU_RESULT_INVALID;
 
 	int bytes;
@@ -191,7 +191,7 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
 	}
 
 	/* check if it is a "middle" UTF-8 character */
-	if ((first_char & 0xC0) ^ 0x80 == 0)
+	if (((first_char & 0xC0) ^ 0x80) == 0)
 		return EU_RESULT_INVALID;
 
 	int bytes;
