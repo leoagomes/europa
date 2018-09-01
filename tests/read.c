@@ -11,6 +11,7 @@
 #include "suites.h"
 #include "helpers.h"
 
+#include "eu_number.h"
 #include "europa.h"
 #include "eu_port.h"
 #include "ports/eu_mport.h"
@@ -85,10 +86,82 @@ MunitResult test_read_booleans(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_num_binary(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#b1001 #b#e1001 #b#i1001 #b1001.1");
+	munit_assert_not_null(port);
+
+	/* #b1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 9);
+
+	/* #b#e1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 9);
+
+	/* #b#i1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 9.0);
+
+	/* #b1001.1 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 9.5);
+
+	return MUNIT_OK;
+}
+
+MunitResult test_read_num_octal(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#b1001 #b#e1001 #b#i1001 #b1001.1");
+	munit_assert_not_null(port);
+
+	/* #b1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 9);
+
+	/* #b#e1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(out.value.i, ==, 9);
+
+	/* #b#i1001 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 9.0);
+
+	/* #b1001.1 */
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NUMBER | EU_NUMBER_REAL);
+	munit_assert_double(out.value.r, ==, 9.5);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
-		"/test-read-boolean",
+		"/boolean",
 		test_read_booleans,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/binary-number",
+		test_read_num_binary,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

@@ -1,7 +1,9 @@
 #include "europa.h"
 #include "eu_port.h"
 #include "eu_error.h"
+#include "eu_number.h"
 #include "utf8.h"
+#include <ctype.h>
 #include <stdio.h>
 
 /* This is where the first parser exists. Thread carefully!
@@ -30,17 +32,33 @@
 #define CSQUOT '\''
 #define CVLINE '|'
 #define CSCOLON ';'
+#define CPLUS '+'
+#define CMINUS '-'
+#define CDOT '.'
 
-#define iseof(c) (c == EOF)
-#define isverticalline(c) (c == CVLINE)
-#define islineending(c) (c == '\n')
-#define iswhitespace(c) (c == ' ' || c == '\t')
-#define isitspace(c) (iswhitespace(c) || c == CSCOLON || c == CHASH)
-#define islpar(c) (c == CLPAR)
-#define isrpar(c) (c == CRPAR)
+#define iseof(c) ((c) == EOF)
+#define isverticalline(c) ((c) == CVLINE)
+#define islineending(c) ((c) == '\n')
+#define iswhitespace(c) ((c) == ' ' || (c) == '\t')
+#define isitspace(c) (iswhitespace(c) || (c) == CSCOLON || (c) == CHASH)
+#define islpar(c) ((c) == CLPAR)
+#define isrpar(c) ((c) == CRPAR)
 #define isdelimiter(c) (iswhitespace(c) || islineending(c) || islpar(c) || \
-	isrpar(c) || c == CDQUOT || c == CSCOLON || iseof(c))
-#define iswhitespace(c) (c == ' ' || c == '\t')
+	isrpar(c) || (c) == CDQUOT || (c) == CSCOLON || iseof(c))
+#define iswhitespace(c) ((c) == ' ' || (c) == '\t')
+
+#define isexactness(c) ((c) == 'e' || (c) == 'E' || (c) == 'i' || (c) == 'I')
+#define isradix(c) ((c) == 'b' || (c) == 'B' || (c) == 'o' || (c) == 'O' || \
+	(c) == 'd' || (c) == 'D' || (c) == 'x' || (c) == 'X')
+#define isbool(c) ((c) == 't' || (c) == 'T' || (c) == 'f' || (c) == 'F')
+#define issign(c) ((c) == '-' || (c) == '+')
+
+#define isbinarydigit(c) ((c) == '0' || c == '1')
+#define isoctaldigit(c) ((c) >= '0' && (c) <= '7')
+#define isdecimaldigit(c) ((c) >= '0' && c <= '9')
+#define ishexdigit(c) (((c) >= '0' && (c) <= '9') || \
+	((c) >= 'A' && (c) <= 'F') || \
+	((c) >= 'a' && (c) <= 'f'))
 
 typedef struct parser parser;
 struct parser {
@@ -71,6 +89,10 @@ struct parser {
 		snprintf(p->buf, AUX_BUFFER_SIZE, "%d:%d: " fmt, p->line, p->col);\
 		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf);\
 	} while(0)
+
+/* some needed prototypes */
+eu_result parser_read(parser* p, eu_value* out);
+eu_result pskip_itspace(parser* p);
 
 eu_result parser_init(parser* p, europa* s, eu_port* port) {
 	int res;
@@ -104,7 +126,16 @@ eu_result padvance(parser* p) {
 
 eu_result pmatch(parser* p, int c) {
 	if (p->current != c) {
-		seterrorf(p, "Expected character '%c' but got %d ('%c').",
+		seterrorf(p, "Expected character '%c' but got %x ('%c').",
+			c, p->current, (char)p->current);
+		return EU_RESULT_ERROR;
+	}
+	return EU_RESULT_OK;
+}
+
+eu_result pcasematch(parser* p, int c) {
+	if (tolower(p->current) != tolower(c)) {
+		seterrorf(p, "Expected (case-insensitive) '%c' but got %x ('%c').",
 			c, p->current, (char)p->current);
 		return EU_RESULT_ERROR;
 	}
@@ -133,6 +164,28 @@ eu_result pmatchstring(parser* p, void* str) {
 	return EU_RESULT_OK;
 }
 
+eu_result pmatchstringcase(parser* p, void* str) {
+	void* next;
+	int cp;
+	eu_result res;
+
+	next = utf8codepoint(str, &cp);
+	while (cp && next) {
+		if (res = pcasematch(p, cp))
+			break;
+		if (res = padvance(p))
+			break;
+		next = utf8codepoint(next, &cp);
+	}
+
+	if (res) {
+		seterrorf(p, "Could not match (ignoring case) expected '%s'.", (char*)str);
+		return res;
+	}
+
+	return EU_RESULT_OK;
+}
+
 eu_result pread_boolean(parser* p, eu_value* out) {
 	eu_result res;
 
@@ -142,7 +195,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 	switch (p->current) {
 		case 't':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#t' */
-				res = pmatchstring(p, "true");
+				res = pmatchstringcase(p, "true");
 				if (res) /* in case it wasnt '#true' */
 					return res;
 
@@ -164,7 +217,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 			return EU_RESULT_OK;
 		case 'f':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#f' */
-				res = pmatchstring(p, "false");
+				res = pmatchstringcase(p, "false");
 				if (res) /* in case it wasnt '#false' */
 					return res;
 
@@ -191,34 +244,158 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 	}
 }
 
+#define UNEXPECTED_DIGIT_IN_RADIX_STR "Unexpected digit %c for radix '%c' in number literal."
+#define UNEXPECTED_CHAR_IN_NUMBER_STR "Unexpected character %c in number literal."
+/* reads a <number> 
+ *
+ * WARNING: this implementation currently ignores explicitely exact real numbers,
+ * integer numbers are exact unless #i is explicitely set and real (non-integer)
+ * numbers are numbers are always inexact.
+ */
+eu_result pread_number(parser* p, eu_value* out) {
+	eu_result res;
+	int exactness = 'a', radix = 'd', sign = 1, value = 0, divideby = 0, aux;
+	eu_integer ipart = 0;
+	eu_real rpart = 0.0;
+
+	/* test for explicit exactness/radix */
+	if (p->current == CHASH) {
+		if (isexactness(p->peek)) { /* exactnes radix */
+			_checkreturn(res, padvance(p));
+			exactness = tolower(p->current);
+
+			/* check for radix */
+			if (p->peek == CHASH) {
+				_checkreturn(res, padvance(p));
+				if (!isradix(p->peek)) {
+					seterror(p, "Expected radix for number literal.");
+					return EU_RESULT_ERROR;
+				}
+				radix = tolower(p->peek);
+			}
+		} else if (isradix(p->peek)) { /* radix exactness */
+			_checkreturn(res, padvance(p));
+			radix = tolower(p->current);
+
+			/* check for exactness */
+			if (p->peek == CHASH) {
+				_checkreturn(res, padvance(p));
+				if (!isexactness(p->peek)) {
+					seterror(p, "Expected exactness for number literal.");
+					return EU_RESULT_ERROR;
+				}
+				exactness = tolower(p->peek);
+			}
+		} else { /* this is not a number token, it does not start with a prefix */
+			seterrorf(p, "Unexpected character %c parsing a number (<prefix>).",
+				p->peek);
+			return EU_RESULT_ERROR;
+		}
+		/* consume final exactness/radix character */
+		_checkreturn(res, padvance(p));
+	}
+
+	/* read optinal sign */
+	if (issign(p->current)) {
+		sign = p->current == '+' ? 1 : -1;
+		_checkreturn(res, padvance(p));
+	}
+
+	/* convert radix to meaningful value */
+	switch (radix) {
+		case 'd': radix = 10; break;
+		case 'b': radix = 2; break;
+		case 'o': radix = 8; break;
+		case 'h': radix = 16; break;
+		default:
+			seterrorf(p, "Invalid number radix '%c'.", radix);
+			return EU_RESULT_ERROR;
+	}
+
+	/* read number */
+	do {
+		if (p->current == CDOT) {
+			if (divideby != 0) { /* in case a dot appeared already */
+				seterrorf(p, UNEXPECTED_CHAR_IN_NUMBER_STR, p->current);
+				return EU_RESULT_ERROR;
+			}
+			/* TODO: maybe report when '.' appears in an explicitely exact
+			 * number */
+
+			_checkreturn(res, padvance(p)); /* consume the dot */
+
+			/* place whatever was recognized as integer part so far into the 
+			 * real part and reset the integer part */
+			rpart = (eu_real)ipart;
+			ipart = 0;
+
+			/* set divideby to one so it will behave properly when multiplied 
+			 * by radix */
+			divideby = 1;
+
+			continue; /* restart the loop */
+		}
+
+		/* assert digit is valid for current radix */
+		if ((radix == 2 && !isbinarydigit(p->current)) ||
+			(radix == 8 && !isoctaldigit(p->current)) ||
+			(radix == 10 && !isdecimaldigit(p->current)) ||
+			(radix == 16 && !ishexdigit(p->current))) {
+			seterrorf(p, UNEXPECTED_DIGIT_IN_RADIX_STR, p->current, radix);
+			return EU_RESULT_ERROR;
+		}
+
+		/* since most of the radices accept numbers in the 0-9 range, we
+		 * can pre-calculate the value in a "radix-independent" way */
+		value = p->current - '0';
+
+		/* if the digit was in the A-F range, we need to correct 'value' */
+		aux = tolower(p->current);
+		if (aux >= 'a' && aux <= 'f')
+			value = (aux - 'a') + 10;
+
+		/* update integer part */
+		ipart = (ipart * radix) + value;
+
+		/* if no '.' appeared, then divideby will be 0 and the following line
+		 * will result in divideby being zero still. 
+		 * if a '.' appeared, then divideby will be the value we need to divide
+		 * ipart by and sum to rpart to represent the final real number. */
+		divideby *= radix;
+
+		/* advance a character */
+		_checkreturn(res, padvance(p));
+	} while (!isdelimiter(p->peek));
+
+	if (divideby) { /* in case the resulting number is real */
+		rpart = (eu_real)sign * (rpart + ((eu_real)ipart / (eu_real)divideby));
+		_eu_makereal(out, rpart);
+		return EU_RESULT_OK;
+	}
+
+	if (exactness == 'i') { /* in case the number was explicitely inexact int */
+		_eu_makereal(out, (eu_real)(sign * ipart));
+		return EU_RESULT_OK;
+	}
+
+	/* in case the resulting number was an exact integer */
+	_eu_makeint(out, sign * ipart);
+	return EU_RESULT_OK;
+}
+
 eu_result pread_hash(parser* p, eu_value* out) {
 	eu_result res;
 
 	/* match the hash character */
 	_checkreturn(res, pmatch(p, CHASH));
 
-	switch (p->peek) {
-		case 't': /* should be a boolean constant */
-			return pread_boolean(p, out);
-		case 'f':
-			return pread_boolean(p, out);
-		case '!':
-			/* read directive */
-			break;
-		case 'b': case 'B':
-		case 'o': case 'O':
-		case 'd': case 'D':
-		case 'x': case 'X':
-			/* TODO: read number with radix */
-			break;
-		case '\\':
-			/* TODO: read character literal */
-			break;
-		default:
-			break;
-	}
+	if (isbool(p->peek))
+		return pread_boolean(p, out);
+	else if (isradix(p->peek) || isexactness(p->peek))
+		return pread_number(p, out);
 
-	return 	EU_RESULT_INVALID;
+	seterror(p, "Expected a boolean, number, ..., but nothing matched.");
+	return EU_RESULT_ERROR;
 }
 
 eu_result pskip_linecomment(parser* p) {
@@ -277,7 +454,7 @@ eu_result pskip_nestedcomment(parser* p) {
 				break;
 			}
 		}
-		_checkreturn(res, padvance);
+		_checkreturn(res, padvance(p));
 	}
 
 	if (nestedcount > 0) { /* more comments were started than ended */
@@ -321,22 +498,23 @@ eu_result pskip_itspace(parser* p) {
 
 			/* in case it was a \r\n sequence, also consume the \n */
 			if (p->current == '\r' && p->peek == '\n')
-				if (res = padvance(p))
-					return res;
+				_checkreturn(res, padvance(p));
 
-			if (res = padvance(p))
-				return res;
+			_checkreturn(res, padvance(p));
 		}
 		else if (p->current == CSCOLON) { /* single line comment, starting with ';' */
 			_checkreturn(res, pskip_linecomment(p)); /* skip the comment and continue in the loop */
 		}
 		else if (p->current == CHASH) { /* might be a comment */
-			if (p->peek == CVLINE) /* skip a nested comment */
+			if (p->peek == CVLINE) { /* skip a nested comment */
 				_checkreturn(res, pskip_nestedcomment(p));
-			else if (p->peek == CSCOLON) /* skip a datum comment */
+			}
+			else if (p->peek == CSCOLON) { /* skip a datum comment */
 				_checkreturn(res, pskip_datumcomment(p));
-			else /* it does not qualify for intertoken space */
+			}
+			else { /* it does not qualify for intertoken space */
 				break;
+			}
 		}
 	}
 
@@ -348,11 +526,17 @@ eu_result pskip_itspace(parser* p) {
 eu_result parser_read(parser* p, eu_value* out) {
 	eu_result res;
 
+	/* check and skip inter token spaces (aka <atmosphere>) */
 	if (isitspace(p->current)) {
 		_checkreturn(res, pskip_itspace(p));
-	} else if (p->current == CHASH) {
-		_checkreturn(res, pread_hash(p, &out));
 	}
+
+	/* check terminals that start with # */
+	if (p->current == CHASH) {
+		return pread_hash(p, out);
+	}
+
+	return EU_RESULT_OK;
 }
 
 eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
@@ -363,6 +547,7 @@ eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
 		return EU_RESULT_NULL_ARGUMENT;
 
 	parser_init(&p, s, port);
+	_checkreturn(res, padvance(&p));
 	if (res = parser_read(&p, out)) {
 		out->type = EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE;
 		out->value.object = _euerror_to_obj(p.error);
