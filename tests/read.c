@@ -233,6 +233,33 @@ MunitResult test_read_num_hex(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_char(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#\\a #\\newline #\\x35 #\\invalid");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_CHARACTER);
+	munit_assert_int(out.value.character, ==, 'a');
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_CHARACTER);
+	munit_assert_int(out.value.character, ==, '\n');
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_CHARACTER);
+	munit_assert_int(out.value.character, ==, '5');
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_ERROR);
+	munit_assert_int(out.type, ==, EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
 		"/boolean",
@@ -269,6 +296,14 @@ MunitTest readtests[] = {
 	{
 		"/decimal-number",
 		test_read_num_dec,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/char",
+		test_read_char,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

@@ -1,10 +1,14 @@
+#include <ctype.h>
+#include <stdio.h>
+
 #include "europa.h"
 #include "eu_port.h"
 #include "eu_error.h"
 #include "eu_number.h"
+#include "eu_character.h"
+#include "eu_util.h"
+
 #include "utf8.h"
-#include <ctype.h>
-#include <stdio.h>
 
 /* This is where the first parser exists. Thread carefully!
  * 
@@ -35,6 +39,7 @@
 #define CPLUS '+'
 #define CMINUS '-'
 #define CDOT '.'
+#define CBSLASH '\\'
 
 #define iseof(c) ((c) == EOF)
 #define isverticalline(c) ((c) == CVLINE)
@@ -385,6 +390,94 @@ eu_result pread_number(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
+#define _checkchar(buf, out, str, c) \
+	if (utf8casecmp(buf, str) == 0) {\
+		_eu_makechar(out, c);\
+		return EU_RESULT_OK;\
+	}
+#define CHAR_BUF_SIZE 128
+
+eu_result pread_character(parser* p, eu_value* out) {
+	eu_result res;
+	int c, v, pos;
+	char buf[CHAR_BUF_SIZE];
+	void *next;
+	size_t size;
+
+	_checkreturn(res, pmatch(p, CHASH));
+	_checkreturn(res, padvance(p));
+	_checkreturn(res, pmatch(p, CBSLASH));
+	_checkreturn(res, padvance(p));
+
+	if (isdelimiter(p->peek)) { /* the #\<char> case */
+		_eu_makechar(out, p->current);
+		_checkreturn(res, padvance(p));
+		return EU_RESULT_OK;
+	} else if (p->current == 'x' || p->current == 'X') { /* the #\x<hexval> case */
+		_checkreturn(res, padvance(p)); /* consume 'x' */
+
+		c = 0;
+		/* read the hex value */
+		while (!isdelimiter(p->current)) {
+			/* check for invalid digits */
+			if (!ishexdigit(p->current)) {
+				seterrorf(p,
+					"Invalid character '%c' in unicode hex character literal.",
+					(char)p->current);
+				return EU_RESULT_ERROR;
+			}
+
+			/* calculate current character value from 0 to 15 */
+			v = tolower(p->current);
+			if (v <= 'a' && v >= 'f')
+				v = v - 'a' + 10;
+			else
+				v = v - '0';
+
+			c = (c << 4) | v;
+
+			/* advance to the next character */
+			_checkreturn(res, padvance(p));
+		}
+
+		/* conver the character to UTF-8 */
+		c = unicodetoutf8(c);
+
+		_eu_makechar(out, c);
+		return EU_RESULT_OK;
+	} else { /* the #\<character name> case */
+		/* read the character name into the aux buffer */
+		size = CHAR_BUF_SIZE;
+		next = buf;
+		while (next != NULL && !isdelimiter(p->current)) {
+			next = utf8catcodepoint(next, p->current, size);
+			size -= utf8codepointsize(p->current);
+			_checkreturn(res, padvance(p));
+		}
+
+		/* check if the char name was too big */
+		if (next == NULL) {
+			seterror(p, "Literal character name too big (and probably invalid).");
+			return EU_RESULT_ERROR;
+		}
+		cast(eu_byte*, next)[0] = '\0';
+
+		/* check for names */
+		_checkchar(buf, out, "alarm", '\n');
+		_checkchar(buf, out, "backspace", '\n');
+		_checkchar(buf, out, "delete", '\n');
+		_checkchar(buf, out, "escape", '\n');
+		_checkchar(buf, out, "newline", '\n');
+		_checkchar(buf, out, "return", '\n');
+		_checkchar(buf, out, "space", '\n');
+		_checkchar(buf, out, "tab", '\n');
+
+		/* in case it didn't match any valid character */
+		seterrorf(p, "Unknown character literal name '%s'.", buf);
+		return EU_RESULT_ERROR;
+	}
+}
+
 eu_result pread_hash(parser* p, eu_value* out) {
 	eu_result res;
 
@@ -395,6 +488,8 @@ eu_result pread_hash(parser* p, eu_value* out) {
 		return pread_boolean(p, out);
 	else if (isradix(p->peek) || isexactness(p->peek))
 		return pread_number(p, out);
+	else if (p->peek == CBSLASH)
+		return pread_character(p, out);
 
 	seterror(p, "Expected a boolean, number, ..., but nothing matched.");
 	return EU_RESULT_ERROR;
