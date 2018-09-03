@@ -139,7 +139,7 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 
 MunitTest gctests[] = {
 	{
-		"/test-object-creation",
+		"/object-creation",
 		test_object_creation,
 		gc_setup,
 		gc_teardown,
@@ -147,7 +147,7 @@ MunitTest gctests[] = {
 		NULL,
 	},
 	{
-		"/text-gc-naive-sweep",
+		"/naive-mark-sweep",
 		test_gc_naive_sweep,
 		gc_setup,
 		gc_teardown,
