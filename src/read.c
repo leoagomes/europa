@@ -619,6 +619,52 @@ eu_result pskip_itspace(parser* p) {
 	return EU_RESULT_OK;
 }
 
+eu_result pread_string(parser* p, eu_value* out) {
+	eu_result res;
+	int c;
+
+	_checkreturn(res, pmatch(p, CDQUOT));
+	_checkreturn(res, padvance(p));
+
+	while (p->current != CDQUOT && p->current != EOF) {
+		if (p->current == CBSLASH) { /* special char */
+			/* consume the \ */
+			_checkreturn(res, padvance(p));
+
+
+			c = tolower(p->current);
+
+			switch (c) {
+				/* special characters */
+				case 'a': c = '\a'; break;
+				case 'b': c = '\b'; break;
+				case 't': c = '\t'; break;
+				case 'n': c = '\n'; break;
+				case 'r': c = '\r'; break;
+				case '"': c = '"'; break;
+				case '\\': c = '\\'; break;
+				case '|': c = '|'; break;
+
+				/* inline hex escape */
+				case 'x':
+					break;
+
+				/* other escapes */
+				default:
+					break;
+			}
+
+			/* advance */
+		} else {
+			c = p->current;
+		}
+
+		_checkreturn(res, padvance(p));
+	}
+
+	return EU_RESULT_OK;
+}
+
 /* this reads a <datum> */
 eu_result parser_read(parser* p, eu_value* out) {
 	eu_result res;
@@ -634,6 +680,8 @@ eu_result parser_read(parser* p, eu_value* out) {
 	} else if (isdecimaldigit(p->current) ||
 		(issign(p->current) && isdecimaldigit(p->peek))) {
 		return pread_number(p, out);
+	} else if (p->current == CDQUOT) {
+		return pread_string(p, out);
 	}
 
 	return EU_RESULT_OK;
