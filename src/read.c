@@ -50,7 +50,6 @@
 #define isrpar(c) ((c) == CRPAR)
 #define isdelimiter(c) (iswhitespace(c) || islineending(c) || islpar(c) || \
 	isrpar(c) || (c) == CDQUOT || (c) == CSCOLON || iseof(c) || (c) == '\0')
-#define iswhitespace(c) ((c) == ' ' || (c) == '\t')
 
 #define isexactness(c) ((c) == 'e' || (c) == 'E' || (c) == 'i' || (c) == 'I')
 #define isradix(c) ((c) == 'b' || (c) == 'B' || (c) == 'o' || (c) == 'O' || \
@@ -99,6 +98,90 @@ struct parser {
 eu_result parser_read(parser* p, eu_value* out);
 eu_result pskip_itspace(parser* p);
 
+
+/* Because strings and identifiers can be arbitrarily long, the auxilary buffer
+ * (p->buf) may be too small to hold them. Because of that, we take the approach
+ * of using the auxilary buffer until it is full, then copying the data into the
+ * heap, reallocating memory in chunks of a predetermined size whenever this
+ * heap store is filled with string data.
+ * 
+ * To make this switch between p->buf and a heap allocated buffer transparent,
+ * we use the following functions.
+ */
+eu_result gbuf_init(parser* p, void** buf, void** next, size_t* size) {
+	/* set all variables to the auxilary buffer initially. */
+	*buf = p->buf;
+	*next = *buf;
+	*size = AUX_BUFFER_SIZE;
+
+	/* zero-out the buffer to ensure that there will be a final NUL byte. */
+	memset(p->buf, 0, AUX_BUFFER_SIZE);
+
+	return EU_RESULT_OK;
+}
+
+/* this is how much the buffer grows every time we need more memory for the
+ * string/symbol.
+ */
+#define GBUF_GROWTH_RATE 128
+
+eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
+	size_t* remaining, int c) {
+	char *cbuf, *cnext;
+
+	/* append the character */
+	*next = utf8catcodepoint(*next, c, *remaining);
+
+	/* check whether there was space for the character in the buffer */
+	if (*next == NULL) {
+		/* in case there wasn't, we need to either allocate a new heap buffer
+		 * or grow the heap buffer. */
+		if (*buf == p->buf) {
+			/* we need to allocate a new buffer on the heap a bit larger than
+			 * the auxilary buffer. */
+			cbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			if (cbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+
+			/* copy the contents of the aux buffer into the newly allocated 
+			 * buffer */
+			memcpy(cbuf, p->buf, AUX_BUFFER_SIZE);
+		} else {
+			/* the buffer currently lives in the heap, so we just need to grow it */
+			cbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			if (cbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+		}
+
+		/* update the remainig space in the buffer and its size */
+		*size += GBUF_GROWTH_RATE;
+		*remaining += GBUF_GROWTH_RATE;
+
+		/* update the effective values */
+		*buf = cbuf;
+		cnext = cbuf + (*size - *remaining);
+		*next = cnext;
+
+		/* try appending the character again */
+		*next = utf8catcodepoint(*next, c, *remaining);
+		if (*next == NULL)
+			return EU_RESULT_ERROR;
+	}
+	*remaining -= utf8codepointsize(c);
+	/* put a nul byte just after the last appended byte */
+	cast(eu_byte*, *next)[0] = '\0';
+	return EU_RESULT_OK;
+}
+
+eu_result gbuf_terminate(parser* p, void** buf) {
+	if (p->buf != *buf) {
+		eugc_free(_eu_get_gc(p->s), *buf);
+	}
+	*buf = NULL;
+	return EU_RESULT_OK;
+}
+
+/* initializes a parser structure */
 eu_result parser_init(parser* p, europa* s, eu_port* port) {
 	int res;
 	p->s = s;
@@ -109,6 +192,7 @@ eu_result parser_init(parser* p, europa* s, eu_port* port) {
 	return euport_peek_char(s, port, &(p->peek));
 }
 
+/* consumes a character from the parser port */
 eu_result pconsume(parser* p) {
 	p->col++;
 	if (islineending(p->current)) {
@@ -118,10 +202,15 @@ eu_result pconsume(parser* p) {
 	return euport_read_char(p->s, p->port, &(p->current));
 }
 
+/* peeks a character from the parser port, placing it into p->peek */
 eu_result ppeek(parser* p) {
 	return euport_peek_char(p->s, p->port, &(p->peek));
 }
 
+/* consumes the current character, making p->current = p->peek and populating
+ * p->peek with the next peek character.
+ * 
+ * basically reads a character and peeks the other in a sequence */
 eu_result padvance(parser* p) {
 	int res;
 	if ((res = pconsume(p)))
@@ -129,6 +218,8 @@ eu_result padvance(parser* p) {
 	return ppeek(p);
 }
 
+/* asserts that the current character (p->current) matches a given character,
+ * returning an error in case it does not match. */
 eu_result pmatch(parser* p, int c) {
 	if (p->current != c) {
 		seterrorf(p, "Expected character '%c' but got %x ('%c').",
@@ -138,6 +229,8 @@ eu_result pmatch(parser* p, int c) {
 	return EU_RESULT_OK;
 }
 
+/* asserts that the current character (p->current) matches a given character,
+ * ignoring case, returning an error if they do not match. */
 eu_result pcasematch(parser* p, int c) {
 	if (tolower(p->current) != tolower(c)) {
 		seterrorf(p, "Expected (case-insensitive) '%c' but got %x ('%c').",
@@ -147,6 +240,8 @@ eu_result pcasematch(parser* p, int c) {
 	return EU_RESULT_OK;
 }
 
+/* applies the match procedure over all characters in a string, advancing the
+ * port along with the string. */
 eu_result pmatchstring(parser* p, void* str) {
 	void* next;
 	int cp;
@@ -169,6 +264,8 @@ eu_result pmatchstring(parser* p, void* str) {
 	return EU_RESULT_OK;
 }
 
+/* applies the casematch procedure over all characters in a string, just like
+ * matchstring. */
 eu_result pmatchstringcase(parser* p, void* str) {
 	void* next;
 	int cp;
@@ -191,6 +288,8 @@ eu_result pmatchstringcase(parser* p, void* str) {
 	return EU_RESULT_OK;
 }
 
+/* reads a <boolean> in either #t or #true (or #f and #false) formats, returning
+ * an error if the sequence does not form a valid boolean. */
 eu_result pread_boolean(parser* p, eu_value* out) {
 	eu_result res;
 
@@ -252,7 +351,27 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 #define UNEXPECTED_DIGIT_IN_RADIX_STR "Unexpected digit %c for radix '%c' in number literal."
 #define UNEXPECTED_CHAR_IN_NUMBER_STR "Unexpected character %c in number literal."
 /* reads a <number> 
- *
+ * 
+ * <number> is defined in a bnf-like language:
+ * <number> := <num 2> | <num 8> | <num 10> | <num 16>
+ * <num R> := <prefix R> <real R>
+ * <prefix R> := <radix R> <exactness>
+ *             | <exactness> <radix R>
+ * <real R> := <sign> <ureal R>
+ * <ureal R> := <uinteger R> | <decimal R>
+ * <uinteger R> := <digit R>+
+ * <decimal R> := <uinteger R>
+ *              | . <digit R>+
+ *              | <digit R>+ . <digit R>*
+ * 
+ * 
+ * available radices are #b #o #d #x for binary (2), octal (8), decimal (10) and
+ * hexadecimal (16) respectively. note that the decimal radix is optional.
+ * digits go according to the bases, so valid binary digits are 0 and 1, valid
+ * octal digits are 0-7, decimal 0-9 and hex 0-9 and A-F (case-insensitive)
+ * 
+ * TODO: add support for <suffix>
+ * 
  * WARNING: this implementation currently ignores explicitely exact real numbers,
  * integer numbers are exact unless #i is explicitely set and real (non-integer)
  * numbers are numbers are always inexact.
@@ -397,6 +516,12 @@ eu_result pread_number(parser* p, eu_value* out) {
 	}
 #define CHAR_BUF_SIZE 128
 
+/* reads a character literal
+ * <character>s are either '#\<any character>', '#\<character name>' or
+ * '#\x<unicode hex value>'.
+ * 
+ * only R7RS-required character names are currently implemented.
+ */
 eu_result pread_character(parser* p, eu_value* out) {
 	eu_result res;
 	int c, v, pos;
@@ -478,6 +603,8 @@ eu_result pread_character(parser* p, eu_value* out) {
 	}
 }
 
+/* reads a token that begins with a '#', those can be booleans (#t), numbers
+ * (#e#x1F), characters, vectors (#(a b c)), bytevectors (#u8(a b c)) */
 eu_result pread_hash(parser* p, eu_value* out) {
 	eu_result res;
 
@@ -495,6 +622,7 @@ eu_result pread_hash(parser* p, eu_value* out) {
 	return EU_RESULT_ERROR;
 }
 
+/* skips a single-line comment */
 eu_result pskip_linecomment(parser* p) {
 	eu_result res;
 
@@ -619,48 +747,164 @@ eu_result pskip_itspace(parser* p) {
 	return EU_RESULT_OK;
 }
 
-eu_result pread_string(parser* p, eu_value* out) {
+/* reads the inline (in-string?) escaped hex character value, something akin to
+ * \xABC */
+eu_result pread_escaped_hex_char(parser* p, int* out) {
+	int c, v;
 	eu_result res;
-	int c;
 
-	_checkreturn(res, pmatch(p, CDQUOT));
+	/* consume the x */
 	_checkreturn(res, padvance(p));
 
+	/* read characters up to a semicolon */
+	while (p->current != CSCOLON) {
+		/* check for invalid digits */
+		if (!ishexdigit(p->current)) {
+			seterrorf(p,
+				"Invalid character '%c' in unicode inline hex character.",
+				(char)p->current);
+			return EU_RESULT_ERROR;
+		}
+
+		/* calculate current character value from 0 to 15 */
+		v = tolower(p->current);
+		if (v <= 'a' && v >= 'f')
+			v = v - 'a' + 10;
+		else
+			v = v - '0';
+
+		c = (c << 4) | v;
+
+		/* advance to the next character */
+		_checkreturn(res, padvance(p));
+	}
+
+	/* consume the semicolon */
+	_checkreturn(res, padvance(p));
+	*out = unicodetoutf8(c);
+	return EU_RESULT_OK;
+}
+
+/* skips an (inlined/instring) escaped whitespace-newline-whitespace sequence */
+eu_result pskip_escaped_whitespace(parser* p) {
+	eu_result res;
+
+	/* skip whitespace */
+	while (iswhitespace(p->current)) {
+		_checkreturn(res, padvance(p));
+	}
+
+	/* make sure that there is a line ending */
+	if (!islineending(p->current)) {
+		seterrorf(p, "Expected a line ending after \\, but got %c.",
+			p->current);
+		return EU_RESULT_ERROR;
+	}
+	/* in case the newline was a \r\n consume the \r */
+	if (p->current == '\r' && p->peek == '\n') {
+		padvance(p);
+	}
+	_checkreturn(res, padvance(p));
+
+	/* skip additional whitespace */
+	while (iswhitespace(p->current)) {
+		_checkreturn(res, padvance(p));
+	}
+
+	return EU_RESULT_OK;
+}
+
+/* reads an inline (in-string) escaped character */
+eu_result pread_escaped_char(parser* p, int* out) {
+	eu_result res;
+	int c, v;
+
+	/* consume the \ */
+	_checkreturn(res, padvance(p));
+	c = tolower(p->current);
+
+	switch (c) {
+		/* special characters */
+		case 'a': c = '\a'; break;
+		case 'b': c = '\b'; break;
+		case 't': c = '\t'; break;
+		case 'n': c = '\n'; break;
+		case 'r': c = '\r'; break;
+		case '"': c = '"'; break;
+		case '\\': c = '\\'; break;
+		case '|': c = '|'; break;
+
+		/* inline hex escape */
+		case 'x':
+			return pread_escaped_hex_char(p, out);
+
+		/* invalid */
+		default:
+			seterrorf(p, "Invalid escape character %c.", p->current);
+			return EU_RESULT_OK;
+	}
+
+	/* consume the last left character. */
+	_checkreturn(res, padvance(p));
+
+	*out = c;
+	return EU_RESULT_OK;
+}
+
+/* reads a string literal from the port */
+eu_result pread_string(parser* p, eu_value* out) {
+	eu_result res;
+	int c, v, should_advance;
+	void *buf, *next;
+	size_t size, remaining;
+	eu_string* str;
+
+	/* make sure the first character is a " */
+	_checkreturn(res, pmatch(p, CDQUOT));
+	_checkreturn(res, padvance(p)); /* consume it */
+
+	/* initialize buffer pointers */
+	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
+	remaining = size;
+
+	/* read until end */
 	while (p->current != CDQUOT && p->current != EOF) {
-		if (p->current == CBSLASH) { /* special char */
-			/* consume the \ */
-			_checkreturn(res, padvance(p));
-
-
-			c = tolower(p->current);
-
-			switch (c) {
-				/* special characters */
-				case 'a': c = '\a'; break;
-				case 'b': c = '\b'; break;
-				case 't': c = '\t'; break;
-				case 'n': c = '\n'; break;
-				case 'r': c = '\r'; break;
-				case '"': c = '"'; break;
-				case '\\': c = '\\'; break;
-				case '|': c = '|'; break;
-
-				/* inline hex escape */
-				case 'x':
-					break;
-
-				/* other escapes */
-				default:
-					break;
+		/* handle special chars */
+		if (p->current == CBSLASH) {
+			if (iswhitespace(p->peek) || islineending(p->peek)) {
+				_checkreturn(res, pskip_escaped_whitespace(p));
+				/* start a new iteration of the loop after the spaces */
+				continue;
+			} else {
+				pread_escaped_char(p, &c);
 			}
-
-			/* advance */
-		} else {
+		} else { /* any other character */
 			c = p->current;
 		}
 
+		/* append the character to the buffer */
+		_checkreturn(res, gbuf_append(p, &buf, &next, &size, &remaining, c));
+
+		/* advance to the next character in the string */
 		_checkreturn(res, padvance(p));
 	}
+
+	/* if the string ended abruptly, we need to return an error */
+	if (p->current == EOF) {
+		seterror(p, "String literal ended abruptly.");
+		return EU_RESULT_ERROR;
+	}
+
+	/* the string is valid, create the object */
+	str = eustring_new(_eu_get_gc(p->s), buf);
+	if (str == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	out->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;
+	out->value.object = _eustring_to_obj(str);
+
+	/* terminate the aux buffer, releasing memory if applicable */
+	gbuf_terminate(p, &buf);
 
 	return EU_RESULT_OK;
 }
