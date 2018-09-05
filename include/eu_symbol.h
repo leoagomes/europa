@@ -23,7 +23,7 @@ struct europa_symbol {
 /* conversion macros */
 
 #define _euobj_to_symbol(o) (cast(eu_symbol*, o))
-#define _eusymbol_to_obj(s) (cast(eu_object*,s))
+#define _eusymbol_to_obj(s) (cast(eu_gcobj*,s))
 
 #define _euvalue_to_symbol(v) _euobj_to_symbol((v)->value.object)
 #define _eusymbol_to_value(s) { \

@@ -7,6 +7,7 @@
 #include "eu_number.h"
 #include "eu_character.h"
 #include "eu_util.h"
+#include "eu_symbol.h"
 
 #include "utf8.h"
 
@@ -32,6 +33,10 @@
 #define CHASH '#'
 #define CLPAR '('
 #define CRPAR ')'
+#define CLSQB '['
+#define CRSQB ']'
+#define CLCRLB '{'
+#define CRCRLB '}'
 #define CDQUOT '"'
 #define CSQUOT '\''
 #define CVLINE '|'
@@ -40,14 +45,29 @@
 #define CMINUS '-'
 #define CDOT '.'
 #define CBSLASH '\\'
+#define CEXCL '!'
+#define CDOLLAR '$'
+#define CPERCENT '%'
+#define CAMP '&'
+#define CASTERISK '*'
+#define CFSLASH '/'
+#define CCOLON ':'
+#define CLESS '<'
+#define CGREAT '>'
+#define CEQUALS '='
+#define CQUEST '?'
+#define CAT '@'
+#define CHAT '^'
+#define CUNDERSC '_'
+#define CTILDE '~'
 
 #define iseof(c) ((c) == EOF)
 #define isverticalline(c) ((c) == CVLINE)
 #define islineending(c) ((c) == '\n')
 #define iswhitespace(c) ((c) == ' ' || (c) == '\t')
 #define isitspace(c) (iswhitespace(c) || (c) == CSCOLON || (c) == CHASH)
-#define islpar(c) ((c) == CLPAR)
-#define isrpar(c) ((c) == CRPAR)
+#define islpar(c) ((c) == CLPAR || (c) == CLSQB || (c) == CLCRLB)
+#define isrpar(c) ((c) == CRPAR || (c) == CRSQB || (c) == CRCRLB)
 #define isdelimiter(c) (iswhitespace(c) || islineending(c) || islpar(c) || \
 	isrpar(c) || (c) == CDQUOT || (c) == CSCOLON || iseof(c) || (c) == '\0')
 
@@ -56,6 +76,7 @@
 	(c) == 'd' || (c) == 'D' || (c) == 'x' || (c) == 'X')
 #define isbool(c) ((c) == 't' || (c) == 'T' || (c) == 'f' || (c) == 'F')
 #define issign(c) ((c) == '-' || (c) == '+')
+#define isdot(c) ((c) == CDOT)
 
 #define isbinarydigit(c) ((c) == '0' || c == '1')
 #define isoctaldigit(c) ((c) >= '0' && (c) <= '7')
@@ -63,6 +84,22 @@
 #define ishexdigit(c) (((c) >= '0' && (c) <= '9') || \
 	((c) >= 'A' && (c) <= 'F') || \
 	((c) >= 'a' && (c) <= 'f'))
+
+#define isspecialinitial(c) ((c) == CEXCL || (c) == CDOLLAR || (c) == CPERCENT ||\
+	(c) == CAMP || (c) == CASTERISK || (c) == CFSLASH || (c) == CCOLON ||\
+	(c) == CLESS || (c) == CEQUALS || (c) == CGREAT || (c) == CQUEST ||\
+	(c) == CAT || (c) == CHAT || (c) == CUNDERSC || (c) == CTILDE)
+#define isletter(c) (((c) >= 'a' && (c) <= 'z') || ((c) >= 'A' && (c) <= 'Z'))
+#define isinitial(c) (isspecialinitial(c) || isletter(c))
+#define isvline(c) ((c) == CVLINE)
+#define isexplicitsign(c) ((c) == CPLUS || (c) == CMINUS)
+#define ispeculiar(c) (isexplicitsign(c) || (c) == CDOT)
+#define isidentifier(c) (isinitial(c) || isvline(c) || ispeculiar(c))
+#define isspecialsubsequent(c) (isexplicitsign(c) || (c) == CDOT || (c) == CAT)
+#define issubsequent(c) (isinitial(c) || isdecimaldigit(c) ||\
+	isspecialsubsequent(c))
+#define isdotsubsequent(c) (issubsequent(c) || isdot(c))
+#define issignsubsequent(c) (isinitial(c) || isexplicitsign(c) || (c) == CAT)
 
 typedef struct parser parser;
 struct parser {
@@ -299,9 +336,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 	switch (p->current) {
 		case 't':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#t' */
-				res = pmatchstringcase(p, "true");
-				if (res) /* in case it wasnt '#true' */
-					return res;
+				_checkreturn(res, pmatchstringcase(p, "true"));
 
 				if (!isdelimiter(p->current)) { /* in case it wasn't exactly '#true' */
 					seterror(p, "Invalid token provided when 'true' was expected.");
@@ -321,9 +356,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 			return EU_RESULT_OK;
 		case 'f':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#f' */
-				res = pmatchstringcase(p, "false");
-				if (res) /* in case it wasnt '#false' */
-					return res;
+				_checkreturn(res, pmatchstringcase(p, "false"));
 
 				if (!isdelimiter(p->current)) { /* in case it wasn't exactly '#false' */
 					seterror(p, "Invalid token provided when 'false' was expected.");
@@ -510,7 +543,7 @@ eu_result pread_number(parser* p, eu_value* out) {
 }
 
 #define _checkchar(buf, out, str, c) \
-	if (utf8casecmp(buf, str) == 0) {\
+	if (utf8cmp(buf, str) == 0) {\
 		_eu_makechar(out, c);\
 		return EU_RESULT_OK;\
 	}
@@ -750,7 +783,7 @@ eu_result pskip_itspace(parser* p) {
 /* reads the inline (in-string?) escaped hex character value, something akin to
  * \xABC */
 eu_result pread_escaped_hex_char(parser* p, int* out) {
-	int c, v;
+	int c = 0, v;
 	eu_result res;
 
 	/* consume the x */
@@ -780,7 +813,6 @@ eu_result pread_escaped_hex_char(parser* p, int* out) {
 	}
 
 	/* consume the semicolon */
-	_checkreturn(res, padvance(p));
 	*out = unicodetoutf8(c);
 	return EU_RESULT_OK;
 }
@@ -844,9 +876,6 @@ eu_result pread_escaped_char(parser* p, int* out) {
 			return EU_RESULT_OK;
 	}
 
-	/* consume the last left character. */
-	_checkreturn(res, padvance(p));
-
 	*out = c;
 	return EU_RESULT_OK;
 }
@@ -876,7 +905,7 @@ eu_result pread_string(parser* p, eu_value* out) {
 				/* start a new iteration of the loop after the spaces */
 				continue;
 			} else {
-				pread_escaped_char(p, &c);
+				_checkreturn(res, pread_escaped_char(p, &c));
 			}
 		} else { /* any other character */
 			c = p->current;
@@ -896,7 +925,7 @@ eu_result pread_string(parser* p, eu_value* out) {
 	}
 
 	/* the string is valid, create the object */
-	str = eustring_new(_eu_get_gc(p->s), buf);
+	str = eustring_new(p->s, buf);
 	if (str == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -905,6 +934,101 @@ eu_result pread_string(parser* p, eu_value* out) {
 
 	/* terminate the aux buffer, releasing memory if applicable */
 	gbuf_terminate(p, &buf);
+
+	return EU_RESULT_OK;
+}
+
+/* reads a
+ * <symbol> := <vertical line> <symbol element>* <vertical line>
+ */
+eu_result pread_vline_symbol(parser* p, eu_value* out) {
+	eu_result res;
+	void *next, *buf;
+	size_t size, remaining;
+	eu_symbol* sym;
+	int c;
+
+	_checkreturn(res, pmatch(p, CVLINE));
+	_checkreturn(res, padvance(p));
+
+	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
+	remaining = size;
+
+	while (!isvline(p->current) && !iseof(p->current)) {
+		/* handle special chars */
+		if (p->current == CBSLASH) {
+			_checkreturn(res, pread_escaped_char(p, &c));
+		} else { /* any other character */
+			c = p->current;
+		}
+
+		/* append the character to the auxilary buffer */
+		_checkreturn(res, gbuf_append(p, &buf, &next, &size, &remaining, c));
+
+		/* advance to the next character */
+		_checkreturn(res, padvance(p));
+	}
+
+	/* create the symbol object */
+	sym = eusymbol_new(p->s, buf);
+	if (sym == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	/* set the output value */
+	out->type = EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE;
+	out->value.object = _eusymbol_to_obj(sym);
+
+	return EU_RESULT_OK;
+}
+
+eu_result pread_insub_symbol(parser* p, eu_value* out) {
+	eu_result res;
+	void *next, *buf;
+	size_t size, remaining;
+	eu_symbol* sym;
+
+	/* initialize the auxilary buffer */
+	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
+	remaining = size;
+
+	do {
+		/* append the current character to the symbol */
+		_checkreturn(res, gbuf_append(p, &buf, &next, &size, &remaining,
+			p->current));
+
+		/* advance a character */
+		_checkreturn(res, padvance(p));
+	} while (issubsequent(p->current));
+
+	/* create the symbol */
+	sym = eusymbol_new(p->s, buf);
+	if (sym == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	out->type = EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE;
+	out->value.object = _eusymbol_to_obj(sym);
+
+	_checkreturn(res, gbuf_terminate(p, &buf));
+
+	return EU_RESULT_OK;
+}
+
+/* reads a <symbol> */
+eu_result pread_symbol(parser* p, eu_value* out) {
+
+	if (isvline(p->current)) { /* vertical line symbols */
+		return pread_vline_symbol(p, out);
+	} else if (isinitial(p->current) ||
+		(issign(p->current) && isdelimiter(p->peek)) ||
+		(issign(p->current) && issignsubsequent(p->peek)) ||
+		(issign(p->current) && isdot(p->peek)) ||
+		(isdot(p->current) && isdotsubsequent(p->peek))) {
+		return pread_insub_symbol(p, out);
+	} else {
+		seterrorf(p, "Parser in inconsistent state. Tried to read an identifier"
+			" and got '%c'.", (char)p->current);
+		return EU_RESULT_ERROR;
+	}
 
 	return EU_RESULT_OK;
 }
@@ -922,10 +1046,14 @@ eu_result parser_read(parser* p, eu_value* out) {
 	if (p->current == CHASH) {
 		return pread_hash(p, out);
 	} else if (isdecimaldigit(p->current) ||
-		(issign(p->current) && isdecimaldigit(p->peek))) {
+		(issign(p->current) && isdecimaldigit(p->peek)) ||
+		(isdot(p->current) && isdecimaldigit(p->peek))) {
 		return pread_number(p, out);
 	} else if (p->current == CDQUOT) {
 		return pread_string(p, out);
+	} else if (isidentifier(p->current) ||
+		(isdot(p->current) && isdotsubsequent(p->peek))) {
+		return pread_symbol(p, out);
 	}
 
 	return EU_RESULT_OK;

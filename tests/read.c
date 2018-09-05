@@ -14,6 +14,7 @@
 #include "eu_number.h"
 #include "europa.h"
 #include "eu_port.h"
+#include "eu_symbol.h"
 #include "ports/eu_mport.h"
 #include "ports/eu_fport.h"
 
@@ -316,6 +317,63 @@ MunitResult test_read_string(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_symbol(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"simple-symbol |vertical-line-\\x53;\\x79;mbol-with-\\nnewline| "
+		"- -@sign -.. .s ...");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"simple-symbol");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"vertical-line-Symbol-with-\nnewline");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"-");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"-@sign");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"-..");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		".s");
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		"...");
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		BIG_STRING);
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(out.value.object)),
+		BIG_STRING);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
 		"/boolean",
@@ -368,6 +426,14 @@ MunitTest readtests[] = {
 	{
 		"/string",
 		test_read_string,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/symbol",
+		test_read_symbol,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

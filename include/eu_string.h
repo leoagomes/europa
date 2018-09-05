@@ -43,7 +43,7 @@ struct europa_string {
 
 /* function declarations */
 
-eu_string* eustring_new(europa* gc, void* text);
+eu_string* eustring_new(europa* s, void* text);
 eu_string* eustring_withsize(europa* s, size_t textsize);
 
 void* eustring_text(eu_string* str);
