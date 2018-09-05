@@ -8,6 +8,7 @@
 #include "eu_character.h"
 #include "eu_util.h"
 #include "eu_symbol.h"
+#include "eu_pair.h"
 
 #include "utf8.h"
 
@@ -132,7 +133,7 @@ struct parser {
 	} while(0)
 
 /* some needed prototypes */
-eu_result parser_read(parser* p, eu_value* out);
+eu_result pread_datum(parser* p, eu_value* out);
 eu_result pskip_itspace(parser* p);
 
 
@@ -741,7 +742,7 @@ eu_result pskip_datumcomment(parser* p) {
 
 	/* read a datum that will be ignored */
 	/* TODO: create a function that skips datum instead of just ignoring it */
-	_checkreturn(res, parser_read(p, &out));
+	_checkreturn(res, pread_datum(p, &out));
 
 	return EU_RESULT_OK;
 }
@@ -1033,8 +1034,115 @@ eu_result pread_symbol(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
+/* reads a <list>
+ * <list> := ( <datum>* )
+ *         | ( <datum>+ . <datum> )
+ */
+eu_result pread_list(parser* p, eu_value* out) {
+	eu_result res;
+	int has_datum = 0;
+	int has_dot = 0;
+	eu_pair *pair, *nextpair;
+	eu_value *slot;
+
+	/* consume left parenthesis */
+	_checkreturn(res, padvance(p));
+
+	/* skip whitespaces and check if the list is empty */
+	_checkreturn(res, pskip_itspace(p));
+	if (isrpar(p->current)) {
+		*out = _null;
+		return EU_RESULT_OK;
+	}
+
+	/* setup the first pair */
+	pair = eupair_new(p->s, &_null, &_null);
+	slot = _eupair_head(pair);
+
+	/* place the first pair in out */
+	_eu_makepair(out, pair);
+
+	while (!isrpar(p->current) && !iseof(p->current)) {
+		/* check for dotted pair */
+		if (isdot(p->current) && isitspace(p->peek)) {
+			if (!has_datum) {
+				seterror(p, "Invalid dot found in list. There must be at least"
+					" one <datum> before a dot.");
+				return EU_RESULT_ERROR;
+			}
+			if (has_dot) {
+				seterror(p, "Only a single dot is permitted in a dotted list.");
+				return EU_RESULT_ERROR;
+			}
+
+			/* mark dotted pair */
+			has_dot = 1;
+
+			/* setup the slot for the next value */
+			slot = _eupair_tail(pair);
+
+			/* consume the dot, skip spaces and restart the loop */
+			_checkreturn(res, padvance(p));
+			_checkreturn(res, pskip_itspace(p));
+			continue;
+		}
+
+		/* try reading a datum */
+		_checkreturn(res, pread_datum(p, slot));
+		has_datum = 1;
+
+		if (has_dot) {
+			/* only one last datum is allowed after a dot, so we need to 
+			 * terminate the list here. */
+			/* we skip whitespaces in order to make sure that if this list is
+			 * valid, p->current after the end of the loop is a closing par */
+			_checkreturn(res, pskip_itspace(p));
+			break;
+		}
+
+		/* skip intertoken spaces in order to check if we are at end of list */
+		_checkreturn(res, pskip_itspace(p));
+
+		/* if this is not the end of the list, we need to allocate a new pair
+		 * to hold the next element in it head and place it in the current pair's
+		 * tail */
+		if (!isrpar(p->current) && !isdot(p->current)) {
+			/* allocate the next pair */
+			nextpair = eupair_new(p->s, &_null, &_null);
+			if (nextpair == NULL)
+				return EU_RESULT_BAD_ALLOC;
+			/* place the next pair in the last pair's tail */
+			_eu_makepair(_eupair_tail(pair), nextpair);
+			/* set the next slot */
+			slot = _eupair_head(nextpair);
+			/* update pairs */
+			pair = nextpair;
+		}
+	}
+
+	if (!isrpar(p->current)) { /* incomplete or incorrect list */
+		if (iseof(p->current)) { /* incomplete */
+			seterror(p, "Unexpected incomplete list. Expected a datum, got EOF.");
+			return EU_RESULT_ERROR;
+		}
+
+		if (has_dot) { /* erroneous dot */
+			seterror(p, "Expected end of dotted list, but found something else."
+				" Do you have more than one <datum> after a dot?");
+			return EU_RESULT_ERROR;
+		}
+
+		/* inconsistent */
+		seterrorf(p, "Expected end of list (')'), but got character '%c'.",
+			(char)p->current);
+		return EU_RESULT_ERROR;
+	}
+
+	return EU_RESULT_OK;
+}
+
 /* this reads a <datum> */
-eu_result parser_read(parser* p, eu_value* out) {
+eu_result pread_datum(parser* p, eu_value* out) {
 	eu_result res;
 
 	/* check and skip inter token spaces (aka <atmosphere>) */
@@ -1054,6 +1162,8 @@ eu_result parser_read(parser* p, eu_value* out) {
 	} else if (isidentifier(p->current) ||
 		(isdot(p->current) && isdotsubsequent(p->peek))) {
 		return pread_symbol(p, out);
+	} else if (islpar(p->current)) {
+		return pread_list(p, out);
 	}
 
 	return EU_RESULT_OK;
@@ -1068,7 +1178,7 @@ eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
 
 	parser_init(&p, s, port);
 	_checkreturn(res, padvance(&p));
-	if ((res = parser_read(&p, out))) {
+	if ((res = pread_datum(&p, out))) {
 		out->type = EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE;
 		out->value.object = _euerror_to_obj(p.error);
 		return res;

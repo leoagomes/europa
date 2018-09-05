@@ -374,6 +374,21 @@ MunitResult test_read_symbol(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_list(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"() (.-a) (a b c) (a b . c)");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_NULL);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
 		"/boolean",
@@ -434,6 +449,14 @@ MunitTest readtests[] = {
 	{
 		"/symbol",
 		test_read_symbol,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/list",
+		test_read_list,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

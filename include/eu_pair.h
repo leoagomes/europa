@@ -35,6 +35,15 @@ struct europa_pair {
 	.type = (p == NULL ? EU_TYPE_NULL : EU_TYPE_PAIR), \
 	.value = { .object = (p) }}
 
+#define _eupair_head(p) (&(p->head))
+#define _eupair_tail(p) (&(p->tail))
+
+#define _eu_makepair(vptr, p) do {\
+		eu_pair* pair = (p); \
+		(vptr)->type = (pair == NULL) ? EU_TYPE_NULL : EU_TYPE_PAIR | \
+			EU_TYPEFLAG_COLLECTABLE; \
+		(vptr)->value.object = _eupair_to_obj(pair); \
+	} while (0)
 
 /* cell related functions */
 eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail);
