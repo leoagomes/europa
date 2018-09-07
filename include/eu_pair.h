@@ -25,11 +25,11 @@ struct europa_pair {
 /** converts a gcobj* to a pair* */
 #define _euobj_to_pair(obj) cast(eu_pair*, (obj))
 /** converts a pair* to a gcobj* */
-#define _eupair_to_obj(pair) cast(eu_gcobj*, (pair))
+#define _eupair_to_obj(p) cast(eu_gcobj*, (p))
 
 /* type conversions to/from eu_value */
 /** gets a pair* from a value* */
-#define _euvalue_to_pair(v) cast(eu_pair*, (v)->value.gcobj)
+#define _euvalue_to_pair(v) cast(eu_pair*, (v)->value.object)
 /** returns a value initialization for a cell */
 #define _eupair_to_value(p) { \
 	.type = (p == NULL ? EU_TYPE_NULL : EU_TYPE_PAIR), \
@@ -39,10 +39,10 @@ struct europa_pair {
 #define _eupair_tail(p) (&(p->tail))
 
 #define _eu_makepair(vptr, p) do {\
-		eu_pair* pair = (p); \
-		(vptr)->type = (pair == NULL) ? EU_TYPE_NULL : EU_TYPE_PAIR | \
+		eu_pair* __PAIR__ = (p); \
+		(vptr)->type = (__PAIR__ == NULL) ? EU_TYPE_NULL : EU_TYPE_PAIR | \
 			EU_TYPEFLAG_COLLECTABLE; \
-		(vptr)->value.object = _eupair_to_obj(pair); \
+		(vptr)->value.object = _eupair_to_obj(__PAIR__); \
 	} while (0)
 
 /* cell related functions */

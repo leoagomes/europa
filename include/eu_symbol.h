@@ -13,10 +13,7 @@ typedef struct europa_symbol eu_symbol;
 /** symbol structure */
 struct europa_symbol {
 	EU_OBJ_COMMON_HEADER;
-
 	eu_integer hash;
-	void* text;
-
 	char _text;
 };
 

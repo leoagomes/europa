@@ -211,6 +211,48 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 	return EU_RESULT_OK;
 }
 
+eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
+	size_t* remaining, eu_byte c) {
+	eu_byte *bbuf, *bnext;
+
+	bbuf = *buf;
+	bnext = *next;
+
+	if (remaining == 0) {
+		if (*buf == p->buf) {
+			/* we need to allocate a new buffer on the heap a bit larger than
+			 * the auxilary buffer. */
+			bbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			if (bbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+
+			/* copy the contents of the aux buffer into the newly allocated 
+			 * buffer */
+			memcpy(bbuf, p->buf, AUX_BUFFER_SIZE);
+		} else {
+			/* the buffer currently lives in the heap, so we just need to grow it */
+			bbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			if (bbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+		}
+
+		/* update the effective values */
+		*buf = bbuf;
+		bnext = bbuf + *size;
+		*next = bnext;
+
+		/* update the remainig space in the buffer and its size */
+		*size += GBUF_GROWTH_RATE;
+		*remaining += GBUF_GROWTH_RATE;
+	}
+
+	*bnext = c;
+	bnext++;
+	(*remaining) -= 1;
+
+	return EU_RESULT_OK;
+}
+
 eu_result gbuf_terminate(parser* p, void** buf) {
 	if (p->buf != *buf) {
 		eugc_free(_eu_get_gc(p->s), *buf);
@@ -637,6 +679,48 @@ eu_result pread_character(parser* p, eu_value* out) {
 	}
 }
 
+eu_result pread_bytevector(parser* p, eu_value* out) {
+	eu_result res;
+	eu_integer vsize;
+	eu_value temp;
+	void *buf, *next;
+	size_t size, remaining;
+
+	_checkreturn(res, pmatch(p, 'u'));
+	_checkreturn(res, padvance(p));
+	_checkreturn(res, pmatch(p, CLPAR));
+	_checkreturn(res, padvance(p));
+
+	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
+	remaining = size;
+
+	while (p->current != CRPAR && !iseof(p->current)) {
+		/* skip any intertoken space */
+		_checkreturn(res, pskip_itspace(p));
+
+		if (!(isdecimaldigit(p->current) ||
+			(issign(p->current) && isdecimaldigit(p->peek)) ||
+			(isdot(p->current) && isdecimaldigit(p->peek)))) {
+			seterrorf(p, "Expected a number literal but got character sequence "
+				"'%c%c'.", (char)p->current, (char)p->peek);
+			return EU_RESULT_ERROR;
+		}
+
+		/* read a number */
+		_checkreturn(res, pread_number(p, &temp));
+
+		if (temp.type & EU_NUMBER_REAL ||
+			temp.value.i >= 256 || temp.value.i < 0) {
+			seterror(p, "Bytevector values need to be an integer between 0 and "
+				"255.");
+			return EU_RESULT_ERROR;
+		}
+
+	}
+
+	return EU_RESULT_OK;
+}
+
 /* reads a token that begins with a '#', those can be booleans (#t), numbers
  * (#e#x1F), characters, vectors (#(a b c)), bytevectors (#u8(a b c)) */
 eu_result pread_hash(parser* p, eu_value* out) {
@@ -651,6 +735,10 @@ eu_result pread_hash(parser* p, eu_value* out) {
 		return pread_number(p, out);
 	else if (p->peek == CBSLASH)
 		return pread_character(p, out);
+	else if (p->peek == 'u')
+		return pread_bytevector(p, out);
+	else if (p->peek == CLPAR)
+		return pread_vector(p, out);
 
 	seterror(p, "Expected a boolean, number, ..., but nothing matched.");
 	return EU_RESULT_ERROR;
@@ -1057,10 +1145,13 @@ eu_result pread_list(parser* p, eu_value* out) {
 
 	/* setup the first pair */
 	pair = eupair_new(p->s, &_null, &_null);
+	if (pair == NULL)
+		return EU_RESULT_BAD_ALLOC;
 	slot = _eupair_head(pair);
 
 	/* place the first pair in out */
-	_eu_makepair(out, pair);
+	out->type = EU_TYPEFLAG_COLLECTABLE | EU_TYPE_PAIR;
+	out->value.object = _eupair_to_obj(pair);
 
 	while (!isrpar(p->current) && !iseof(p->current)) {
 		/* check for dotted pair */
@@ -1112,7 +1203,8 @@ eu_result pread_list(parser* p, eu_value* out) {
 			if (nextpair == NULL)
 				return EU_RESULT_BAD_ALLOC;
 			/* place the next pair in the last pair's tail */
-			_eu_makepair(_eupair_tail(pair), nextpair);
+			_eupair_tail(pair)->type = EU_TYPEFLAG_COLLECTABLE | EU_TYPE_PAIR;
+			_eupair_tail(pair)->value.object = _eupair_to_obj(nextpair);
 			/* set the next slot */
 			slot = _eupair_head(nextpair);
 			/* update pairs */

@@ -15,6 +15,7 @@
 #include "europa.h"
 #include "eu_port.h"
 #include "eu_symbol.h"
+#include "eu_pair.h"
 #include "ports/eu_mport.h"
 #include "ports/eu_fport.h"
 
@@ -377,14 +378,88 @@ MunitResult test_read_symbol(MunitParameter params[], void* fixture) {
 MunitResult test_read_list(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
+	eu_value* v;
+	eu_pair* pair;
 	eu_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
-		"() (.-a) (a b c) (a b . c)");
+		"() (.-a) (a 8 #t) (#\\A -123.45 . #b1010)");
 	munit_assert_not_null(port);
 
+	// ()
 	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
 	munit_assert_int(out.type, ==, EU_TYPE_NULL);
+
+	// (.-a)
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_PAIR | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_not_null(out.value.object);
+	pair = _euobj_to_pair(out.value.object);
+	v = _eupair_head(pair);
+
+	munit_assert_int(v->type, ==, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_not_null(v->value.object);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(v->value.object)),
+		".-a");
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, ==, EU_TYPE_NULL);
+
+	// (a b c)
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_PAIR | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_not_null(out.value.object);
+	pair = _euobj_to_pair(out.value.object);
+
+	v = _eupair_head(pair);
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_not_null(v->value.object);
+	munit_assert_string_equal(eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"a");
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	munit_assert_not_null(v->value.object);
+	pair = _euobj_to_pair(v->value.object);
+
+	v = _eupair_head(pair);
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.i, ==, 8);
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	munit_assert_not_null(v->value.object);
+	pair = _euobj_to_pair(v->value.object);
+
+	v = _eupair_head(pair);
+	munit_assert_int(v->type, &, EU_TYPE_BOOLEAN);
+	munit_assert_int(v->value.boolean, ==, EU_TRUE);
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, ==, EU_TYPE_NULL);
+
+	// (#\A -123.45 . #b1010)
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, ==, EU_TYPE_PAIR | EU_TYPEFLAG_COLLECTABLE);
+	munit_assert_not_null(out.value.object);
+	pair = _euobj_to_pair(out.value.object);
+
+	v = _eupair_head(pair);
+	munit_assert_int(v->type, ==, EU_TYPE_CHARACTER);
+	munit_assert_int(v->value.character, ==, 'A');
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	munit_assert_not_null(v->value.object);
+	pair = _euobj_to_pair(v->value.object);
+
+	v = _eupair_head(pair);
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.r, ==, -123.45);
+
+	v = _eupair_tail(pair);
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.i, ==, 10);
 
 	return MUNIT_OK;
 }
