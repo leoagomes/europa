@@ -9,6 +9,7 @@
 #include "eu_util.h"
 #include "eu_symbol.h"
 #include "eu_pair.h"
+#include "eu_bytevector.h"
 
 #include "utf8.h"
 
@@ -685,19 +686,26 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 	eu_value temp;
 	void *buf, *next;
 	size_t size, remaining;
+	eu_bvector* vec;
 
+	/* match the '#u8(' */
 	_checkreturn(res, pmatch(p, 'u'));
+	_checkreturn(res, padvance(p));
+	_checkreturn(res, pmatch(p, '8'));
 	_checkreturn(res, padvance(p));
 	_checkreturn(res, pmatch(p, CLPAR));
 	_checkreturn(res, padvance(p));
 
+	/* initialize auxilary buffer */
 	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
 	remaining = size;
 
+	/* read bytevector elements */
 	while (p->current != CRPAR && !iseof(p->current)) {
 		/* skip any intertoken space */
 		_checkreturn(res, pskip_itspace(p));
 
+		/* assert that the next token is a number */
 		if (!(isdecimaldigit(p->current) ||
 			(issign(p->current) && isdecimaldigit(p->peek)) ||
 			(isdot(p->current) && isdecimaldigit(p->peek)))) {
@@ -709,6 +717,7 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 		/* read a number */
 		_checkreturn(res, pread_number(p, &temp));
 
+		/* assert the number is a valid byte (exact and in [0,256[) */
 		if (temp.type & EU_NUMBER_REAL ||
 			temp.value.i >= 256 || temp.value.i < 0) {
 			seterror(p, "Bytevector values need to be an integer between 0 and "
@@ -716,7 +725,21 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 			return EU_RESULT_ERROR;
 		}
 
+		/* append the byte to the buffer */
+		_checkreturn(res, gbuf_append_byte(p, &buf, &next, &size, &remaining,
+			temp.value.i));
 	}
+
+	/* turn the buf into a bytevector */
+	vec = eubvector_new(p->s, size - remaining, cast(eu_byte*, buf));
+	if (vec == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	/* set the return value */
+	_eu_makebvector(out, vec);
+
+	/* terminate the buffer */
+	_checkreturn(res, gbuf_terminate(p, &buf));
 
 	return EU_RESULT_OK;
 }

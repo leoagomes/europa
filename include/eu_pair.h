@@ -51,7 +51,7 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail);
 eu_result eupair_mark(eu_gc* gc, eu_gcmark mark, eu_pair* pair);
 eu_result eupair_destroy(eu_gc* gc, eu_pair* pair);
 
-eu_integer eupair_hash(europa* s, eu_pair* pair);
+eu_integer eupair_hash(eu_pair* pair);
 
 /* the language API */
 
