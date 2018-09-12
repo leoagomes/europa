@@ -10,6 +10,7 @@
 #include "eu_symbol.h"
 #include "eu_pair.h"
 #include "eu_bytevector.h"
+#include "eu_vector.h"
 
 #include "utf8.h"
 
@@ -251,6 +252,59 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 	bnext++;
 	*next = bnext;
 	(*remaining) -= 1;
+
+	return EU_RESULT_OK;
+}
+
+/* TODO: this code can be improved.
+ * at the moment whenever a value is appended to the buffer it is copied twice
+ * once to a temporary value and then to the buffer.
+ * 
+ * if instead of using the function to append a value to the buffer we append it
+ * directly by passing next to the read function, we will save one copy.
+ * to do that, we need to use the append_value function instead as a "check that
+ * next is valid, if not do whatever you need and give me a valid next" helper.
+ * 
+ */
+eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
+	size_t* remaining, eu_value* val) {
+	eu_value *vbuf, *vnext;
+
+	vbuf = *buf;
+	vnext = *next;
+
+	if (*remaining < sizeof(eu_value)) {
+		if (*buf == p->buf) {
+			/* we need to allocate a new buffer on the heap a bit larger than
+			 * the auxilary buffer. */
+			vbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			if (vbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+
+			/* copy the contents of the aux buffer into the newly allocated 
+			 * buffer */
+			memcpy(vbuf, p->buf, AUX_BUFFER_SIZE);
+		} else {
+			/* the buffer currently lives in the heap, so we just need to grow it */
+			vbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			if (vbuf == NULL)
+				return EU_RESULT_BAD_ALLOC;
+		}
+
+		/* update the effective values */
+		*buf = vbuf;
+		vnext = vbuf + *size;
+		*next = vnext;
+
+		/* update the remainig space in the buffer and its size */
+		*size += GBUF_GROWTH_RATE;
+		*remaining += GBUF_GROWTH_RATE;
+	}
+
+	*vnext = *val;
+	vnext++;
+	*next = vnext;
+	(*remaining) -= sizeof(eu_value);
 
 	return EU_RESULT_OK;
 }
@@ -743,9 +797,39 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 
 eu_result pread_vector(parser* p, eu_value* out) {
 	eu_result res;
+	eu_value temp;
+	void *buf, *next;
+	size_t size, remaining;
+	eu_vector* vec;
+	eu_integer count = 0;
 
+	/* match '#(' */
 	_checkreturn(res, pmatchstring(p, "#("));
 
+	/* initialize buffer variables */
+	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
+	remaining = size;
+
+	while (p->current != CRPAR && !iseof(p->current)) {
+		/* skip intertoken space */
+		_checkreturn(res, pskip_itspace(p));
+
+		/* read a <datum> element */
+		_checkreturn(res, pread_datum(p, &temp));
+
+		/* append it to the buffer */
+		_checkreturn(res, gbuf_append_value(p, &buf, &next, &size, &remaining,
+			&temp));
+		count++;
+	}
+
+	/* make the vector */
+	vec = euvector_new(p->s, cast(eu_value*, buf), count);
+	/* set the return to it */
+	_eu_makevector(out, vec);
+
+	/* release the buffer */
+	_checkreturn(res, gbuf_terminate(p, &buf));
 
 	return EU_RESULT_OK;
 }

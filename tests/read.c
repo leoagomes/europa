@@ -17,6 +17,7 @@
 #include "eu_symbol.h"
 #include "eu_pair.h"
 #include "eu_bytevector.h"
+#include "eu_vector.h"
 #include "ports/eu_mport.h"
 #include "ports/eu_fport.h"
 
@@ -487,6 +488,30 @@ MunitResult test_read_bytevector(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_vector(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_mport* port;
+	eu_value out;
+	eu_vector* vec;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"#(#b00 #xA 12 3)");
+	munit_assert_not_null(port);
+
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, &, EU_TYPE_VECTOR);
+	munit_assert_not_null(out.value.object);
+
+	vec = _euobj_to_vector(out.value.object);
+	munit_assert_int(_euvector_ref(vec, 0).type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(_euvector_ref(vec, 0).value.i, ==, 0);
+	munit_assert_int(_euvector_ref(vec, 1).type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(_euvector_ref(vec, 1).value.i, ==, 10);
+	munit_assert_int(_euvector_ref(vec, 2).type, ==, EU_TYPE_NUMBER);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
 		"/boolean",
@@ -563,6 +588,14 @@ MunitTest readtests[] = {
 	{
 		"/bytevector",
 		test_read_bytevector,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL
+	},
+	{
+		"/vector",
+		test_read_vector,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,

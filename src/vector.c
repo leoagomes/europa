@@ -1,5 +1,7 @@
 #include "eu_vector.h"
 
+#include <string.h>
+
 /* Vectors:
  * 
  * Like symbols and strings, vectors store their "content" along the same memory
@@ -13,7 +15,7 @@
  * @param s The Europa state.
  * @param length The number of values the vector can house.
  */
-eu_vector* euvector_new(europa* s, eu_integer length) {
+eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
 	eu_vector* vec;
 
 	if(s == NULL || length < 0)
@@ -26,6 +28,10 @@ eu_vector* euvector_new(europa* s, eu_integer length) {
 		return NULL;
 
 	vec->length = length;
+
+	if (data != NULL) {
+		memcpy(_euvector_values(vec), data, length * sizeof(eu_value));
+	}
 
 	return vec;
 }
