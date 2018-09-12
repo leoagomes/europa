@@ -8,7 +8,7 @@
  * be set!.
  */
 
-/** Creates allocates a new vector object.
+/** Creates a new vector object.
  * 
  * @param s The Europa state.
  * @param length The number of values the vector can house.

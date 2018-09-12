@@ -2,14 +2,14 @@
 
 #include <string.h>
 
-eu_bvector* eubvector_new(europa* s, size_t length, eu_byte* data) {
+eu_bvector* eubvector_new(europa* s, eu_integer length, eu_byte* data) {
 	eu_bvector* vec;
 
 	if (!s || !data || length <= 0)
 		return NULL;
 
-	vec = eugc_new_object(_eu_get_gc(s), EU_TYPE_BYTEVECTOR |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_bvector) + length);
+	vec = _euobj_to_bvector(eugc_new_object(_eu_get_gc(s), EU_TYPE_BYTEVECTOR |
+		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_bvector) + length));
 	if (vec == NULL)
 		return NULL;
 

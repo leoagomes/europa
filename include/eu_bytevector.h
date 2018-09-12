@@ -11,7 +11,7 @@ typedef struct europa_bytevector eu_bvector;
 struct europa_bytevector {
 	EU_OBJ_COMMON_HEADER;
 
-	size_t length;
+	eu_integer length;
 	eu_byte _data;
 };
 
@@ -30,10 +30,12 @@ struct europa_bytevector {
 
 #define _eubvector_data(v) (&((v)->_data))
 #define _eubvector_length(v) ((v)->length)
+#define _eubvector_ref(v, i) ((&((v)->_data))[(i)])
+#define _eubvector_set(v, i, value) ((&((v)->_data))[(i)] = (value))
 
 /* function declarations */
 
-eu_bvector* eubvector_new(europa* s, size_t length, eu_byte* data);
+eu_bvector* eubvector_new(europa* s, eu_integer length, eu_byte* data);
 
 void* eubvector_text(eu_bvector* vec);
 eu_integer eubvector_hash(eu_bvector* vec);

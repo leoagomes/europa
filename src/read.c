@@ -249,6 +249,7 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 
 	*bnext = c;
 	bnext++;
+	*next = bnext;
 	(*remaining) -= 1;
 
 	return EU_RESULT_OK;
@@ -689,12 +690,7 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 	eu_bvector* vec;
 
 	/* match the '#u8(' */
-	_checkreturn(res, pmatch(p, 'u'));
-	_checkreturn(res, padvance(p));
-	_checkreturn(res, pmatch(p, '8'));
-	_checkreturn(res, padvance(p));
-	_checkreturn(res, pmatch(p, CLPAR));
-	_checkreturn(res, padvance(p));
+	_checkreturn(res, pmatchstringcase(p, "#u8("));
 
 	/* initialize auxilary buffer */
 	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
@@ -708,7 +704,8 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 		/* assert that the next token is a number */
 		if (!(isdecimaldigit(p->current) ||
 			(issign(p->current) && isdecimaldigit(p->peek)) ||
-			(isdot(p->current) && isdecimaldigit(p->peek)))) {
+			(isdot(p->current) && isdecimaldigit(p->peek)) ||
+			(p->current == CHASH && (isexactness(p->peek) || isradix(p->peek))))) {
 			seterrorf(p, "Expected a number literal but got character sequence "
 				"'%c%c'.", (char)p->current, (char)p->peek);
 			return EU_RESULT_ERROR;
@@ -740,6 +737,15 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 
 	/* terminate the buffer */
 	_checkreturn(res, gbuf_terminate(p, &buf));
+
+	return EU_RESULT_OK;
+}
+
+eu_result pread_vector(parser* p, eu_value* out) {
+	eu_result res;
+
+	_checkreturn(res, pmatchstring(p, "#("));
+
 
 	return EU_RESULT_OK;
 }
