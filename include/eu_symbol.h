@@ -27,6 +27,11 @@ struct europa_symbol {
 	.type = EU_TYPE_SYMBOL, \
 	.value = { .object = (s) }}
 
+#define _eu_makesym(vptr, sym) do {\
+		(vptr)->type = EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE;\
+		(vptr)->value.object = _eusymbol_to_obj(sym);\
+	} while (0)
+
 /* member access macros */
 #define _eusymbol_text(sym) (&((sym)->_text))
 #define _eusymbol_hash(sym) ((sym)->hash)

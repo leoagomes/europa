@@ -63,6 +63,8 @@
 #define CHAT '^'
 #define CUNDERSC '_'
 #define CTILDE '~'
+#define CGRAVE '`'
+#define CCOMMA ','
 
 #define iseof(c) ((c) == EOF)
 #define isverticalline(c) ((c) == CVLINE)
@@ -103,6 +105,7 @@
 	isspecialsubsequent(c))
 #define isdotsubsequent(c) (issubsequent(c) || isdot(c))
 #define issignsubsequent(c) (isinitial(c) || isexplicitsign(c) || (c) == CAT)
+#define isabbrevprefix(c) ((c) == CSQUOT || (c) == CGRAVE || (c) == CCOMMA)
 
 typedef struct parser parser;
 struct parser {
@@ -111,6 +114,8 @@ struct parser {
 	eu_error* error;
 	int current, peek, line, col;
 	char buf[AUX_BUFFER_SIZE];
+
+	eu_symbol *quote, *quasiquote, *unquote, *unqspl;
 };
 
 /* some helper macros */
@@ -133,6 +138,20 @@ struct parser {
 		snprintf(p->buf, AUX_BUFFER_SIZE, "%d:%d: " fmt, p->line, p->col);\
 		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf);\
 	} while(0)
+
+#define testmake(p, name) ((p)->name != NULL ? (p)->name : pmake##name(p))
+
+#define pquote(p) testmake(p, quote)
+#define punquote(p) testmake(p, unquote)
+#define pquasiquote(p) testmake(p, quasiquote)
+#define punqspl(p) testmake(p, unqspl)
+
+#define MAKESYMBOL(name, text)\
+eu_symbol* pmake##name (parser* p) {\
+	p->name = eusymbol_new(p->s, text);\
+	return p->name;\
+}
+#define MAKENSYMBOL(name) MAKESYMBOL(name, #name)
 
 /* some needed prototypes */
 eu_result pread_datum(parser* p, eu_value* out);
@@ -325,8 +344,19 @@ eu_result parser_init(parser* p, europa* s, eu_port* port) {
 	p->current = EOF;
 	p->line = p->col = 0;
 	p->error = NULL;
+
+	p->quote = NULL;
+	p->unquote = NULL;
+	p->unqspl = NULL;
+	p->quasiquote = NULL;
+
 	return euport_peek_char(s, port, &(p->peek));
 }
+
+MAKENSYMBOL(quote)
+MAKENSYMBOL(unquote)
+MAKENSYMBOL(quasiquote)
+MAKESYMBOL(unqspl, "unquote-splicing")
 
 /* consumes a character from the parser port */
 eu_result pconsume(parser* p) {
@@ -1346,6 +1376,53 @@ eu_result pread_list(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
+eu_result pread_abbreviation(parser* p, eu_value* out) {
+	eu_result res;
+	eu_symbol* sym;
+	eu_pair* pair;
+	eu_value* slot;
+
+	/* make sure the state is consistent */
+	if (!isabbrevprefix(p->current)) {
+		seterror(p, "Parser in inconsistent state. Tried reading an invalid "
+			"abbreviation.");
+		return EU_ERROR_NONE;
+	}
+
+	/* create a new pair for the abbreviation symbol */
+	pair = eupair_new(p->s, &_null, &_null);
+	if (pair == NULL)
+		return EU_RESULT_BAD_ALLOC;
+	/* place it on the output */
+	_eu_makepair(out, pair);
+
+	/* read the abbreviation */
+	if (p->current == CSQUOT) {
+		sym = pquote(p);
+	} else if (p->current == CCOMMA) {
+		sym = punquote(p);
+		if (p->peek == CAT) {
+			sym = punqspl(p);
+			padvance(p);
+		}
+	} else if (p->current == CGRAVE) {
+		sym = pquasiquote(p);
+	}
+	/* consume abbrev prefix character */
+	_checkreturn(res, padvance(p));
+
+	/* place correct symbol in pair's head and a new pair in tail */
+	_eu_makesym(_eupair_head(pair), sym);
+	_eu_makepair(_eupair_tail(pair), eupair_new(p->s, &_null, &_null));
+	pair = _euobj_to_pair(_eupair_tail(pair)->value.object);
+	if (pair == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	/* read the next datum into the new pair's head */
+	_checkreturn(res, pread_datum(p, _eupair_head(pair)));
+	return EU_RESULT_OK;
+}
+
 /* this reads a <datum> */
 eu_result pread_datum(parser* p, eu_value* out) {
 	eu_result res;
@@ -1369,6 +1446,8 @@ eu_result pread_datum(parser* p, eu_value* out) {
 		return pread_symbol(p, out);
 	} else if (islpar(p->current)) {
 		return pread_list(p, out);
+	} else if (isabbrevprefix(p->current)) {
+		return pread_abbreviation(p, out);
 	}
 
 	return EU_RESULT_OK;

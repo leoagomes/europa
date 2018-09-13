@@ -512,6 +512,97 @@ MunitResult test_read_vector(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult test_read_abbreviation(MunitParameter params[], void* fixture) {
+	europa* s = (europa*)fixture;
+	eu_value out, *v, *u;
+	eu_mport* port;
+
+	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
+		"'123 '() `,123 `,@123");
+	munit_assert_not_null(port);
+
+	// '123
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, &, EU_TYPE_PAIR);
+
+	v = _eupair_head(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"quote");
+
+	v = _eupair_tail(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.i, ==, 123);
+
+	// '()
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, &, EU_TYPE_PAIR);
+
+	v = _eupair_head(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"quote");
+
+	v = _eupair_tail(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, ==, EU_TYPE_NULL);
+
+	// `,123
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, &, EU_TYPE_PAIR);
+
+	v = _eupair_head(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"quasiquote");
+
+	v = _eupair_tail(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	u = v;
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"unquote");
+	v = _eupair_tail(_euobj_to_pair(u->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	munit_assert_not_null(v->value.object);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.i, ==, 123);
+
+	// `,@123
+	munit_assert_int(euport_read(s, port, &out), ==, EU_RESULT_OK);
+	munit_assert_int(out.type, &, EU_TYPE_PAIR);
+
+	v = _eupair_head(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"quasiquote");
+
+	v = _eupair_tail(_euobj_to_pair(out.value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	u = v;
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_SYMBOL);
+	munit_assert_string_equal(_eusymbol_text(_euobj_to_symbol(v->value.object)),
+		"unquote-splicing");
+	v = _eupair_tail(_euobj_to_pair(u->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_PAIR);
+	munit_assert_not_null(v->value.object);
+	v = _eupair_head(_euobj_to_pair(v->value.object));
+	munit_assert_int(v->type, &, EU_TYPE_NUMBER);
+	munit_assert_int(v->value.i, ==, 123);
+
+	return MUNIT_OK;
+}
+
 MunitTest readtests[] = {
 	{
 		"/boolean",
@@ -596,6 +687,14 @@ MunitTest readtests[] = {
 	{
 		"/vector",
 		test_read_vector,
+		read_setup,
+		read_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL
+	},
+	{
+		"/abbreviation",
+		test_read_abbreviation,
 		read_setup,
 		read_teardown,
 		MUNIT_TEST_OPTION_NONE,
