@@ -32,10 +32,21 @@ struct europa_port {
 	EU_PORT_COMMON_HEADER;
 };
 
+
+#define _euobj_to_port(o) cast(eu_port*, o)
+#define _euport_to_obj(v) cast(eu_gcobj*, v)
+
+#define _euvalue_to_port(v) _euobj_to_port(&((v)->value.object))
+#define _eu_makeport(vptr, v) do {\
+		(vptr)->type = EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE;\
+		(vptr)->value.object = _euport_to_obj(v);\
+	} while (0)
+
+
 /* function declarations */
-eu_result euport_mark(eu_gc* gc, eu_gcmark mark, eu_port* pair);
-eu_result euport_destroy(eu_gc* gc, eu_port* pair);
-eu_integer euport_hash(europa* s, eu_port* pair);
+eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port);
+eu_result euport_destroy(europa* s, eu_port* port);
+eu_integer euport_hash(eu_port* port);
 
 /* internal functions */
 /* input */

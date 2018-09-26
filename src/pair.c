@@ -19,7 +19,7 @@
 eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
 	eu_pair* pair;
 
-	pair = cast(eu_pair*,eugc_new_object(_eu_get_gc(s), EU_TYPE_PAIR |
+	pair = cast(eu_pair*,eugc_new_object(s, EU_TYPE_PAIR |
 		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_pair)));
 	if (pair == NULL)
 		return NULL;
@@ -36,35 +36,24 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
  * @param pair the pair to process.
  * @result the result of running the procedure.
  */
-eu_result eupair_mark(eu_gc* gc, eu_gcmark mark, eu_pair* pair) {
+eu_result eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
 	eu_result res;
 
-	if (gc == NULL || pair == NULL)
+	if (s == NULL || pair == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* try and mark head */
 	if (_euvalue_is_collectable(&(pair->head))) {
-		if ((res = mark(gc, _euvalue_to_obj(&(pair->head)))))
+		if ((res = mark(s, _euvalue_to_obj(&(pair->head)))))
 			return res;
 	}
 
 	/* try and mark tail */
 	if (_euvalue_is_collectable(&(pair->tail))) {
-		if ((res = mark(gc, _euvalue_to_obj(&(pair->tail)))))
+		if ((res = mark(s, _euvalue_to_obj(&(pair->tail)))))
 			return res;
 	}
 
-	return EU_RESULT_OK;
-}
-
-/** Releases any other resources associated to this pair that is not
- * automatically collected.
- * 
- * @param gc the garbage collector structure.
- * @param pair the pair to "destroy".
- * @return the result of the destruction.
- */
-eu_result eupair_destroy(eu_gc* gc, eu_pair* pair) {
 	return EU_RESULT_OK;
 }
 

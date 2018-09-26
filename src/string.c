@@ -26,7 +26,7 @@ eu_string* eustring_new(europa* s, void* text) {
 
 	/* allocate enough memory for text data and structure data */
 	size_t text_size = utf8size(text);
-	str = _euobj_to_string(eugc_new_object(_eu_get_gc(s), EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE,
+	str = _euobj_to_string(eugc_new_object(s, EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_string) + text_size));
 	if (str == NULL)
 		return NULL;
@@ -47,7 +47,7 @@ eu_string* eustring_withsize(europa* s, size_t textsize) {
 	if (s == NULL || textsize <= 0)
 		return NULL;
 
-	str = _euobj_to_string(eugc_new_object(_eu_get_gc(s),
+	str = _euobj_to_string(eugc_new_object(s,
 		EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE, sizeof(eu_string) + textsize));
 	if (str == NULL)
 		return NULL;
@@ -93,4 +93,15 @@ eu_integer eustring_rehash(eu_string* str) {
 		return 0;
 	str->hash = eutil_cstr_hash(_eustring_text(str));
 	return str->hash;
+}
+
+/** Generates a hash for a raw C string as if it was a string object.
+ * 
+ * @param str The C-string to use for hashing.
+ * @return The resulting hash.
+ */
+eu_integer eustring_hash_cstr(const char* str) {
+	if (str == NULL)
+		return 0;
+	return eutil_cstr_hash(str);
 }

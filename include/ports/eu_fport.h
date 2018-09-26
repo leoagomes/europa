@@ -23,10 +23,10 @@ struct europa_fport {
 
 eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename);
 
-eu_result eufport_mark(eu_gc* gc, eu_gcmark mark, eu_fport* port);
-eu_result eufport_destroy(eu_gc* gc, eu_fport* port);
+eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port);
+eu_result eufport_destroy(europa* s, eu_fport* port);
 
-eu_integer eufport_hash(europa* s, eu_fport* port);
+eu_integer eufport_hash(eu_fport* port);
 
 /* internal use functions */
 /* input */

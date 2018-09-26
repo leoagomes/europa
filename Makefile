@@ -12,7 +12,7 @@ EXECUTABLE=europa
 
 CFLAGS=-I$(INCLUDE_DIR) -I$(LIB_INCLUDE) -fpic -pedantic
 
-OBJECTS=error.o fport.o gc.o mport.o object.o pair.o port.o read.o string.o symbol.o util.o vector.o europa.o bytevector.o
+OBJECTS=error.o fport.o gc.o mport.o object.o pair.o port.o read.o string.o symbol.o util.o vector.o europa.o bytevector.o table.o character.o number.o
 
 all: clean $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE)# $(BUILD_DIR)/$(EXECUTABLE)
 

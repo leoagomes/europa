@@ -29,10 +29,10 @@ struct europa_mport {
 
 eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str);
 
-eu_result eumport_mark(eu_gc* gc, eu_gcmark mark, eu_mport* port);
-eu_result eumport_destroy(eu_gc* gc, eu_mport* port);
+eu_result eumport_mark(europa* s, eu_gcmark mark, eu_mport* port);
+eu_result eumport_destroy(europa* s, eu_mport* port);
 
-eu_integer eumport_hash(europa* s, eu_mport* port);
+eu_integer eumport_hash(eu_mport* port);
 
 /* internal use functions */
 /* input */

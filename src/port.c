@@ -3,11 +3,12 @@
 #include "ports/eu_fport.h"
 #include "ports/eu_mport.h"
 
-eu_result euport_mark(eu_gc* gc, eu_gcmark mark, eu_port* port) {
+eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
-			return eufport_mark(gc, mark, _euport_to_fport(port));
+			return eufport_mark(s, mark, _euport_to_fport(port));
 		case EU_PORT_TYPE_MEMORY:
+			return eumport_mark(s, mark, _euport_to_mport(port));
 		case EU_PORT_TYPE_VIRTUAL:
 			// TODO: implement
 		default:
@@ -16,11 +17,12 @@ eu_result euport_mark(eu_gc* gc, eu_gcmark mark, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-eu_result euport_destroy(eu_gc* gc, eu_port* port) {
+eu_result euport_destroy(europa* s, eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
-			return eufport_destroy(gc, _euport_to_fport(port));
+			return eufport_destroy(s, _euport_to_fport(port));
 		case EU_PORT_TYPE_MEMORY:
+			return eumport_destroy(s, _euport_to_mport(port));
 		case EU_PORT_TYPE_VIRTUAL:
 			// TODO: implement
 		default:
@@ -29,11 +31,12 @@ eu_result euport_destroy(eu_gc* gc, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-eu_integer euport_hash(europa* s, eu_port* port) {
+eu_integer euport_hash(eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
-			return eufport_hash(s, _euport_to_fport(port));
+			return eufport_hash(_euport_to_fport(port));
 		case EU_PORT_TYPE_MEMORY:
+			return eumport_hash(_euport_to_mport(port));
 		case EU_PORT_TYPE_VIRTUAL:
 			// TODO: implement
 		default:

@@ -2,6 +2,7 @@
 #define __EUROPA_INTEGER_H__
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef unsigned char eu_byte; /*!< byte type */
 typedef short eu_short; /*!< short (usually 16-bit) type */
@@ -15,7 +16,7 @@ typedef long long eu_integer;
 typedef double eu_real;
 
 /* default boolean true and false values */
-#define EU_TRUE !EU_FALSE /*!< boolean true value */
+#define EU_TRUE 0x01 /*!< boolean true value */
 #define EU_FALSE 0x00 /*!< boolean false value */
 
 typedef int eu_result; /*!< c function result type */

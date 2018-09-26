@@ -198,7 +198,7 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 		if (*buf == p->buf) {
 			/* we need to allocate a new buffer on the heap a bit larger than
 			 * the auxilary buffer. */
-			cbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			cbuf = eugc_malloc(_eu_gc(p->s), *size + GBUF_GROWTH_RATE);
 			if (cbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
@@ -207,7 +207,7 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 			memcpy(cbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
 			/* the buffer currently lives in the heap, so we just need to grow it */
-			cbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			cbuf = eugc_realloc(_eu_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
 			if (cbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 		}
@@ -243,7 +243,7 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 		if (*buf == p->buf) {
 			/* we need to allocate a new buffer on the heap a bit larger than
 			 * the auxilary buffer. */
-			bbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			bbuf = eugc_malloc(_eu_gc(p->s), *size + GBUF_GROWTH_RATE);
 			if (bbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
@@ -252,7 +252,7 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 			memcpy(bbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
 			/* the buffer currently lives in the heap, so we just need to grow it */
-			bbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			bbuf = eugc_realloc(_eu_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
 			if (bbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 		}
@@ -296,7 +296,7 @@ eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 		if (*buf == p->buf) {
 			/* we need to allocate a new buffer on the heap a bit larger than
 			 * the auxilary buffer. */
-			vbuf = eugc_malloc(_eu_get_gc(p->s), *size + GBUF_GROWTH_RATE);
+			vbuf = eugc_malloc(_eu_gc(p->s), *size + GBUF_GROWTH_RATE);
 			if (vbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
@@ -305,7 +305,7 @@ eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 			memcpy(vbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
 			/* the buffer currently lives in the heap, so we just need to grow it */
-			vbuf = eugc_realloc(_eu_get_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
+			vbuf = eugc_realloc(_eu_gc(p->s), *buf, *size + GBUF_GROWTH_RATE);
 			if (vbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 		}
@@ -330,7 +330,7 @@ eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 
 eu_result gbuf_terminate(parser* p, void** buf) {
 	if (p->buf != *buf) {
-		eugc_free(_eu_get_gc(p->s), *buf);
+		eugc_free(_eu_gc(p->s), *buf);
 	}
 	*buf = NULL;
 	return EU_RESULT_OK;

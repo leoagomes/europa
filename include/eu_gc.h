@@ -11,8 +11,10 @@ typedef void* (*eu_realloc)(void*, void*, unsigned long long);
 /** GC structure definition */
 typedef struct europa_gc eu_gc;
 
+typedef struct europa europa;
+
 /** The function an object should call to mark its references. */
-typedef eu_result (*eu_gcmark)(eu_gc* gc, eu_gcobj* obj);
+typedef eu_result (*eu_gcmark)(europa* s, eu_gcobj* obj);
 
 /** Possible object colors during garbage collection. */
 enum eugc_color {
@@ -45,13 +47,13 @@ struct europa_gc {
 /* function declarations */
 
 eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
-eu_result eugc_destroy(eu_gc* gc);
+eu_result eugc_destroy(europa* s);
 
-eu_gcobj* eugc_new_object(eu_gc* gc, eu_byte type, unsigned long long size);
+eu_gcobj* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 
 /* naive mark and sweep */
-eu_result eugc_naive_collect(eu_gc* gc, eu_gcobj* root);
-eu_result eugc_naive_mark(eu_gc* gc, eu_gcobj* root);
-eu_result eugc_naive_sweep(eu_gc* gc);
+eu_result eugc_naive_collect(europa* s, eu_gcobj* root);
+eu_result eugc_naive_mark(europa* s, eu_gcobj* root);
+eu_result eugc_naive_sweep(europa* s);
 
 #endif /* __EUROPA_GC_H__ */

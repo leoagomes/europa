@@ -8,7 +8,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-
+#include "munit.h"
 
 /** Realloc-like function to be used by the garbage collector.
  * 
@@ -20,22 +20,17 @@ void* rlike(void* ud, void* ptr, unsigned long long size) {
 
 europa* bootstrap_default_instance(void) {
 	europa* s;
+	eu_result err;
 
 	/* we need to allocate memory for the state, because it tries to leave
 	 * memory management to the GC
 	 * 
 	 * TODO: maybe sometime use something provided by an auxilary library */
-	s = (europa*)malloc(sizeof(europa));
-	if (s == NULL)
-		return NULL;
-
-	eugc_init(&(s->gc), NULL, rlike);
-	eu_init(s);
-
+	s = europa_new(rlike, NULL, NULL, &err);
 	return s;
 }
 
 void terminate_default_instance(europa* s) {
-	eugc_destroy(_eu_get_gc(s));
+	eugc_destroy(s);
 	free(s);
 }

@@ -12,7 +12,7 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str) {
 		return NULL;
 
 	size = utf8size(str);
-	port = _euobj_to_mport(eugc_new_object(_eu_get_gc(s), EU_TYPEFLAG_COLLECTABLE |
+	port = _euobj_to_mport(eugc_new_object(s, EU_TYPEFLAG_COLLECTABLE |
 		EU_TYPE_PORT, sizeof(eu_mport)));
 	if (port == NULL)
 		return NULL;
@@ -20,7 +20,7 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str) {
 	port->type = EU_PORT_TYPE_MEMORY;
 	port->flags = flags;
 	port->size = size;
-	port->mem = (eu_byte*)eugc_malloc(_eu_get_gc(s), size);
+	port->mem = (eu_byte*)eugc_malloc(_eu_gc(s), size);
 	if (port->mem == NULL)
 		return NULL;
 
@@ -32,21 +32,21 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str) {
 	return port;
 }
 
-eu_result eumport_mark(eu_gc* gc, eu_gcmark mark, eu_mport* port) {
+eu_result eumport_mark(europa* s, eu_gcmark mark, eu_mport* port) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_destroy(eu_gc* gc, eu_mport* port) {
-	if (!gc || !port)
+eu_result eumport_destroy(europa* s, eu_mport* port) {
+	if (!s || !port)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	if (port->mem)
-		eugc_free(gc, port->mem);
+		eugc_free(_eu_gc(s), port->mem);
 
 	return EU_RESULT_OK;
 }
 
-eu_integer eumport_hash(europa* s, eu_mport* port) {
+eu_integer eumport_hash(eu_mport* port) {
 	return cast(eu_integer, port);
 }
 

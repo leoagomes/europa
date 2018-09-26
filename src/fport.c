@@ -32,7 +32,7 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
 		return NULL;
 
 	/* allocate the garbage collected port */
-	port = _euobj_to_fport(eugc_new_object(_eu_get_gc(s), EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
+	port = _euobj_to_fport(eugc_new_object(s, EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_fport)));
 	if (port == NULL)
 		return NULL;
@@ -47,12 +47,12 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
 
 /** Marks any reachable objects for collection.
  * 
- * @param gc The garbage collector state structure.
+ * @param s The europa state.
  * @param mark The gc marking function.
  * @param port The target port.
  * @return The result of the marking operation.
  */
-eu_result eufport_mark(eu_gc* gc, eu_gcmark mark, eu_fport* port) {
+eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
 	/* this object holds no GC structures */
 	return EU_RESULT_OK;
 }
@@ -62,12 +62,12 @@ eu_result eufport_mark(eu_gc* gc, eu_gcmark mark, eu_fport* port) {
  * Frees resources associated with the file port, closing the file in case it is
  * open.
  * 
- * @param gc The garbage collector state structure.
+ * @param s The europa state.
  * @param port The target port.
  * @return The result of destroying the object.
  */
-eu_result eufport_destroy(eu_gc* gc, eu_fport* port) {
-	if (!gc || !port)
+eu_result eufport_destroy(europa* s, eu_fport* port) {
+	if (!s || !port)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* close the file if it is open */
@@ -85,7 +85,7 @@ eu_result eufport_destroy(eu_gc* gc, eu_fport* port) {
  * @param port The target port.
  * @return The target port's hash.
  */
-eu_integer eufport_hash(europa* s, eu_fport* port) {
+eu_integer eufport_hash(eu_fport* port) {
 	if (port->file)
 		return cast(eu_integer, port->file);
 	return cast(eu_integer, port);
@@ -274,7 +274,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 		/* check if the buffer has to be reallocated */
 		if (pos == size) {
 			size += MIN_CHUNK;
-			buf = eugc_realloc(_eu_get_gc(s), buf, size);
+			buf = eugc_realloc(_eu_gc(s), buf, size);
 			if (!buf)
 				return EU_RESULT_BAD_ALLOC;
 		}
@@ -303,7 +303,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	out->value.object = _eustring_to_obj(eustring_new(s, buf));
 
 	/* free the buffer */
-	eugc_free(_eu_get_gc(s), buf);
+	eugc_free(_eu_gc(s), buf);
 
 	return EU_RESULT_OK;
 }
@@ -346,7 +346,7 @@ eu_result eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	/* allocate a string long enough to hold k UTF-8 characters and an extra
 	 * NUL byte. */
 	remaining = k * 4 + 1;
-	str = _euobj_to_string(eugc_new_object(_eu_get_gc(s), EU_TYPE_STRING |
+	str = _euobj_to_string(eugc_new_object(s, EU_TYPE_STRING |
 		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_string) + (remaining)));
 	if (!str)
 		return EU_RESULT_BAD_ALLOC;

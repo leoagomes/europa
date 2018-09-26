@@ -42,5 +42,4 @@ eu_integer eubvector_hash(eu_bvector* vec);
 eu_integer eubvector_rehash(eu_bvector* vec);
 eu_integer eubvector_size(eu_bvector* vec);
 
-
 #endif

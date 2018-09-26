@@ -13,7 +13,7 @@ eu_integer eutil_strb_hash(eu_byte* str, eu_uint len) {
 	return (eu_integer)hash;
 }
 
-eu_integer eutil_cstr_hash(char* str) {
+eu_integer eutil_cstr_hash(const char* str) {
 	unsigned long hash = 5381;
 	int c;
 

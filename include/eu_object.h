@@ -21,21 +21,23 @@ enum eu_type {
 	EU_TYPE_BOOLEAN,
 	EU_TYPE_NUMBER,
 	EU_TYPE_CHARACTER,
-	EU_TYPE_CPOINTER,
 	EU_TYPE_EOF,
 
-	EU_TYPE_PAIR,
 	EU_TYPE_SYMBOL,
 	EU_TYPE_STRING,
-	EU_TYPE_VECTOR,
-	EU_TYPE_BYTEVECTOR,
-	EU_TYPE_PROCEDURE,
 	EU_TYPE_ERROR,
 	EU_TYPE_EXCEPTION,
-	EU_TYPE_ENVIRONMENT,
+
+	EU_TYPE_PAIR,
+	EU_TYPE_VECTOR,
+	EU_TYPE_BYTEVECTOR,
+	EU_TYPE_TABLE,
+	EU_TYPE_PROCEDURE,
 	EU_TYPE_PORT,
 
-	EU_TYPE_USERDATA
+	EU_TYPE_CPOINTER,
+	EU_TYPE_USERDATA,
+	EU_TYPE_LAST
 };
 
 /** flag to signal if a type is garbage collected */
@@ -83,6 +85,11 @@ struct europa_gcobj {
 	{.type = EU_TYPE_NULL, .value = {.object = NULL}}
 /** effective null value singleton */
 extern eu_value _null;
+#define _eu_makenull(vptr) \
+	do {\
+		(vptr)->type = EU_TYPE_NULL;\
+		(vptr)->value.object = NULL;\
+	} while (0)
 
 /** value struct initialization definition for the true object */
 #define EU_VALUE_TRUE \
@@ -104,8 +111,10 @@ extern eu_value _eof;
 
 /* function declarations */
 
+/** gets the raw type of a value */
+#define _euvalue_rtype(v) ((v)->type)
 /** gets the object type */
-#define _euvalue_type(v) (((v)->type) & EU_TYPEMASK)
+#define _euvalue_type(v) (_euvalue_rtype(v) & EU_TYPEMASK)
 /** checks if a value is null */
 #define _euvalue_is_null(v) (_euvalue_type(v) == EU_TYPE_NULL)
 /** checks if a value is of a given type */
@@ -125,6 +134,7 @@ extern eu_value _eof;
 /* value functions */
 eu_bool euvalue_is_null(eu_value* value);
 eu_bool euvalue_is_type(eu_value* value, eu_byte type);
+eu_integer euvalue_hash(eu_value* v);
 
 eu_bool euobj_is_null(eu_gcobj* obj);
 eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type);

@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "eu_util.h"
+#include "eu_number.h"
 #include "utf8.h"
 
 /*
@@ -45,7 +46,7 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
 
 	size_t text_size = utf8size(text);
 
-	sym = (eu_symbol*)eugc_new_object(_eu_get_gc(s), EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
+	sym = (eu_symbol*)eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_symbol) + text_size);
 	if (sym == NULL)
 		return NULL;
@@ -81,4 +82,43 @@ eu_integer eusymbol_hash(eu_symbol* sym) {
 	if (sym == NULL)
 		return 0;
 	return _eusymbol_hash(sym);
+}
+
+/** Hashes a string as if it were a symbol.
+ * 
+ * @param str The string representing the symbol.
+ * @return The resulting hash.
+ */
+eu_integer eusymbol_hash_cstr(const char* str){
+	if (str == NULL)
+		return 0;
+	return eutil_cstr_hash(str);
+}
+
+/** Checks whether two symbols are `eqv?`.
+ * 
+ * @param a The first symbol.
+ * @param b The other symbol.
+ * @param out Where to place the boolean result.
+ * @returns The result of executing the operation.
+ */
+eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
+	eu_symbol *sa, *sb;
+	int v;
+
+	sa = _euvalue_to_symbol(a);
+	sb = _euvalue_to_symbol(b);
+
+	/* if hashes don't match, they are definitely different */
+	if (_eusymbol_hash(sa) != _eusymbol_hash(sb)) {
+		v = EU_FALSE;
+		goto end;
+	}
+
+	/* hashes match, check if texts are the same */
+	v = !utf8cmp(_eusymbol_text(sa), _eusymbol_text(sb));
+
+	end:
+	_eu_makebool(out, v);
+	return EU_RESULT_OK;
 }

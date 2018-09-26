@@ -21,7 +21,7 @@ eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
 	if(s == NULL || length < 0)
 		return NULL;
 
-	vec = _euobj_to_vector(eugc_new_object(_eu_get_gc(s), 
+	vec = _euobj_to_vector(eugc_new_object(s, 
 		EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_vector) + (sizeof(eu_value) * (length - 1))));
 	if (vec == NULL)
@@ -65,7 +65,7 @@ eu_value* euvector_values(eu_vector* vec) {
  * @param vec The target vector object.
  * @return The result of the marking process.
  */
-eu_result euvector_mark(eu_gc* gc, eu_gcmark mark, eu_vector* vec) {
+eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
 	eu_result res;
 	eu_integer i;
 	eu_value* values;
@@ -79,7 +79,7 @@ eu_result euvector_mark(eu_gc* gc, eu_gcmark mark, eu_vector* vec) {
 	for (i = 0; i < _euvector_length(vec); i++) {
 		if (_euvalue_is_collectable(&(values[i]))) {
 			obj = _euvalue_to_obj(&(values[i]));
-			if ((res = mark(gc, obj)))
+			if ((res = mark(s, obj)))
 				return res;
 		}
 	}
@@ -87,11 +87,11 @@ eu_result euvector_mark(eu_gc* gc, eu_gcmark mark, eu_vector* vec) {
 	return EU_RESULT_OK;
 }
 
-/** Destroys the vector object. Freeing resources.
+/** Calculates a hash for the vector.
  * 
- * @param vec The vector object.
- * @return The result of destroying the object.
+ * @param vec The target vector.
+ * @return The hash.
  */
-eu_result euvector_destroy(eu_vector* vec) {
-	return EU_RESULT_OK;
+eu_integer euvector_hash(eu_vector* vec) {
+	return cast(eu_integer, vec);
 }

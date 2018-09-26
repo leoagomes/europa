@@ -13,7 +13,7 @@ eu_error* euerror_new(europa* s, int flags, void* text) {
 
 	text_size = utf8size(text);
 
-	err = _euobj_to_error(eugc_new_object(_eu_get_gc(s), EU_TYPEFLAG_COLLECTABLE | EU_TYPE_ERROR,
+	err = _euobj_to_error(eugc_new_object(s, EU_TYPEFLAG_COLLECTABLE | EU_TYPE_ERROR,
 		sizeof(eu_error) + text_size));
 	if (err == NULL)
 		return NULL;

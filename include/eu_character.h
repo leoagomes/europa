@@ -13,4 +13,9 @@
 		(vptr)->value.character = (int)c; \
 	} while(0)
 
+#define _euchar_char(v) ((v)->value.character)
+
+eu_integer euchar_hash(eu_value* v);
+eu_result euchar_eqv(eu_value* a, eu_value* b, eu_value* out);
+
 #endif

@@ -42,6 +42,8 @@ eu_symbol* eusymbol_new(europa* s, void* text);
 
 void* eusymbol_text(eu_symbol* sym);
 eu_integer eusymbol_hash(eu_symbol* sym);
+eu_integer eusymbol_hash_cstr(const char* str);
+eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 /* library functions */
 

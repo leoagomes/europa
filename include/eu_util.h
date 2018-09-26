@@ -5,7 +5,7 @@
 #include "eu_int.h"
 
 eu_integer eutil_strb_hash(eu_byte* str, eu_uint len);
-eu_integer eutil_cstr_hash(char* str);
+eu_integer eutil_cstr_hash(const char* str);
 
 int unicodetoutf8(int c);
 

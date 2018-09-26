@@ -45,8 +45,8 @@ eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length);
 
 eu_integer euvector_length(eu_vector* vec);
 eu_value* euvector_values(eu_vector* vec);
+eu_integer euvector_hash(eu_vector* vec);
 
-eu_result euvector_mark(eu_gc* gc, eu_gcmark mark, eu_vector* vec);
-eu_result euvector_destroy(eu_vector* vec);
+eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec);
 
 #endif /* __EUROPA_VECTOR_H__ */
