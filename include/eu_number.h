@@ -23,11 +23,11 @@
 	} while(0)
 
 #define _euvalue_is_number(v) (_euvalue_type(v) == EU_TYPE_NUMBER)
-#define _eunum_is_exact(v) ((_eu_rvalue(v) & EU_NUMBER_REAL) == 0)
+#define _eunum_is_exact(v) ((_euvalue_rtype(v) & EU_NUMBER_REAL) == 0)
 #define _eunum_i(v) ((v)->value.i)
 #define _eunum_r(v) ((v)->value.r)
 
-eu_integer eunum_hash(eu_value* v);
+eu_uinteger eunum_hash(eu_value* v);
 eu_result eunum_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 /* boolean functions */
@@ -40,7 +40,7 @@ eu_result eunum_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 #define _euvalue_to_bool(v) ((v)->value.boolean)
 
-eu_integer eubool_hash(eu_value* v);
+eu_uinteger eubool_hash(eu_value* v);
 eu_result eubool_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 #endif

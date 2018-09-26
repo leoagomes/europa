@@ -1,3 +1,8 @@
+/** General object and value type procedures.
+ * 
+ * @file object.c
+ * @author Leonardo G.
+ */
 #include "eu_object.h"
 
 #include "eu_number.h"
@@ -67,7 +72,7 @@ eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type) {
  * @param v The value to hash.
  * @return The hash.
  */
-eu_integer euvalue_hash(eu_value* v) {
+eu_uinteger euvalue_hash(eu_value* v) {
 	if (v == NULL)
 		return 0;
 
@@ -93,6 +98,13 @@ eu_integer euvalue_hash(eu_value* v) {
 	}
 }
 
+/** Checks whether two values are `eqv?`.
+ * 
+ * @param a The first value.
+ * @param b The second value.
+ * @param out Where to place the result.
+ * @return Whether the operation was successful.
+ */
 eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -104,11 +116,13 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	}
 
 	switch(_euvalue_type(a)) {
-	case EU_TYPE_NULL: return 0;
+	case EU_TYPE_NULL:
+		_eu_makebool(out, EU_TRUE);
+		return EU_RESULT_OK;
 	case EU_TYPE_NUMBER: return eunum_eqv(a, b, out);
 	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
 	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
-	case EU_TYPE_SYMBOL: return eusym_eqv(a, b, out);
+	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
 	case EU_TYPE_BYTEVECTOR:
 	case EU_TYPE_CPOINTER:
 	case EU_TYPE_STRING:
@@ -117,6 +131,7 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	case EU_TYPE_TABLE:
 	case EU_TYPE_VECTOR:
 	case EU_TYPE_ERROR:
+	case EU_TYPE_USERDATA:
 		_eu_makebool(out, _euvalue_to_obj(a) == _euvalue_to_obj(b));
 		return EU_RESULT_OK;
 
@@ -125,7 +140,6 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 		return EU_RESULT_OK;
 
 	case EU_TYPE_PROCEDURE: // TODO: implement
-	case EU_TYPE_USERDATA:
 	default:
 		return EU_RESULT_OK;
 	}
@@ -133,16 +147,25 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_INVALID;
 }
 
+/** Checks whether two values are `eq?`.
+ * 
+ * @param a The first value.
+ * @param b The second value.
+ * @param out Where to place the result.
+ * @return Whether the operation was successful.
+ */
 eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	switch(_euvalue_type(a)) {
-	case EU_TYPE_NULL: return 0;
+	case EU_TYPE_NULL:
+		_eu_makebool(out, EU_TRUE);
+		return EU_RESULT_OK;
 	case EU_TYPE_NUMBER: return eunum_eqv(a, b, out);
 	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
 	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
-	case EU_TYPE_SYMBOL: return eusym_eqv(a, b, out);
+	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
 	case EU_TYPE_BYTEVECTOR:
 	case EU_TYPE_CPOINTER:
 	case EU_TYPE_STRING:
@@ -151,6 +174,49 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 	case EU_TYPE_TABLE:
 	case EU_TYPE_VECTOR:
 	case EU_TYPE_ERROR:
+	case EU_TYPE_USERDATA:
+		_eu_makebool(out, _euvalue_to_obj(a) == _euvalue_to_obj(b));
+		return EU_RESULT_OK;
+
+	case EU_TYPE_EOF: /* there is one single EOF object. */
+		_eu_makebool(out, EU_TRUE);
+		return EU_RESULT_OK;
+
+	case EU_TYPE_PROCEDURE: // TODO: implement
+	default:
+		return EU_RESULT_OK;
+	}
+
+	return EU_RESULT_OK;
+}
+
+/** Checks whether two values are `equal?`.
+ * 
+ * @param a The first value.
+ * @param b The second value.
+ * @param out Where to place the result.
+ * @return Whether the operation was successful.
+ */
+eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
+	if (a == NULL || b == NULL || out == NULL)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	switch(_euvalue_type(a)) {
+	case EU_TYPE_NULL:
+		_eu_makebool(out, EU_TRUE);
+		return EU_RESULT_OK;
+	case EU_TYPE_NUMBER: return eunum_eqv(a, b, out);
+	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
+	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
+	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
+	case EU_TYPE_BYTEVECTOR: // TODO: implement
+	case EU_TYPE_STRING:
+	case EU_TYPE_PAIR:
+	case EU_TYPE_PORT:
+	case EU_TYPE_TABLE:
+	case EU_TYPE_VECTOR:
+	case EU_TYPE_ERROR:
+	case EU_TYPE_CPOINTER:
 		_eu_makebool(out, _euvalue_to_obj(a) == _euvalue_to_obj(b));
 		return EU_RESULT_OK;
 

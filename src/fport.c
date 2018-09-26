@@ -85,7 +85,7 @@ eu_result eufport_destroy(europa* s, eu_fport* port) {
  * @param port The target port.
  * @return The target port's hash.
  */
-eu_integer eufport_hash(eu_fport* port) {
+eu_uinteger eufport_hash(eu_fport* port) {
 	if (port->file)
 		return cast(eu_integer, port->file);
 	return cast(eu_integer, port);

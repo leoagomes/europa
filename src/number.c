@@ -7,7 +7,7 @@
  * @param v The number.
  * @return The hash.
  */
-eu_integer eunum_hash(eu_value* v) {
+eu_uinteger eunum_hash(eu_value* v) {
 	eu_integer ival;
 
 	ival = (_euvalue_rtype(v) & EU_NUMBER_REAL) ? cast(int, v->value.r) :
@@ -53,7 +53,7 @@ eu_result eunum_eqv(eu_value* a, eu_value* b, eu_value* out) {
  * @param v The boolean value.
  * @return The hash.
  */
-eu_integer eubool_hash(eu_value* v) {
+eu_uinteger eubool_hash(eu_value* v) {
 	return v->value.boolean ? 0xAA : ~0xAA;
 }
 

@@ -77,7 +77,7 @@ void* eustring_text(eu_string* str) {
  * @param str The string object.
  * @return The object's hash.
  */
-eu_integer eustring_hash(eu_string* str) {
+eu_uinteger eustring_hash(eu_string* str) {
 	if (str == NULL)
 		return 0;
 	return _eustring_hash(str);

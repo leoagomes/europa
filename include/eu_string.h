@@ -47,7 +47,7 @@ eu_string* eustring_new(europa* s, void* text);
 eu_string* eustring_withsize(europa* s, size_t textsize);
 
 void* eustring_text(eu_string* str);
-eu_integer eustring_hash(eu_string* str);
+eu_uinteger eustring_hash(eu_string* str);
 eu_integer eustring_hash_cstr(const char* str);
 eu_integer eustring_rehash(eu_string* str);
 eu_integer eustring_size(eu_string* str);

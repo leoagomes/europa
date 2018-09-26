@@ -12,6 +12,7 @@ typedef struct europa_global eu_global;
 typedef struct europa europa;
 typedef int (*eu_cfunc)(europa* s);
 
+typedef struct europa_table eu_table;
 struct europa_global {
 	eu_gc gc;
 	eu_cfunc panic;

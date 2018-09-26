@@ -48,6 +48,6 @@ struct europa_table {
 eu_table* eutable_new(europa* s, size_t count);
 eu_result eutable_destroy(europa* s, eu_table* t);
 eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t);
-eu_integer eutable_hash(eu_table* t);
+eu_uinteger eutable_hash(eu_table* t);
 
 #endif

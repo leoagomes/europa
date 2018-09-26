@@ -25,7 +25,7 @@ eu_byte* eubvector_data(eu_bvector* vec) {
 	return _eubvector_data(vec);
 }
 
-eu_integer eubvector_hash(eu_bvector* vec) {
+eu_uinteger eubvector_hash(eu_bvector* vec) {
 	return cast(eu_integer, vec);
 }
 

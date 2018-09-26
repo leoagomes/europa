@@ -46,7 +46,7 @@ eu_result eumport_destroy(europa* s, eu_mport* port) {
 	return EU_RESULT_OK;
 }
 
-eu_integer eumport_hash(eu_mport* port) {
+eu_uinteger eumport_hash(eu_mport* port) {
 	return cast(eu_integer, port);
 }
 

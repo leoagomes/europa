@@ -13,6 +13,7 @@ typedef unsigned int eu_bool; /*!< boolean type */
 /* value types for numbers, which can either be floating point Reals or
  * fixed point Integers. */
 typedef long long eu_integer;
+typedef unsigned long long eu_uinteger;
 typedef double eu_real;
 
 /* default boolean true and false values */

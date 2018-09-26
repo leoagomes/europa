@@ -31,7 +31,7 @@ eu_result euport_destroy(europa* s, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-eu_integer euport_hash(eu_port* port) {
+eu_uinteger euport_hash(eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_hash(_euport_to_fport(port));

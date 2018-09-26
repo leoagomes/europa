@@ -92,6 +92,6 @@ eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
  * @param vec The target vector.
  * @return The hash.
  */
-eu_integer euvector_hash(eu_vector* vec) {
+eu_uinteger euvector_hash(eu_vector* vec) {
 	return cast(eu_integer, vec);
 }

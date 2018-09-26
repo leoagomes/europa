@@ -46,7 +46,7 @@ struct europa_port {
 /* function declarations */
 eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port);
 eu_result euport_destroy(europa* s, eu_port* port);
-eu_integer euport_hash(eu_port* port);
+eu_uinteger euport_hash(eu_port* port);
 
 /* internal functions */
 /* input */

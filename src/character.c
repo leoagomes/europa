@@ -12,7 +12,7 @@
  * @param v The character value.
  * @return The hash.
  */
-eu_integer euchar_hash(eu_value* v) {
+eu_uinteger euchar_hash(eu_value* v) {
 	return v->value.character * 5; /* completely arbitrary. not even sure is a good idea */
 }
 

@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-eu_integer eutil_strb_hash(eu_byte* str, eu_uint len) {
-	unsigned long hash = 5381;
+eu_uinteger eutil_strb_hash(eu_byte* str, eu_uint len) {
+	eu_uinteger hash = 5381;
 	int c;
 	eu_uint i;
 
@@ -13,14 +13,14 @@ eu_integer eutil_strb_hash(eu_byte* str, eu_uint len) {
 	return (eu_integer)hash;
 }
 
-eu_integer eutil_cstr_hash(const char* str) {
-	unsigned long hash = 5381;
+eu_uinteger eutil_cstr_hash(const char* str) {
+	eu_uinteger hash = 5381;
 	int c;
 
 	while ((c = *str++))
 		hash = ((hash << 5) + hash) + c;
 
-	return (eu_integer)hash;
+	return (eu_uinteger)hash;
 }
 
 int unicodetoutf8(int c) {

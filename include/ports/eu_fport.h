@@ -26,7 +26,7 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename);
 eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port);
 eu_result eufport_destroy(europa* s, eu_fport* port);
 
-eu_integer eufport_hash(eu_fport* port);
+eu_uinteger eufport_hash(eu_fport* port);
 
 /* internal use functions */
 /* input */

@@ -63,7 +63,7 @@ eu_result eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
  * @param pair the target pair.
  * @return the hash of the pair.
  */
-eu_integer eupair_hash(eu_pair* pair) {
+eu_uinteger eupair_hash(eu_pair* pair) {
 	/* TODO: change behavior when using a moving gc */
 	return cast(eu_integer, pair);
 }

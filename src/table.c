@@ -162,7 +162,7 @@ eu_table* eutable_new(europa* s, size_t length) {
  * @param t The target table.
  * @return The hash.
  */
-eu_integer eutable_hash(eu_table* t) {
+eu_uinteger eutable_hash(eu_table* t) {
 	return cast(eu_integer, t);
 }
 
@@ -215,11 +215,22 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
 	return EU_RESULT_OK;
 }
 
-/**
+/** Gets a pointer to the value associated to a given key.
  * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param key The desired key.
+ * @return A pointer to the associated value. NULL if key is not found in the
+ * table.
  */
-eu_result eutable_get(europa* s, eu_table* t, eu_value* key) {
+eu_value* eutable_get(europa* s, eu_table* t, eu_value* key) {
+	eu_integer vhash;
 
+	/* return NULL in case any of the arguments is invalid */
+	if (!s || !t || !key)
+		return NULL;
+
+	/* calculate the value's hash */
 }
 
 /**

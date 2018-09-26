@@ -39,6 +39,6 @@ struct europa_error {
 eu_error* euerror_new(europa* s, int flags, void* text);
 
 void* euerror_message(eu_error* err);
-eu_integer euerror_hash(eu_error* err);
+eu_uinteger euerror_hash(eu_error* err);
 
 #endif

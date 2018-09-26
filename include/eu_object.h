@@ -134,7 +134,7 @@ extern eu_value _eof;
 /* value functions */
 eu_bool euvalue_is_null(eu_value* value);
 eu_bool euvalue_is_type(eu_value* value, eu_byte type);
-eu_integer euvalue_hash(eu_value* v);
+eu_uinteger euvalue_hash(eu_value* v);
 
 eu_bool euobj_is_null(eu_gcobj* obj);
 eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type);

@@ -32,7 +32,7 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str);
 eu_result eumport_mark(europa* s, eu_gcmark mark, eu_mport* port);
 eu_result eumport_destroy(europa* s, eu_mport* port);
 
-eu_integer eumport_hash(eu_mport* port);
+eu_uinteger eumport_hash(eu_mport* port);
 
 /* internal use functions */
 /* input */

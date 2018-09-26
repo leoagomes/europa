@@ -78,7 +78,7 @@ void* eusymbol_text(eu_symbol* sym) {
  * @param sym The symbol object.
  * @return The obejct's hash.
  */
-eu_integer eusymbol_hash(eu_symbol* sym) {
+eu_uinteger eusymbol_hash(eu_symbol* sym) {
 	if (sym == NULL)
 		return 0;
 	return _eusymbol_hash(sym);

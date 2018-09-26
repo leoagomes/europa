@@ -28,6 +28,6 @@ void* euerror_message(eu_error* err) {
 	return _euerror_message(err);
 }
 
-eu_integer euerror_hash(eu_error* err) {
+eu_uinteger euerror_hash(eu_error* err) {
 	return (eu_integer)err;
 }

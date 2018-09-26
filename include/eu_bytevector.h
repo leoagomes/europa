@@ -38,7 +38,7 @@ struct europa_bytevector {
 eu_bvector* eubvector_new(europa* s, eu_integer length, eu_byte* data);
 
 void* eubvector_text(eu_bvector* vec);
-eu_integer eubvector_hash(eu_bvector* vec);
+eu_uinteger eubvector_hash(eu_bvector* vec);
 eu_integer eubvector_rehash(eu_bvector* vec);
 eu_integer eubvector_size(eu_bvector* vec);
 
