@@ -1,5 +1,5 @@
 /**
- * @file eu_pair.c
+ * @file pair.c
  * @brief Pair (cons cell) related operations.
  * @author Leonardo G.
  */

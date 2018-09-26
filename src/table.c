@@ -1,3 +1,8 @@
+/** Table structure operations.
+ * 
+ * @file table.c
+ * @author Leonardo G.
+ */
 #include "eu_table.h"
 
 #include <stdint.h>

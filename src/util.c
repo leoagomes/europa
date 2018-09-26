@@ -1,3 +1,8 @@
+/** Utility functions.
+ * 
+ * @file util.c
+ * @author Leonardo G.
+ */
 #include "eu_util.h"
 
 #include <string.h>

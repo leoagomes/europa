@@ -1,3 +1,8 @@
+/** Vector type operations.
+ * 
+ * @file vector.c
+ * @author Leonardo G.
+ */
 #include "eu_vector.h"
 
 #include <string.h>

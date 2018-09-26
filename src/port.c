@@ -1,3 +1,8 @@
+/** Port type operations.
+ * 
+ * @file port.c
+ * @author Leonardo G.
+ */
 #include "eu_port.h"
 
 #include "ports/eu_fport.h"

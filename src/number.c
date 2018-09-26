@@ -1,3 +1,8 @@
+/** Numeric types operations and routines.
+ * 
+ * @file number.c
+ * @author Leonardo G.
+ */
 #include "eu_number.h"
 
 /* == **number** functions == */

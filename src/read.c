@@ -1,3 +1,8 @@
+/** Generic port `read` procedure implementation.
+ * 
+ * @file read.c
+ * @author Leonardo G.
+ */
 #include <ctype.h>
 #include <stdio.h>
 

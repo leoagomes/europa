@@ -1,3 +1,8 @@
+/** Bytevector type implementation.
+ * 
+ * @file bytevector.c
+ * @author Leonardo G.
+ */
 #include "eu_bytevector.h"
 
 #include <string.h>

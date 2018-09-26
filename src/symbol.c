@@ -1,6 +1,6 @@
 /** Symbol implementation file.
  * 
- * @file eu_symbol.c
+ * @file symbol.c
  * @author Leonardo G.
  */
 #include "eu_symbol.h"

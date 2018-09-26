@@ -1,3 +1,8 @@
+/** String type operations.
+ * 
+ * @file string.c
+ * @author Leonardo G.
+ */
 #include "eu_string.h"
 
 #include <string.h>
