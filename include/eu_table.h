@@ -25,10 +25,11 @@ struct europa_table_node {
 
 struct europa_table {
 	EU_OBJ_COMMON_HEADER;
-	eu_byte lsize;
-	int count;
+	eu_byte lsize; /*!< log2 of the table's size */
+	int count; /*!< the number of elements in the table */
 	struct europa_table_node *nodes, *last_free;
-	struct europa_table* metatable;
+
+	struct europa_table* index; /*!< the table's index */
 };
 
 #define _eutable_to_obj(s) cast(eu_gcobj*, s)
@@ -46,6 +47,9 @@ struct europa_table {
 #define _eutable_lsize(t) ((t)->lsize)
 #define _eutable_last_free(t) ((t)->last_free)
 #define _eutable_size(t) (_eutable_last_free(t) ? twoto(_eutable_lsize(t)) : 0)
+#define _eutable_index(t) ((t)->index)
+
+#define _eutable_set_index(t, i) (_eutable_index(t) = (i))
 
 /* member access macros */
 
@@ -55,6 +59,7 @@ eu_table* eutable_new(europa* s, size_t count);
 eu_result eutable_destroy(europa* s, eu_table* t);
 eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t);
 eu_uinteger eutable_hash(eu_table* t);
+eu_table* eutable_set_index(eu_table* t, eu_table* i);
 
 eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key,
 	eu_value** val);
@@ -64,5 +69,11 @@ eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
 eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
 	eu_value** val);
 eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val);
+
+eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
+eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+	eu_value** val);
+eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+	eu_value** val);
 
 #endif

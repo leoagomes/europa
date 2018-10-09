@@ -197,7 +197,7 @@ eu_table* eutable_new(europa* s, size_t length) {
 		return NULL;
 	}
 
-	t->metatable = NULL;
+	t->index = NULL;
 	t->count = 0;
 
 	return t;
@@ -210,6 +210,10 @@ eu_table* eutable_new(europa* s, size_t length) {
  */
 eu_uinteger eutable_hash(eu_table* t) {
 	return cast(eu_integer, t);
+}
+
+eu_table* eutable_set_index(eu_table* t, eu_table* i) {
+	return _eutable_set_index(t, i);
 }
 
 /** Releases resources used by the table.
@@ -239,6 +243,7 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
 	eu_value* v;
 	eu_tnode* n;
 
+	/* mark elements in table */
 	len = twoto(t->lsize);
 	for (i = 0; i < len; i++) {
 		n = _eutable_node(t, i);
@@ -256,6 +261,11 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
 				_eu_checkreturn(mark(s, _euvalue_to_obj(v)));
 			}
 		}
+	}
+
+	/* mark index */
+	if (t->index != NULL) {
+		_eu_checkreturn(mark(s, _eutable_to_obj(t->index)));
 	}
 
 	return EU_RESULT_OK;
@@ -520,7 +530,7 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 	}
 	/* whenever we reach this point we're at three possible situations:
 	 * a) the key's main position is empty.
-	 *    In which case, `fnode` points to the correct position and has the
+	 *    In which case, `fnode` points to the csh -c "$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"orrect position and has the
 	 *    correct `next` value (-1).
 	 * b) the key's main position wasn't empty, but the colliding key was **not**
 	 *    in it's main position.
@@ -541,4 +551,69 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 	fnode->key = *key; /* set the free node's key */
 	*val = _eutnode_value(fnode); /* return the address of it's value field */
 	return EU_RESULT_OK; /* everything went fine */
+}
+
+eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
+eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+	eu_value** val);
+eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+	eu_value** val);
+
+/** Gets a value from a table, recursing into index if necessary.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param key The key value.
+ * @param val Where to place the pointer to the value.
+ * @return Whether the operation was successful.
+ */
+eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+	/* try getting the key in current table */
+	_eu_checkreturn(eutable_get(s, t, key, val));
+
+	/* if failed, try index */
+	if (*val == NULL && t->index != NULL) {
+		_eu_checkreturn(eutable_rget(s, t->index, key, val));
+	}
+	return EU_RESULT_OK;
+}
+
+/** Gets a string value from a table, recursing into index if necessary.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param str The C string.
+ * @param val Where to place the pointer to the value.
+ * @return Whether the operation was successful.
+ */
+eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+	eu_value** val) {
+	/* try getting the string */
+	_eu_checkreturn(eutable_get_string(s, t, str, val));
+
+	/* if failed, try index */
+	if (*val == NULL && t->index != NULL) {
+		_eu_checkreturn(eutable_rget_string(s, t->index, str, val));
+	}
+	return EU_RESULT_OK;
+}
+
+/** Gets a symbol value from a table, recursing into index if necessary.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param str The C string with the symbol's text.
+ * @param val Where to place the pointer to the value.
+ * @return Whether the operation was successful.
+ */
+eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+	eu_value** val) {
+	/* try getting the string */
+	_eu_checkreturn(eutable_get_string(s, t, str, val));
+
+	/* if failed, try index */
+	if (*val == NULL && t->index != NULL) {
+		_eu_checkreturn(eutable_rget_string(s, t->index, str, val));
+	}
+	return EU_RESULT_OK;
 }

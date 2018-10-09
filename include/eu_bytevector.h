@@ -11,8 +11,8 @@ typedef struct europa_bytevector eu_bvector;
 struct europa_bytevector {
 	EU_OBJ_COMMON_HEADER;
 
-	eu_integer length;
-	eu_byte _data;
+	eu_integer length; /*!< The vector's length. */
+	eu_byte _data; /*!< first byte of the vector's data.*/
 };
 
 #define _eubvector_to_obj(v) cast(eu_gcobj*, v)

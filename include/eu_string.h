@@ -20,7 +20,7 @@ typedef struct europa_string eu_string;
 struct europa_string {
 	EU_OBJ_COMMON_HEADER;
 
-	eu_integer size;
+	eu_integer size; /*!< the string's length. */
 	eu_integer hash; /*!< the string hash. */
 	char _text; /*!< the first byte of the string's text. */
 };

@@ -5,6 +5,7 @@
 #include "eu_table.h"
 #include "eu_symbol.h"
 #include "eu_string.h"
+#include "eu_number.h"
 
 static void* table_setup(MunitParameter params[], void* user_data) {
 	europa* s;
@@ -110,6 +111,52 @@ MunitResult multiple_elements(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+MunitResult simple_index(MunitParameter params[], void* fixture) {
+	europa* s = cast(europa*, fixture);
+	eu_symbol* key;
+	eu_table *t, *i;
+	eu_value *vr, kv;
+
+	// create the key
+	key = eusymbol_new(s, "+!");
+	munit_assert_not_null(key);
+	_eu_makesym(&kv, key);
+
+	// create the index table
+	i = eutable_new(s, 1);
+	munit_assert_not_null(i);
+	// create the table
+	t = eutable_new(s, 1);
+	munit_assert_not_null(t);
+
+	// set the index
+	_eutable_set_index(t, i);
+
+	// set key on the index
+	munit_assert_int(eutable_create_key(s, i, &kv, &vr), ==, EU_RESULT_OK);
+	munit_assert_not_null(vr);
+	_eu_makeint(vr, 1010);
+	vr = NULL;
+
+	// try getting the value recursively
+	munit_assert_int(eutable_rget(s, t, &kv, &vr), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(vr), ==, EU_TYPE_NUMBER);
+	munit_assert_int(_eunum_i(vr), ==, 1010);
+
+	// add the key to t
+	munit_assert_int(eutable_create_key(s, t, &kv, &vr), ==, EU_RESULT_OK);
+	munit_assert_not_null(vr);
+	_eu_makeint(vr, 2020);
+	vr = NULL;
+
+	// try getting the value recursively again
+	munit_assert_int(eutable_rget(s, t, &kv, &vr), ==, EU_RESULT_OK);
+	munit_assert_int(_euvalue_type(vr), ==, EU_TYPE_NUMBER);
+	munit_assert_int(_eunum_i(vr), ==, 2020);
+
+	return MUNIT_OK;
+}
+
 MunitTest tabletests[] = {
 	{
 		"/simple",
@@ -122,6 +169,14 @@ MunitTest tabletests[] = {
 	{
 		"/multiple",
 		multiple_elements,
+		table_setup,
+		table_teardown,
+		MUNIT_TEST_OPTION_NONE,
+		NULL,
+	},
+	{
+		"/simple-index",
+		simple_index,
 		table_setup,
 		table_teardown,
 		MUNIT_TEST_OPTION_NONE,

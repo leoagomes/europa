@@ -18,8 +18,8 @@ typedef struct europa_error eu_error;
 struct europa_error {
 	EU_OBJ_COMMON_HEADER;
 
-	int flags;
-	eu_byte _msg;
+	int flags; /*!< error flags. */
+	eu_byte _msg; /*!< start of the errors, message. */
 };
 
 /* conversion macros */
