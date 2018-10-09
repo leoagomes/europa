@@ -123,9 +123,9 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
 	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
 	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
-	case EU_TYPE_BYTEVECTOR:
+	case EU_TYPE_STRING: return eustring_equal(a, b, out);
 	case EU_TYPE_CPOINTER:
-	case EU_TYPE_STRING:
+	case EU_TYPE_BYTEVECTOR:
 	case EU_TYPE_PAIR:
 	case EU_TYPE_PORT:
 	case EU_TYPE_TABLE:
@@ -166,9 +166,9 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
 	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
 	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
+	case EU_TYPE_STRING: return eustring_equal(a, b, out);
 	case EU_TYPE_BYTEVECTOR:
 	case EU_TYPE_CPOINTER:
-	case EU_TYPE_STRING:
 	case EU_TYPE_PAIR:
 	case EU_TYPE_PORT:
 	case EU_TYPE_TABLE:
@@ -209,8 +209,8 @@ eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
 	case EU_TYPE_BOOLEAN: return eubool_eqv(a, b, out);
 	case EU_TYPE_CHARACTER: return euchar_eqv(a, b, out);
 	case EU_TYPE_SYMBOL: return eusymbol_eqv(a, b, out);
+	case EU_TYPE_STRING: return eustring_equal(a, b, out);
 	case EU_TYPE_BYTEVECTOR: // TODO: implement
-	case EU_TYPE_STRING:
 	case EU_TYPE_PAIR:
 	case EU_TYPE_PORT:
 	case EU_TYPE_TABLE:

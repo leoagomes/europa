@@ -122,3 +122,15 @@ eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	_eu_makebool(out, v);
 	return EU_RESULT_OK;
 }
+
+/** Checks whether a symbol's text matches a given C string.
+ * 
+ * @param vsym The value symbol.
+ * @param cstr The C string.
+ * @return Whether the two match.
+ */
+eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* cstr) {
+	if (!vsym || !cstr)
+		return EU_FALSE;
+	return !utf8cmp(_eusymbol_text(_euvalue_to_symbol(vsym)), cstr);
+}

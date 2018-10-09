@@ -35,6 +35,11 @@ struct europa_string {
 	.type = EU_TYPE_STRING, \
 	.value = { .object = (s) }}
 
+#define _eu_makestring(vptr, s) do {\
+		(vptr)->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;\
+		(vptr)->value.object = _eustring_to_obj(s);\
+	} while (0)
+
 /* member access macros */
 
 #define _eustring_text(s) (&((s)->_text))
@@ -51,5 +56,8 @@ eu_uinteger eustring_hash(eu_string* str);
 eu_integer eustring_hash_cstr(const char* str);
 eu_integer eustring_rehash(eu_string* str);
 eu_integer eustring_size(eu_string* str);
+
+eu_result eustring_equal(eu_value* a, eu_value* b, eu_value* out);
+eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr);
 
 #endif /* __EUROPA_STRING_H__ */

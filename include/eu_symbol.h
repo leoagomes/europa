@@ -44,6 +44,7 @@ void* eusymbol_text(eu_symbol* sym);
 eu_uinteger eusymbol_hash(eu_symbol* sym);
 eu_integer eusymbol_hash_cstr(const char* str);
 eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
+eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* str);
 
 /* library functions */
 

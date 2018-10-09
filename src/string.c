@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "eu_util.h"
+#include "eu_number.h"
 #include "utf8.h"
 
 /* Strings, like symbols, hold their text along their structure's memory.
@@ -109,4 +110,45 @@ eu_integer eustring_hash_cstr(const char* str) {
 	if (str == NULL)
 		return 0;
 	return eutil_cstr_hash(str);
+}
+
+/** Compares a value (possibly a string) against a C string, returning whether
+ * the two are the same.
+ * 
+ * @param vstr The europa value string.
+ * @param cstr The C string.
+ * @result Whether they are equal.
+ */
+eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr) {
+	if (vstr == NULL || cstr == NULL)
+		return EU_FALSE;
+	
+	return !utf8cmp(_eustring_text(_euvalue_to_string(vstr)), cstr);
+}
+
+/** Checks whether two strings are equal. (Both in the sense of `eq?`, `eqv?`,
+ * `equal?` and `string=?`)
+ * 
+ * Warning: this assumes both values are strings.
+ * 
+ * @param a The first string value.
+ * @param b The second string value.
+ * @return The result of the operation.
+ */
+eu_result eustring_equal(eu_value* a, eu_value* b, eu_value* out) {
+	/* check for bad arguments */
+	if (!a || !b || !out)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* if the hashes don't match, the strings are different */
+	if (_eustring_hash(_euvalue_to_string(a)) !=
+		_eustring_hash(_euvalue_to_string(b))) {
+		_eu_makebool(out, EU_FALSE);
+		return EU_RESULT_OK;
+	}
+
+	/* return a strcmp of the strings */
+	_eu_makebool(out, utf8cmp(_eustring_text(_euvalue_to_string(a)),
+		_eustring_text(_euvalue_to_string(b))) ? EU_FALSE : EU_TRUE);
+	return EU_RESULT_OK;
 }

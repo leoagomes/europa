@@ -4,6 +4,10 @@
  * @author Leonardo G.
  */
 #include "eu_table.h"
+#include "eu_object.h"
+#include "eu_number.h"
+#include "eu_string.h"
+#include "eu_symbol.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -28,8 +32,6 @@ static eu_tnode _dummy = {
 	.next = -1,
 };
 
-/* calculates 2^x */
-#define twoto(x) (1 << (x))
 /* calculates ceil(log2(l)) */
 int ceil_log2(unsigned int length) {
 	static const eu_byte log_2[256] = {/* log_2[i] = ceil(log2(i - 1)) */
@@ -60,6 +62,7 @@ int ceil_log2(unsigned int length) {
  */
 static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 	size_t size;
+	eu_tnode* node;
 
 	if (length == 0) {
 		/* free the nodes array in case it wasn't the dummy already */
@@ -81,6 +84,13 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 
 		/* all nodes are free */
 		t->last_free = _eutable_node(t, size);
+
+		/* fill the nodes with empty values */
+		for (node = t->nodes; node != t->last_free; node++) {
+			_eu_makenull(_eutnode_key(node));
+			_eu_makenull(_eutnode_value(node));
+			_eutnode_next(node) = -1;
+		}
 	}
 
 	return EU_RESULT_OK;
@@ -89,6 +99,7 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 	size_t old_llen, old_len, new_llen;
 	eu_tnode* old_nodes;
+	eu_value* v;
 	int i;
 
 	/* check whether trying to shrink a table beyond the number of elements it
@@ -109,7 +120,7 @@ eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 	new_length = twoto(new_llen);
 
 	/* check whether table is already of the required length */
-	if (new_llen == old_llen)
+	if (new_llen == old_llen && _eutable_nodes(t) != &_dummy)
 		return EU_RESULT_OK;
 
 	/* save old node array */
@@ -123,15 +134,38 @@ eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 
 	/* insert old_nodes' elements into the new `nodes` */
 	for (i = 0; i < old_len; i++) {
-		if (!_euvalue_is_null(_eutnode_key(_eutable_node(t, i)))) {
-			// TODO: implement
+		/* check if key-value pair is valid */
+		if (!_euvalue_is_null(_eutnode_key(&(old_nodes[i])))) {
+			/* insert the key into the table */
+			_eu_checkreturn(eutable_create_key(s, t,
+				_eutnode_key(&(old_nodes[i])), &v));
+			/* copy the value into the new slot */
+			*v = *(_eutnode_value(&(old_nodes[i])));
 		}
 	}
 
 	/* free old nodes */
-	eugc_free(_eu_gc(s), old_nodes);
+	if (old_nodes != &_dummy)
+		eugc_free(_eu_gc(s), old_nodes);
 
 	return EU_RESULT_OK;
+}
+
+/** Finds a free position in the table.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @return The node. NULL if length is 0 or no free positions.
+ */
+eu_tnode* eutnode_free_position(europa* s, eu_table* t) {
+	if (t->last_free) {
+		while (t->last_free > t->nodes) {
+			t->last_free--;
+			if (_euvalue_is_null(_eutnode_key(t->last_free)))
+				return t->last_free;
+		}
+	}
+	return NULL;
 }
 
 /** Creates a new table capable of holding `length` elements.
@@ -158,7 +192,7 @@ eu_table* eutable_new(europa* s, size_t length) {
 
 	/* initialize other fields */
 	t->metatable = NULL;
-
+	t->count = 0;
 	return t;
 }
 
@@ -228,33 +262,274 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
  * @return A pointer to the associated value. NULL if key is not found in the
  * table.
  */
-eu_value* eutable_get(europa* s, eu_table* t, eu_value* key) {
-	eu_integer vhash;
+eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+	eu_uinteger vhash;
+	int pos;
+	eu_tnode* node;
+	eu_value out;
 
-	/* return NULL in case any of the arguments is invalid */
+	/* return error in case any of the arguments is invalid */
 	if (!s || !t || !key)
-		return NULL;
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* table has no elements */
+	if (_eutable_size(t) == 0) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
 
 	/* calculate the value's hash */
+	vhash = euvalue_hash(key);
+	/* find the position in the table */
+	pos = vhash % _eutable_size(t);
+	/* get the node */
+	node = _eutable_node(t, pos);
+
+	/* check whether the found node is empty */
+	if (_euvalue_is_null(_eutnode_key(node))) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
+
+	do {
+		/* check if colliding element and key are the same */
+		_eu_checkreturn(euvalue_eqv(key, _eutnode_key(node), &out));
+
+		/* in case they are, return the current node's value field */
+		if (_euvalue_to_bool(&out)) {
+			*val = _eutnode_value(node);
+			return EU_RESULT_OK;
+		}
+
+		/* we haven't found the key; try the next colliding element if there
+		 * are any */
+		if (_eutnode_next(node) >= 0) {
+			node = _eutable_node(t, _eutnode_next(node));
+		}
+	} while (_eutnode_next(node) >= 0);
+
+	/* the key wasn't found in its collision chain, so object not found */
+	*val = NULL;
+	return EU_RESULT_OK;
 }
 
-/**
+/** Gets a pointer associated to the value of the string key.
  * 
+ * This function treats a C string as an eu_string in hashing and collision
+ * resolution.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param str The string key.
+ * @param val Where to place the value pointer.
+ * @return Whether the operation was succesfull.
  */
-eu_result eutable_get_string(europa* s, eu_table* t, const char* str) {
+eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
+	eu_value** val) {
+	eu_uinteger vhash;
+	int pos;
+	eu_tnode* node;
 
+	/* check parameters */
+	if (!s || !t || !str || !val)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* table has no elements */
+	if (_eutable_size(t) == 0) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
+
+	/* calculate the string's hash */
+	vhash = eustring_hash_cstr(str);
+	/* find the position in the table */
+	pos = vhash % _eutable_size(t);
+	/* get the node */
+	node = _eutable_node(t, pos);
+
+	/* check whether the found node is empty */
+	if (_euvalue_is_null(_eutnode_key(node))) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
+
+	do {
+		/* check whether the colliding value is equal to str */
+		if (_euvalue_is_type(_eutnode_key(node), EU_TYPE_STRING) &&
+			eustring_equal_cstr(_eutnode_key(node), str)) {
+			*val = _eutnode_value(node);
+			return EU_RESULT_OK;
+		}
+
+		/* we haven't found the key; try the next colliding element if there
+		 * are any */
+		if (_eutnode_next(node) >= 0) {
+			node = _eutable_node(t, _eutnode_next(node));
+		}
+	} while (_eutnode_next(node) >= 0);
+
+	*val = NULL;
+	return EU_RESULT_OK;
 }
 
-/**
+/** Gets a pointer to the value associated to a symbol with a given text.
  * 
+ * Like `eutable_get_cstr`, this function treats the given symbol text as a
+ * symbol object and searches for a matching key.
+ * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param sym_text The string representing the target symbol's text.
+ * @param val Where to place the resulting value pointer.
+ * @return Whether the operation was successful.
  */
-eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text) {
+eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
+	eu_value** val) {
+	eu_uinteger vhash;
+	int pos;
+	eu_tnode* node;
+	eu_value out;
 
+	/* check parameters */
+	if (!s || !t || !sym_text || !val)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* table has no elements */
+	if (_eutable_size(t) == 0) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
+
+	/* calculate the string's hash (as if it were a symbol) */
+	vhash = eusymbol_hash_cstr(sym_text);
+	/* find the position in the table */
+	pos = vhash % _eutable_size(t);
+	/* get the node */
+	node = _eutable_node(t, pos);
+
+	/* check whether the found node is empty */
+	if (_euvalue_is_null(_eutnode_key(node))) {
+		*val = NULL;
+		return EU_RESULT_OK;
+	}
+
+	do {
+		/* check whether the colliding value is equal to str */
+		if (_euvalue_is_type(_eutnode_key(node), EU_TYPE_SYMBOL) &&
+			eusymbol_equal_cstr(_eutnode_key(node), sym_text)) {
+			*val = _eutnode_value(node);
+			return EU_RESULT_OK;
+		}
+
+		/* we haven't found the key; try the next colliding element if there
+		 * are any */
+		if (_eutnode_next(node) >= 0) {
+			node = _eutable_node(t, _eutnode_next(node));
+		}
+	} while (_eutnode_next(node) >= 0);
+
+	*val = NULL;
+	return EU_RESULT_OK;
 }
 
-/**
+/** Adds a key to the table and returns a pointer to the associated value.
  * 
+ * @param s The Europa state.
+ * @param t The target table.
+ * @param key The key to be inserted.
+ * @param val Where to place the value pointer.
+ * @return Whether the operation was successful.
  */
-eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key) {
+eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+	eu_uinteger vhash;
+	int pos, i;
+	eu_tnode *node, *cnode, *fnode;
+	eu_value out;
 
+	/* check parameters */
+	if (!s || !t || !key || !val)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* grow the table if it does not fit an extra element */
+	if (_eutable_size(t) == _eutable_count(t)) {
+		_eu_checkreturn(eutable_resize(s, t, _eutable_size(t) + 1));
+	}
+
+	/* calculate key's position */
+	vhash = euvalue_hash(key);
+	/* find the position in the table */
+	pos = vhash % _eutable_size(t);
+	/* get the node */
+	node = _eutable_node(t, pos);
+
+	/* main position isn't empty */
+	if (!_euvalue_is_null(_eutnode_key(node)) || _eutable_last_free(t) == NULL) {
+		/* find a free position in the table */
+		fnode = eutnode_free_position(s, t);
+		if (fnode == NULL) {
+			/* considering we already growed the table, this is a strange error */
+			return EU_RESULT_ERROR;
+		}
+
+		/* get the colliding node */
+		cnode = _eutable_node(t, euvalue_hash(_eutnode_key(node)) % _eutable_size(t));
+
+		if (cnode != node) { /* colliding node isn't in main position */
+			/* find whatever node previously pointed to it */
+			while (_eutable_nodes(t) + _eutnode_next(cnode) != node)
+				cnode = _eutable_nodes(t) + _eutnode_next(cnode);
+			/* update its 'next' field */
+			_eutnode_next(cnode) = fnode - _eutable_nodes(t);
+			/* place the colliding node in the free slot */
+			*fnode = *node;
+
+			/* mark the main position node as free */
+			_eutnode_next(node) = -1;
+			*_eutnode_key(node) = _null;
+			/* update fnode to point to the insertion point */
+			fnode = node;
+		} else {
+			/* in case the colliding key is in its main position, we need to add
+			 * 'key' to the collision chain */
+
+			/* set the `next` field of the new node to point to the "tail" of
+			 * the collision chain (if you consider the node at its main position
+			 * a 'head' of this list) */
+			fnode->next = node->next;
+			/* set the next of the "colision chain's head" to be the offset of
+			 * the added node */
+			node->next = fnode - _eutable_nodes(t);
+
+			/* all that's left to do now is set the fnode's key to `key` and 
+			 * return a pointer to its `value` field */
+		}
+	} else { /* main position is empty */
+		/* set fnode to it */
+		fnode = node;
+		/* set its `next` to the "end" value*/
+		_eutnode_next(fnode) = -1;
+	}
+	/* whenever we reach this point we're at three possible situations:
+	 * a) the key's main position is empty.
+	 *    In which case, `fnode` points to the correct position and has the
+	 *    correct `next` value (-1).
+	 * b) the key's main position wasn't empty, but the colliding key was **not**
+	 *    in it's main position.
+	 *    In this case, the colliding key is now at a new free position,
+	 *    correctly set up, and `fnode` points to the key's main position and has
+	 *    the correct `next` value (-1).
+	 * c) the key's main position wasn't empty and the colliding key **was** in
+	 *    its main position.
+	 *    In which case, the colliding node already points to `fnode` and `fnode`
+	 *    has the correct `next` value (the same as the colliding node had prior
+	 *    to this key's insertion).
+	 * 
+	 * In any of the cases above, the only thing left to do is properly set `fnode`'s
+	 * `key` and return the address of it's `value` field.
+	 */
+
+	_eutable_count(t) += 1; /* increase the number of elements in table */
+	fnode->key = *key; /* set the free node's key */
+	*val = _eutnode_value(fnode); /* return the address of it's value field */
+	return EU_RESULT_OK; /* everything went fine */
 }

@@ -13,6 +13,7 @@ int main(int argc, char* argv[]) {
 	MunitSuite suites[] = {
 		gcsuite,
 		readsuite,
+		tablesuite,
 		NULL
 	};
 
