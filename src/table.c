@@ -66,7 +66,7 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 
 	if (length == 0) {
 		/* free the nodes array in case it wasn't the dummy already */
-		if (t->nodes != &_dummy)
+		if ((t->nodes != &_dummy) && _eutable_last_free(t) != NULL)
 			eugc_free(_eu_gc(s), t->nodes);
 
 		t->last_free = NULL;
@@ -132,6 +132,8 @@ eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 		return EU_RESULT_BAD_ALLOC;
 	}
 
+	/* reset table count to zero as eutable_create_key will increment it*/
+	_eutable_count(t) = 0;
 	/* insert old_nodes' elements into the new `nodes` */
 	for (i = 0; i < old_len; i++) {
 		/* check if key-value pair is valid */
@@ -177,12 +179,17 @@ eu_tnode* eutnode_free_position(europa* s, eu_table* t) {
  */
 eu_table* eutable_new(europa* s, size_t length) {
 	eu_table *t;
-	
+
 	/* allocate space for the main table structure */
 	t = cast(eu_table*, eugc_new_object(s, EU_TYPE_TABLE | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_table)));
 	if (t == NULL)
 		return NULL;
+
+	/* in order for set_nodes_length to work properly, we need to first initialize
+	 * them with dummy values */
+	t->last_free = NULL;
+	t->nodes = &_dummy;
 
 	/* initialize the node array with the specified length */
 	if (set_nodes_length(s, t, length)) {
@@ -190,9 +197,9 @@ eu_table* eutable_new(europa* s, size_t length) {
 		return NULL;
 	}
 
-	/* initialize other fields */
 	t->metatable = NULL;
 	t->count = 0;
+
 	return t;
 }
 
@@ -305,8 +312,10 @@ eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 		 * are any */
 		if (_eutnode_next(node) >= 0) {
 			node = _eutable_node(t, _eutnode_next(node));
+		} else {
+			break;
 		}
-	} while (_eutnode_next(node) >= 0);
+	} while (1);
 
 	/* the key wasn't found in its collision chain, so object not found */
 	*val = NULL;
@@ -451,7 +460,7 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* grow the table if it does not fit an extra element */
-	if (_eutable_size(t) == _eutable_count(t)) {
+	if (_eutable_size(t) <= _eutable_count(t)) {
 		_eu_checkreturn(eutable_resize(s, t, _eutable_size(t) + 1));
 	}
 

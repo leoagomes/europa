@@ -98,10 +98,13 @@ MunitResult multiple_elements(MunitParameter params[], void* fixture) {
 
 	// check keys
 	munit_assert_int(eutable_get(s, t, &key1, &rv), ==, EU_RESULT_OK);
+	munit_assert_not_null(rv);
 	munit_assert_ptr_equal(_euvalue_to_obj(rv), k1);
 	munit_assert_int(eutable_get(s, t, &key2, &rv), ==, EU_RESULT_OK);
+	munit_assert_not_null(rv);
 	munit_assert_ptr_equal(_euvalue_to_obj(rv), k2);
 	munit_assert_int(eutable_get(s, t, &key3, &rv), ==, EU_RESULT_OK);
+	munit_assert_not_null(rv);
 	munit_assert_ptr_equal(_euvalue_to_obj(rv), k3);
 
 	return MUNIT_OK;
