@@ -276,6 +276,7 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
  * @param s The Europa state.
  * @param t The target table.
  * @param key The desired key.
+ * @param val Where to place the pointer to the node's value.
  * @return A pointer to the associated value. NULL if key is not found in the
  * table.
  */

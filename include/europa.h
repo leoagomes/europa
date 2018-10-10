@@ -14,17 +14,18 @@ typedef int (*eu_cfunc)(europa* s);
 
 typedef struct europa_table eu_table;
 struct europa_global {
-	eu_gc gc;
-	eu_cfunc panic;
-	europa* main;
-	eu_table* type_metas[EU_TYPE_LAST];
+	eu_gc gc; /*!< global state GC */
+	eu_cfunc panic; /*!< global panic function */
+	europa* main; /*!< the main state */
+	eu_table* type_indexes[EU_TYPE_LAST]; /*!< index tables for primitive types */
+	eu_table* internalized; /*!< internalized strings and symbols */
 };
 
 struct europa_jmplist;
 
 struct europa {
-	eu_global* global;
-	struct europa_jmplist* error_jmp;
+	eu_global* global; /*!< associated global state */
+	struct europa_jmplist* error_jmp; /*!< error jump buf */
 };
 
 #define _euglobal_gc(g) (&((g)->gc))

@@ -11,6 +11,10 @@ typedef struct europa_table eu_table;
 typedef struct europa_table_node eu_tnode;
 
 struct europa_table_node {
+	/* because of an ugly hack below, value needs to be the first field
+	 * (this forces &tn->value and tn to the same value and the conversion cast
+	 * works)
+	 */
 	eu_value value;
 	eu_value key;
 	int next;
@@ -19,6 +23,7 @@ struct europa_table_node {
 #define _eutnode_key(n) (&((n)->key))
 #define _eutnode_value(n) (&((n)->value))
 #define _eutnode_next(n) ((n)->next)
+#define _eutnode_from_valueptr(vptr) cast(eu_tnode*, vptr)
 
 /* calculates 2^x */
 #define twoto(x) (1 << (x))

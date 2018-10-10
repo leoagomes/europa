@@ -3,5 +3,8 @@
     "editor.renderWhitespace": "all",
     "editor.rulers": [
         80, 120
-    ]
+    ],
+    "files.associations": {
+        "utf8.h": "c"
+    }
 }

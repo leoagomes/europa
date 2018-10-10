@@ -5,6 +5,10 @@
  */
 #include "europa.h"
 
+#include "eu_table.h"
+#include "eu_symbol.h"
+#include "eu_number.h"
+
 /** Initializes a global environment.
  * 
  * @param g the global paremeter.
@@ -18,6 +22,53 @@ eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
 
 	/* initialize other fields */
 	g->panic = panic;
+	g->internalized = NULL;
+
+	return EU_RESULT_OK;
+}
+
+#define INTERNALIZED_COUNT 256
+
+#define __add_symbol(sname, sym, s, t, sv, tv) do {\
+	sym = eusymbol_new(s, sname);\
+	if (sym == NULL)\
+		return EU_RESULT_BAD_ALLOC;\
+	_eu_makesym(&sv, sym);\
+	_eu_checkreturn(eutable_create_key(s, t, &sv, &tv));\
+	if (tv == NULL)\
+		return EU_RESULT_BAD_RESOURCE;\
+	_eu_makebool(tv, EU_TRUE);\
+} while (0)
+
+/** Bootstraps the internalized table.
+ * 
+ * @param s The Europa state.
+ * @return The operation's result.
+ */
+eu_result euglobal_bootstrap_internalized(europa* s) {
+	eu_table* t;
+	eu_symbol* sym;
+	eu_value symvalue, *tvalue;
+
+	/* create the table */
+	t = eutable_new(s, INTERNALIZED_COUNT);
+	if (t == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	/* todo: put useful values here */
+	__add_symbol("quote", sym, s, t, symvalue, tvalue);
+	__add_symbol("unquote", sym, s, t, symvalue, tvalue);
+	__add_symbol("quasiquote", sym, s, t, symvalue, tvalue);
+	__add_symbol("eq?", sym, s, t, symvalue, tvalue);
+	__add_symbol("eqv?", sym, s, t, symvalue, tvalue);
+	__add_symbol("equal?", sym, s, t, symvalue, tvalue);
+	__add_symbol("+", sym, s, t, symvalue, tvalue);
+	__add_symbol("-", sym, s, t, symvalue, tvalue);
+	__add_symbol("*", sym, s, t, symvalue, tvalue);
+	__add_symbol("/", sym, s, t, symvalue, tvalue);
+
+	/* set internalized*/
+	_eu_global(s)->internalized = t;
 
 	return EU_RESULT_OK;
 }
@@ -69,6 +120,11 @@ europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 
 	/* set the current context as the main for the global environment */
 	_eu_global(s)->main = s;
+
+	/* bootstrap internalized table */
+	if ((res = euglobal_bootstrap_internalized(s))) {
+		_checkset(err, res);
+	}
 
 	return s;
 }

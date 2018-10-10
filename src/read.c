@@ -16,6 +16,7 @@
 #include "eu_pair.h"
 #include "eu_bytevector.h"
 #include "eu_vector.h"
+#include "eu_table.h"
 
 #include "utf8.h"
 
@@ -120,6 +121,8 @@ struct parser {
 	int current, peek, line, col;
 	char buf[AUX_BUFFER_SIZE];
 
+	eu_table* intern;
+
 	eu_symbol *quote, *quasiquote, *unquote, *unqspl;
 };
 
@@ -150,13 +153,6 @@ struct parser {
 #define punquote(p) testmake(p, unquote)
 #define pquasiquote(p) testmake(p, quasiquote)
 #define punqspl(p) testmake(p, unqspl)
-
-#define MAKESYMBOL(name, text)\
-eu_symbol* pmake##name (parser* p) {\
-	p->name = eusymbol_new(p->s, text);\
-	return p->name;\
-}
-#define MAKENSYMBOL(name) MAKESYMBOL(name, #name)
 
 /* some needed prototypes */
 eu_result pread_datum(parser* p, eu_value* out);
@@ -194,7 +190,7 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 	char *cbuf, *cnext;
 
 	/* append the character */
-	*next = utf8catcodepoint(*next, c, *remaining);
+	*next = utf8catcodepoint(*next, c, *remaining - 1);
 
 	/* check whether there was space for the character in the buffer */
 	if (*next == NULL) {
@@ -355,13 +351,66 @@ eu_result parser_init(parser* p, europa* s, eu_port* port) {
 	p->unqspl = NULL;
 	p->quasiquote = NULL;
 
+	/* create the internalization table */
+	p->intern = eutable_new(s, 32); /* completely arbitrary number */
+	if (p->intern == NULL)
+		return EU_RESULT_BAD_ALLOC;
+	_eutable_set_index(p->intern, _eu_global(s)->internalized);
+
 	return euport_peek_char(s, port, &(p->peek));
 }
 
-MAKENSYMBOL(quote)
-MAKENSYMBOL(unquote)
-MAKENSYMBOL(quasiquote)
-MAKESYMBOL(unqspl, "unquote-splicing")
+eu_symbol* pmake_symbol(parser* p, void* text) {
+	eu_symbol* sym;
+	eu_value *rval, sval;
+
+	/* try getting the symbol from the internalized table */
+	if (eutable_rget_symbol(p->s, p->intern, text, &rval))
+		return NULL;
+
+	if (rval) /* got a symbol, return it */
+		return _euvalue_to_symbol(_eutnode_key(_eutnode_from_valueptr(rval)));
+
+	/* not in internalized table, create it and add to the table */
+	sym = eusymbol_new(p->s, text);
+	if (sym == NULL)
+		return NULL;
+	_eu_makesym(&sval, sym); /* make a value out of it */
+
+	/* add it to the table */
+	if (eutable_create_key(p->s, p->intern, &sval, &rval))
+		return NULL;
+	/* set its value to something that does not need marking for collection */
+	_eu_makebool(rval, EU_TRUE);
+
+	return sym;
+}
+
+eu_string* pmake_string(parser* p, void* text) {
+	eu_string* str;
+	eu_value *rval, sval;
+
+	/* try getting the string from the internalized table */
+	if (eutable_rget_string(p->s, p->intern, text, &rval))
+		return NULL;
+
+	if (rval) /* got a string, return it */
+		return _euvalue_to_string(_eutnode_key(_eutnode_from_valueptr(rval)));
+
+	/* not in internalized table, create it and add to the table */
+	str = eustring_new(p->s, text);
+	if (str == NULL)
+		return NULL;
+	_eu_makestring(&sval, str); /* make a value out of it */
+
+	/* add it to the table */
+	if (eutable_create_key(p->s, p->intern, &sval, &rval))
+		return NULL;
+	/* set its value to something that does not need marking for collection */
+	_eu_makebool(rval, EU_TRUE);
+
+	return str;
+}
 
 /* consumes a character from the parser port */
 eu_result pconsume(parser* p) {
@@ -1162,7 +1211,7 @@ eu_result pread_string(parser* p, eu_value* out) {
 	}
 
 	/* the string is valid, create the object */
-	str = eustring_new(p->s, buf);
+	str = pmake_string(p, buf);
 	if (str == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -1207,7 +1256,7 @@ eu_result pread_vline_symbol(parser* p, eu_value* out) {
 	}
 
 	/* create the symbol object */
-	sym = eusymbol_new(p->s, buf);
+	sym = pmake_symbol(p, buf);
 	if (sym == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -1238,7 +1287,7 @@ eu_result pread_insub_symbol(parser* p, eu_value* out) {
 	} while (issubsequent(p->current));
 
 	/* create the symbol */
-	sym = eusymbol_new(p->s, buf);
+	sym = pmake_symbol(p, buf);
 	if (sym == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -1403,15 +1452,15 @@ eu_result pread_abbreviation(parser* p, eu_value* out) {
 
 	/* read the abbreviation */
 	if (p->current == CSQUOT) {
-		sym = pquote(p);
+		sym = pmake_symbol(p, "quote");
 	} else if (p->current == CCOMMA) {
-		sym = punquote(p);
+		sym = pmake_symbol(p, "unquote");
 		if (p->peek == CAT) {
-			sym = punqspl(p);
+			sym = pmake_symbol(p, "unquote-splicing");
 			padvance(p);
 		}
 	} else if (p->current == CGRAVE) {
-		sym = pquasiquote(p);
+		sym = pmake_symbol(p, "quasiquote");
 	}
 	/* consume abbrev prefix character */
 	_checkreturn(res, padvance(p));
