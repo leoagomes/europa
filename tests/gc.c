@@ -80,6 +80,22 @@ MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
+int object_in_list(europa* s, eu_gcobj* obj) {
+	eu_gc* gc;
+	eu_gcobj* current;
+
+	gc = _eu_gc(s);
+
+	current = gc->last_obj;
+	while (current) {
+		if (obj == current)
+			return 1;
+		current = current->_next;
+	}
+
+	return 0;
+}
+
 /** Tests whether the naive sweep algorithm correctly releases objects.
  * 
  * The test creates 4 objects, marks 2, does a naive sweep and verifies
@@ -89,6 +105,7 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	europa* s;
 	eu_gcobj* obj[4];
 	eu_gc* gc;
+	int i;
 
 	if (fixture == NULL)
 		return MUNIT_ERROR;
@@ -114,24 +131,19 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	obj[0]->_mark = EUGC_COLOR_BLACK;
 	obj[2]->_mark = EUGC_COLOR_BLACK;
 
-	/* check whether objects are being properly added to the list */
-	munit_assert_ptr_equal(gc->last_obj, obj[3]);
-	munit_assert_ptr_equal(gc->last_obj->_next, obj[2]);
-	munit_assert_ptr_equal(gc->last_obj->_next->_next, obj[1]);
-	munit_assert_ptr_equal(gc->last_obj->_next->_next->_next, obj[0]);
-	munit_assert_ptr_null(gc->last_obj->_next->_next->_next->_next);
+	/* make sure all objects are in the object list */
+	for (int i = 0; i < 4; i++) {
+		munit_assert_true(object_in_list(s, obj[i]));
+	}
 
-	/* collect garbage objects */
-	eugc_naive_sweep(s);
+	/* collect */
+	munit_assert_int(eugc_naive_sweep(s), ==, EU_RESULT_OK);
 
-	/* check if marked objects are the only ones that remain */
-	munit_assert_ptr_equal(gc->last_obj, obj[2]);
-	munit_assert_ptr_equal(gc->last_obj->_next, obj[0]);
-	munit_assert_ptr_null(gc->last_obj->_next->_next);
-
-	/* make sure that they are now marked white */
-	munit_assert_int(gc->last_obj->_mark, ==, EUGC_COLOR_WHITE);
-	munit_assert_int(gc->last_obj->_next->_mark, ==, EUGC_COLOR_WHITE);
+	/* make sure some objects are on the list and some aren't */
+	munit_assert_true(object_in_list(s, obj[0]));
+	munit_assert_true(object_in_list(s, obj[2]));
+	munit_assert_false(object_in_list(s, obj[1]));
+	munit_assert_false(object_in_list(s, obj[3]));
 
 	return MUNIT_OK;
 }
