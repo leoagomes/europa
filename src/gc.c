@@ -10,6 +10,7 @@
 #include "eu_table.h"
 #include "eu_vector.h"
 #include "eu_port.h"
+#include "eu_closure.h"
 
 /* helper macros */
 #define eugco_mark(obj) ((obj)->_mark)
@@ -155,20 +156,23 @@ eu_result eugc_naive_mark(europa* s, eu_gcobj* obj) {
 	switch (_euobj_type(obj)) {
 	/* object types that may need to mark refered objects */
 	case EU_TYPE_PAIR:
-		eupair_mark(s, eugc_naive_mark, _euobj_to_pair(obj));
+		_eu_checkreturn(eupair_mark(s, eugc_naive_mark, _euobj_to_pair(obj)));
 		break;
 
 	case EU_TYPE_VECTOR:
-		euvector_mark(s, eugc_naive_mark, _euobj_to_vector(obj));
+		_eu_checkreturn(euvector_mark(s, eugc_naive_mark, _euobj_to_vector(obj)));
 		break;
 
 	case EU_TYPE_PORT:
-		euport_mark(s, eugc_naive_mark, _euobj_to_port(obj));
+		_eu_checkreturn(euport_mark(s, eugc_naive_mark, _euobj_to_port(obj)));
+		break;
+
+	case EU_TYPE_CLOSURE:
+		_eu_checkreturn(eucl_mark(s, eugc_naive_mark, _euobj_to_closure(obj)));
 		break;
 
 	case EU_TYPE_USERDATA:
 	case EU_TYPE_TABLE:
-	case EU_TYPE_PROCEDURE:
 		break;
 
 	/* object types that reference no other objects */
@@ -258,10 +262,13 @@ eu_result eugco_destroy(europa* s, eu_gcobj* obj) {
 		checkreturn_result(res, euport_destroy(s, _euobj_to_port(obj)));
 		break;
 
+	case EU_TYPE_CLOSURE:
+		checkreturn_result(res, euport_destroy(s, _euclosure_to_obj(obj)));
+		break;
+
 	case EU_TYPE_PAIR:
 	case EU_TYPE_USERDATA:
 	case EU_TYPE_VECTOR:
-	case EU_TYPE_PROCEDURE:
 		break;
 
 	/* object types that reference no other objects */

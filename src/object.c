@@ -91,7 +91,7 @@ eu_uinteger euvalue_hash(eu_value* v) {
 	case EU_TYPE_VECTOR: return euvector_hash(_euvalue_to_vector(v));
 	case EU_TYPE_ERROR: return euerror_hash(_euvalue_to_error(v));
 	case EU_TYPE_EOF:
-	case EU_TYPE_PROCEDURE:
+	case EU_TYPE_CLOSURE:
 	case EU_TYPE_USERDATA:
 	default:
 		return 0;
@@ -139,7 +139,7 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 		_eu_makebool(out, EU_TRUE);
 		return EU_RESULT_OK;
 
-	case EU_TYPE_PROCEDURE: // TODO: implement
+	case EU_TYPE_CLOSURE: // TODO: implement
 	default:
 		return EU_RESULT_OK;
 	}
@@ -182,7 +182,7 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 		_eu_makebool(out, EU_TRUE);
 		return EU_RESULT_OK;
 
-	case EU_TYPE_PROCEDURE: // TODO: implement
+	case EU_TYPE_CLOSURE: // TODO: implement
 	default:
 		return EU_RESULT_OK;
 	}
@@ -224,7 +224,7 @@ eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
 		_eu_makebool(out, EU_TRUE);
 		return EU_RESULT_OK;
 
-	case EU_TYPE_PROCEDURE: // TODO: implement
+	case EU_TYPE_CLOSURE: // TODO: implement
 	case EU_TYPE_USERDATA:
 	default:
 		return EU_RESULT_OK;
