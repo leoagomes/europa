@@ -8,6 +8,9 @@
 #include "eu_object.h"
 #include "eu_table.h"
 
+#include "eu_pair.h"
+#include "eu_frame.h"
+
 typedef struct europa_global eu_global;
 typedef struct europa europa;
 typedef int (*eu_cfunc)(europa* s);
@@ -19,6 +22,7 @@ struct europa_global {
 	europa* main; /*!< the main state */
 	eu_table* type_indexes[EU_TYPE_LAST]; /*!< index tables for primitive types */
 	eu_table* internalized; /*!< internalized strings and symbols */
+	eu_table* env; /*!< global environment */
 };
 
 struct europa_jmplist;
@@ -26,6 +30,13 @@ struct europa_jmplist;
 struct europa {
 	eu_global* global; /*!< associated global state */
 	struct europa_jmplist* error_jmp; /*!< error jump buf */
+
+	/* execution state */
+	eu_value acc; /*!< the accumulator */
+	eu_value next; /*!< the next expression */
+	eu_table* env; /*!< current environment */
+	eu_pair* rib; /*!< environment rib */
+	eu_frame* previous; /*!< last stack frame */
 };
 
 #define _euglobal_gc(g) (&((g)->gc))

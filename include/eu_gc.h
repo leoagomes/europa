@@ -37,6 +37,7 @@ struct europa_gc {
 	eu_realloc realloc; /*!< the realloc-like function */
 
 	eu_gcobj* last_obj; /*!< the last object created by the garbage collector */
+
 };
 
 /* helper macros to translate semantically to stdlib functions */

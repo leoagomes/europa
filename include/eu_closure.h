@@ -23,12 +23,9 @@ struct europa_closure {
 #define _euobj_to_closure(o) cast(eu_closure*, o)
 
 #define _euvalue_to_closure(v) _euobj_to_closure((v)->value.object)
-#define _euclosure_to_value(v) { \
-	.type = EU_TYPE_STRING, \
-	.value = { .object = (s) }}
 
 #define _eu_makeclosure(vptr, s) do {\
-		(vptr)->type = EU_TYPE_STRING | EU_TYPEFLAG_COLLECTABLE;\
+		(vptr)->type = EU_TYPE_CLOSURE | EU_TYPEFLAG_COLLECTABLE;\
 		(vptr)->value.object = _euclosure_to_obj(s);\
 	} while (0)
 

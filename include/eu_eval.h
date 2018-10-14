@@ -7,6 +7,6 @@
 #include "eu_commons.h"
 #include "eu_int.h"
 
-eu_result eu_eval(europa* s, eu_value* val);
+eu_result eu_evaluate(europa* s, eu_value* val, eu_value* out);
 
 #endif
