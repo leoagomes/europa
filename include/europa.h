@@ -8,8 +8,9 @@
 #include "eu_object.h"
 #include "eu_table.h"
 
-#include "eu_pair.h"
-#include "eu_frame.h"
+typedef struct europa_frame eu_frame;
+typedef struct europa_pair eu_pair;
+typedef struct europa_error eu_error;
 
 typedef struct europa_global eu_global;
 typedef struct europa europa;
@@ -31,6 +32,8 @@ struct europa {
 	eu_global* global; /*!< associated global state */
 	struct europa_jmplist* error_jmp; /*!< error jump buf */
 
+	eu_error* err; /*!< last computation error */
+
 	/* execution state */
 	eu_value acc; /*!< the accumulator */
 	eu_value next; /*!< the next expression */
@@ -45,10 +48,19 @@ struct europa {
 
 #define _eu_global(s) ((s)->global)
 #define _eu_gc(s) _euglobal_gc(_eu_global(s))
+#define _eu_env(s) ((s)->env)
+#define _eu_err(s) ((s)->err)
+#define _eu_next(s) (&((s)->next))
+#define _eu_acc(s) (&((s)->acc))
+
+#define _eu_reset_err(s) (_eu_err(s) = NULL)
 
 eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic);
 eu_result europa_init(europa* s);
 
 europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err);
+
+eu_result europa_set_error(europa* s, int flags, eu_error* nested, void* error_text);
+eu_result europa_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
 
 #endif /* __EUROPA_H__ */

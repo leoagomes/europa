@@ -36,6 +36,7 @@ enum eu_type {
 
 	EU_TYPE_CLOSURE,
 	EU_TYPE_CONTINUATION,
+	EU_TYPE_PROTO, /* function prototype */
 
 	EU_TYPE_CPOINTER,
 	EU_TYPE_USERDATA,

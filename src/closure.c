@@ -3,28 +3,18 @@
  * @file closure.c
  * @author Leonardo G.
  */
-#include "eu_closure.h"
+#include "eu_rt.h"
 
 /** Instantiates a new closure structure.
  * 
  * @param s The Europa state.
  * @param cfunc The C function to create a closure around.
- * @param body The closure's body.
- * @param formals The function's formals.
- * @param env Its declaration environment.
  * @return The created closure.
  */
-eu_closure* eucl_new(europa* s, eu_cfunc cfunc, eu_pair* body, eu_pair* formals, eu_table* env) {
+eu_closure* eucl_new(europa* s, eu_cfunc cfunc, void* body, eu_pair* formals, eu_table* env) {
 	eu_closure* cl;
 
-	cl = eugc_new_object(s, EU_TYPE_CLOSURE | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_closure));
-	if (cl == NULL)
-		return NULL;
-
-	cl->body = body;
-	cl->formals = formals;
-	cl->env = env;
+	// TODO: reimplement
 
 	return cl;
 }
@@ -40,23 +30,17 @@ eu_result eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
 	if (!s || !mark || !cl)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	/* mark body */
-	if (cl->body) {
-		_eu_checkreturn(eupair_mark(s, mark, cl->body));
+	if (cl->proto) {
+		_eu_checkreturn(mark(s, _euproto_to_obj(cl->proto)));
 	}
 
-	/* mark formals */
-	if (cl->formals) {
-		_eu_checkreturn(eupair_mark(s, mark, cl->formals));
-	}
-
-	/* mark environment table */
 	if (cl->env) {
-		_eu_checkreturn(eutable_mark(s, mark, cl->formals));
+		_eu_checkreturn(mark(s, _eutable_to_obj(cl->env)));
 	}
 
 	return EU_RESULT_OK;
 }
+
 
 /** Returns a closure's hash.
  * 

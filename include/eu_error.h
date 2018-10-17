@@ -18,6 +18,8 @@ typedef struct europa_error eu_error;
 struct europa_error {
 	EU_OBJ_COMMON_HEADER;
 
+	eu_error* nested; /*!< possibly nested error. */
+
 	int flags; /*!< error flags. */
 	eu_byte _msg; /*!< start of the errors, message. */
 };
@@ -35,8 +37,9 @@ struct europa_error {
 /* member access macros */
 
 #define _euerror_message(s) (&((s)->_msg))
+#define _euerror_nested(s) (&((s)->nested))
 
-eu_error* euerror_new(europa* s, int flags, void* text);
+eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested);
 
 void* euerror_message(eu_error* err);
 eu_uinteger euerror_hash(eu_error* err);

@@ -138,13 +138,13 @@ struct parser {
 #define seterrorf(p, fmt, ...) \
 	do {\
 		errorf(p, fmt, __VA_ARGS__);\
-		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf);\
+		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf, NULL);\
 	} while(0)
 
 #define seterror(p, fmt) \
 	do {\
 		snprintf(p->buf, AUX_BUFFER_SIZE, "%d:%d: " fmt, p->line, p->col);\
-		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf);\
+		p->error = euerror_new(p->s, EU_ERROR_READ, p->buf, NULL);\
 	} while(0)
 
 #define testmake(p, name) ((p)->name != NULL ? (p)->name : pmake##name(p))

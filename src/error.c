@@ -9,7 +9,7 @@
 
 #include "utf8.h"
 
-eu_error* euerror_new(europa* s, int flags, void* text) {
+eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested) {
 	eu_error* err;
 	size_t text_size;
 
@@ -25,6 +25,8 @@ eu_error* euerror_new(europa* s, int flags, void* text) {
 
 	err->flags = flags;
 	memcpy(&(err->_msg), text, text_size);
+
+	err->nested = nested;
 
 	return err;
 }

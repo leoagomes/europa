@@ -8,6 +8,10 @@
 #include "eu_table.h"
 #include "eu_symbol.h"
 #include "eu_number.h"
+#include "eu_error.h"
+
+#include <stdarg.h>
+#include <stdio.h>
 
 /** Initializes a global environment.
  * 
@@ -127,4 +131,34 @@ europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 	}
 
 	return s;
+}
+
+eu_result europa_set_error(europa* s, int flags, eu_error* nested, void* text) {
+	if (!s || !text)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* create error with message, set to s->err */
+	_eu_err(s) = euerror_new(s, flags, text, nested);
+	if (_eu_err(s) == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	return EU_RESULT_OK;
+}
+
+eu_result europa_set_error_nf(europa* s, int flags, eu_error* nested, size_t len,
+	const char* fmt, ...) {
+	char buf[len];
+
+	/* call snprintf with given arguments */
+	va_list args;
+	va_start(args, fmt);
+	vsnprintf(buf, len, fmt, args);
+	va_end(args);
+
+	/* create the error object */
+	_eu_err(s) = euerror_new(s, flags, buf, nested);
+	if (_eu_err(s) == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	return EU_RESULT_OK;
 }
