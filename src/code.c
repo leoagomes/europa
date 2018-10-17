@@ -10,6 +10,7 @@ enum {
 	OP_CLOSE,
 	OP_TEST,
 	OP_JUMP,
+	OP_ASSIGN,
 };
 
 /* warning: currently assumes 32-bit */
@@ -26,6 +27,7 @@ enum {
 /* opcode generation helper macros */
 #define IREFER(k) (opc_part(OP_REFER) | val_part(k))
 #define ICONST(k) (opc_part(OP_CONST) | val_part(k))
+#define IASSIGN(k) (opc_part(OP_ASSIGN) | val_part(k))
 #define ICLOSE(subindex) (opc_part(OP_CLOSE) | val_part(subindex))
 #define ITEST(off) (opc_part(OP_TEST) | offset_part(off))
 #define IJUMP(off) (opc_part(OP_JUMP) | offset_part(off))
@@ -181,12 +183,42 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v) {
 
 			return EU_RESULT_OK;
 		} else if (eusymbol_equal_cstr(head, "set!")) {
+			/* check arity */
+			length = list_length(s, tail, &improper);
+			if (length < 0 || improper) {
+				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+					"set! can't be used in an improper list."));
+				return EU_RESULT_ERROR;
+			}
+			if (length != 2) {
+				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+					"bad set! arity: expected 2 arguments, got %d.", length));
+				return EU_RESULT_ERROR;
+			}
 
+			/* check if variable name parameter is actually a symbol */
+			head = _eupair_head(_euvalue_to_pair(tail));
+			if (!_euvalue_is_type(head, EU_TYPE_SYMBOL)) {
+				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+					"bad set! syntax, expected first argument to be an identifier (symbol)."));
+				return EU_RESULT_ERROR;
+			}
+
+			/* compile the value parameter */
+			tail = _eupair_head(_euvalue_to_pair(_eupair_tail(_euvalue_to_pair(tail))));
+			_eu_checkreturn(compile(s, proto, tail));
+
+			/* add name symbol to the constant list */
+			_eu_checkreturn(euproto_add_constant(s, proto, head, &index));
+			/* append the assign instruction */
+			_eu_checkreturn(euproto_append_instruction(s, proto, IASSIGN(index)));
+
+			return EU_RESULT_OK;
 		} else if (eusymbol_equal_cstr(head, "call/cc")
 			|| eusymbol_equal_cstr(head, "call-with-current-continuation")) {
-
+			
 		} else if (eusymbol_equal_cstr(head, "begin")) {
-
+			
 		}
 	}
 

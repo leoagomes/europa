@@ -4,6 +4,7 @@
  * @author Leonardo G.
  */
 #include "eu_rt.h"
+#include "eu_number.h"
 
 /** how much to grow the code buffer */
 #define CODE_GROWTH_RATE 5
@@ -187,6 +188,9 @@ eu_integer euproto_append_instruction(europa* s, eu_proto* proto, eu_instruction
 /**
  * @brief Adds a constant to the buffer, returning its index.
  * 
+ * If the given value is found to be in the constant list already, then its
+ * index is returned, but nothing is added (the list won't grow in size).
+ * 
  * @param s The Europa state.
  * @param proto The target prototype.
  * @param constant The constant value.
@@ -195,6 +199,20 @@ eu_integer euproto_append_instruction(europa* s, eu_proto* proto, eu_instruction
  */
 eu_integer euproto_add_constant(europa* s, eu_proto* proto, eu_value* constant,
 	int* index) {
+	int i;
+	eu_value out;
+
+	/* check if constant is in the constant list already */
+	for (i = 0; i < proto->constantc; i++) {
+		_eu_checkreturn(euvalue_equal(&(proto->constants[i]), constant, &out));
+		if (_euvalue_is_type(&out, EU_TYPE_BOOLEAN) && _euvalue_to_bool(&out)) {
+			/* value found, set index and return ok */
+			*index = i;
+			return EU_RESULT_OK;
+		}
+	}
+
+	/* value not found, we need to add it to the list */
 
 	/* check whether constant fits the array */
 	if (++(proto->constantc) > proto->constants_size) {
