@@ -63,18 +63,18 @@ struct europa_continuation {
 
 /* vm instruction set related definitions */
 enum {
-	OP_NOP,
-	OP_REFER,
-	OP_CONST,
-	OP_CLOSE,
-	OP_TEST,
-	OP_JUMP,
-	OP_ASSIGN,
-	OP_ARGUMENT,
-	OP_CONTI,
-	OP_APPLY,
-	OP_RETURN,
-	OP_FRAME,
+	EU_OP_NOP,
+	EU_OP_REFER,
+	EU_OP_CONST,
+	EU_OP_CLOSE,
+	EU_OP_TEST,
+	EU_OP_JUMP,
+	EU_OP_ASSIGN,
+	EU_OP_ARGUMENT,
+	EU_OP_CONTI,
+	EU_OP_APPLY,
+	EU_OP_RETURN,
+	EU_OP_FRAME,
 };
 
 /* warning: currently assumes 32-bit */

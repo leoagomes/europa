@@ -10,7 +10,7 @@
 #define offset_part(off) ((OFFBIAS) + off)
 
 /* opcode generation helper macros */
-#define IREFER(k) (opc_part(OP_REFER) | val_part(k))
+#define IREFER(k) (opc_part(EU_OP_REFER) | val_part(k))
 #define ICONST(k) (opc_part(OP_CONST) | val_part(k))
 #define IASSIGN(k) (opc_part(OP_ASSIGN) | val_part(k))
 #define ICLOSE(subindex) (opc_part(OP_CLOSE) | val_part(subindex))
