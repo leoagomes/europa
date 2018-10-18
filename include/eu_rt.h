@@ -42,7 +42,7 @@ struct europa_closure {
 	EU_OBJ_COMMON_HEADER;
 
 	eu_proto* proto; /*!< europa function prototype */
-	eu_cfunc* cf; /*!< C function closure */
+	eu_cfunc cf; /*!< C function closure */
 
 	eu_table* env; /*!< closure environment */
 };
@@ -61,6 +61,29 @@ struct europa_continuation {
 	eu_instruction* pc; /*!< saved program counter */
 };
 
+/* vm instruction set related definitions */
+enum {
+	OP_NOP,
+	OP_REFER,
+	OP_CONST,
+	OP_CLOSE,
+	OP_TEST,
+	OP_JUMP,
+	OP_ASSIGN,
+	OP_ARGUMENT,
+	OP_CONTI,
+	OP_APPLY,
+	OP_RETURN,
+	OP_FRAME,
+};
+
+/* warning: currently assumes 32-bit */
+/* adapting the following values should be enough, though */
+#define OPCMASK 0xFF
+#define OPCSHIFT 24
+#define VALMASK 0xFFFFFF
+#define OFFBIAS (0xFFFFFF >> 1)
+
 /* prototype structure functions and macros */
 #define _euproto_to_obj(s) cast(eu_gcobj*, s)
 #define _euobj_to_proto(o) cast(eu_proto*, o)
@@ -69,6 +92,7 @@ struct europa_continuation {
 		(vptr)->type = EU_TYPE_CLOSURE | EU_TYPEFLAG_COLLECTABLE;\
 		(vptr)->value.object = _euproto_to_obj(s);\
 	} while (0)
+#define _euproto_formals(p) (&((p)->formals))
 
 eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
 	eu_value* source, int subprotos_size, int code_size);
@@ -91,8 +115,7 @@ eu_integer euproto_add_subproto(europa* s, eu_proto* proto, eu_proto* subproto,
 		(vptr)->value.object = _euclosure_to_obj(s);\
 	} while (0)
 
-eu_closure* eucl_new(europa* s, eu_cfunc cfunc, void* body, eu_pair* formals,
-	eu_table* env);
+eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env);
 
 eu_result eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl);
 eu_result eucl_destroy(europa* s, eu_closure* cl);
@@ -116,6 +139,11 @@ eu_integer eucont_hash(eu_continuation* cl);
 
 /* code generation related macros and functions */
 eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk);
+
+/* virtual machine related functions and macros */
+eu_result euvm_call();
+
+
 
 /* run time macros and functions */
 eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud);

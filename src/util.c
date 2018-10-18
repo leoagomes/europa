@@ -5,6 +5,8 @@
  */
 #include "eu_util.h"
 
+#include "eu_pair.h"
+
 #include <string.h>
 
 eu_uinteger eutil_strb_hash(eu_byte* str, eu_uint len) {
@@ -57,4 +59,38 @@ int unicodetoutf8(int c) {
 		((0x80 | (0x3F & (c >> 12))) << 16) |
 		((0x80 | (0x3F & (c >> 6))) << 8) |
 		(0x80 | (0x3F & c));
+}
+
+/* this function's return value does not take into account the improper end of
+ * the list:
+ * list_length(s, (a b c)) = 3
+ * list_length(s, (a b . c)) = 2
+ * 
+ * the number of elements may be considered (return + improper)
+ * */
+int eulist_length(europa* s, eu_value* v, int* improper) {
+	int count;
+
+	/* empty list: length = 0 */
+	if (_euvalue_is_null(v))
+		return 0;
+
+	/* not even a list */
+	if (!_euvalue_is_type(v, EU_TYPE_PAIR))
+		return -1;
+
+	/* count number of elements */
+	count = 0;
+	*improper = 0;
+	while (!_euvalue_is_null(v)) {
+		count++;
+		v = _eupair_tail(_euvalue_to_pair(v));
+
+		/* check if improper list */
+		if (!_euvalue_is_type(v, EU_TYPE_PAIR)) {
+			*improper = 1; /* mark improper */
+			break;
+		}
+	}
+	return count;
 }
