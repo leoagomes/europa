@@ -29,17 +29,22 @@ struct europa_global {
 struct europa_jmplist;
 
 struct europa {
+	EU_OBJ_COMMON_HEADER;
+
 	eu_global* global; /*!< associated global state */
 	struct europa_jmplist* error_jmp; /*!< error jump buf */
 
 	eu_error* err; /*!< last computation error */
 
 	/* execution state */
+	eu_instruction* pc; /*!< current instruction */
+	eu_closure* ccl; /*!< current running closure */
+	eu_byte tag; /*!< current continuation tag */
 	eu_value acc; /*!< the accumulator */
-	eu_value next; /*!< the next expression */
 	eu_table* env; /*!< current environment */
-	eu_pair* rib; /*!< environment rib */
-	eu_frame* previous; /*!< last stack frame */
+	eu_value rib; /*!< environment rib */
+	eu_value* rib_lastpos; /*!< last rib position */
+	eu_continuation* previous; /*!< previous continuation */
 };
 
 #define _euglobal_gc(g) (&((g)->gc))

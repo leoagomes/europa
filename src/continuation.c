@@ -1,5 +1,24 @@
 #include "eu_rt.h"
 
+eu_continuation* eucont_new(europa* s, eu_short tag, eu_continuation* previous,
+	eu_table* env, eu_value* rib, eu_closure* cl, eu_instruction* pc) {
+	eu_continuation* cont;
+
+	cont = eugc_new_object(s, EU_TYPE_CONTINUATION | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(eu_continuation));
+	if (cont == NULL)
+		return NULL;
+
+	cont->tag = tag;
+	cont->previous = previous;
+	cont->next = NULL;
+	cont->env = env;
+	cont->cl = cl;
+	cont->pc = pc;
+
+	return cont;
+}
+
 /**
  * @brief Marks continuation references.
  * 
@@ -19,10 +38,14 @@ eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
 
 	/* mark environment and rib */
 	_eu_checkreturn(mark(s, _eutable_to_obj(cont->env)));
-	_eu_checkreturn(mark(s, _eupair_to_obj(cont->rib)));
+	if (_euvalue_is_collectable(&cont->rib)) {
+		_eu_checkreturn(mark(s, _euvalue_to_obj(&cont->rib)));
+	}
 
-	/* mark referenced prototype */
-	_eu_checkreturn(mark(s, _euproto_to_obj(cont->proto)));
+	/* mark referenced closure */
+	if (cont->cl) {
+		_eu_checkreturn(mark(s, _euproto_to_obj(cont->cl)));
+	}
 
 	return EU_RESULT_OK;
 }

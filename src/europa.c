@@ -9,6 +9,7 @@
 #include "eu_symbol.h"
 #include "eu_number.h"
 #include "eu_error.h"
+#include "eu_rt.h"
 
 #include <stdarg.h>
 #include <stdio.h>
@@ -128,6 +129,11 @@ europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 	/* bootstrap internalized table */
 	if ((res = euglobal_bootstrap_internalized(s))) {
 		_checkset(err, res);
+	}
+
+	/* setup initial state */
+	if ((res = euvm_intialize_state(s))) {
+		checkset(err, res);
 	}
 
 	return s;

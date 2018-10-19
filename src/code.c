@@ -11,16 +11,16 @@
 
 /* opcode generation helper macros */
 #define IREFER(k) (opc_part(EU_OP_REFER) | val_part(k))
-#define ICONST(k) (opc_part(OP_CONST) | val_part(k))
-#define IASSIGN(k) (opc_part(OP_ASSIGN) | val_part(k))
-#define ICLOSE(subindex) (opc_part(OP_CLOSE) | val_part(subindex))
-#define ITEST(off) (opc_part(OP_TEST) | offset_part(off))
-#define IJUMP(off) (opc_part(OP_JUMP) | offset_part(off))
-#define IARGUMENT() (opc_part(OP_ARGUMENT) | val_part(0))
-#define ICONTI(arg) (opc_part(OP_CONTI) | val_part(arg))
-#define IAPPLY() (opc_part(OP_APPLY) | val_part(0))
-#define IRETURN() (opc_part(OP_RETURN) | val_part(0))
-#define IFRAME(return_to) (opc_part(OP_FRAME) | offset_part(return_to))
+#define ICONST(k) (opc_part(EU_OP_CONST) | val_part(k))
+#define IASSIGN(k) (opc_part(EU_OP_ASSIGN) | val_part(k))
+#define ICLOSE(subindex) (opc_part(EU_OP_CLOSE) | val_part(subindex))
+#define ITEST(off) (opc_part(EU_OP_TEST) | offset_part(off))
+#define IJUMP(off) (opc_part(EU_OP_JUMP) | offset_part(off))
+#define IARGUMENT() (opc_part(EU_OP_ARGUMENT) | val_part(0))
+#define ICONTI(arg) (opc_part(EU_OP_CONTI) | val_part(arg))
+#define IAPPLY() (opc_part(EU_OP_APPLY) | val_part(0))
+#define IRETURN() (opc_part(EU_OP_RETURN) | val_part(0))
+#define IFRAME(return_to) (opc_part(EU_OP_FRAME) | offset_part(return_to))
 
 eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail);
 
@@ -141,9 +141,9 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 					"if can't be used with improper list."));
 				return EU_RESULT_ERROR;
 			}
-			if (length != 3) {
+			if (length > 3 || length <= 1) {
 				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
-					"bad if arity: expected 3 arguments, got %d.", length));
+					"bad if arity: expected 2 or 3 arguments, got %d.", length));
 				return EU_RESULT_ERROR;
 			}
 
@@ -154,30 +154,36 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* because the offset of the false branch is not yet known (no
 			 * branches have been compiled), insert a placeholder offset and
 			 * save the instruction's index in order to update it later */
+			index = proto->code_length; /* get instruction index */
 			_eu_checkreturn(euproto_append_instruction(s, proto, ITEST(0)));
-			index = proto->code_length - 1; /* get instruction index */
 
 			/* compile true branch */
 			tail = _eupair_tail(_euvalue_to_pair(tail)); /* (true . (false . '())) */
 			head = _eupair_head(_euvalue_to_pair(tail)); /* true */
 			_eu_checkreturn(compile(s, proto, head, is_tail)); /* is in tail position if this is in tail position*/
 
-			/* add a jump instruction to skip the false branch, where to jump
-			 * is still not defined, though, so we'll have to do the same as
-			 * with the test instruction */
-			length = proto->code_length; /* the index of the jump instruction */
-			_eu_checkreturn(euproto_append_instruction(s, proto, ITEST(0)));
+			/* check if there is a false branch */
+			if (!_euvalue_is_null(_eupair_tail(_euvalue_to_pair(tail)))) {
+				/* add a jump instruction to skip the false branch, where to jump
+				* is still not defined, though, so we'll have to do the same as
+				* with the test instruction */
+				length = proto->code_length; /* the index of the jump instruction */
+				_eu_checkreturn(euproto_append_instruction(s, proto, IJUMP(0)));
 
-			/* compile false branch */
-			tail = _eupair_tail(_euvalue_to_pair(tail)); /* (false . '()) */
-			head = _eupair_head(_euvalue_to_pair(tail)); /* false */
-			_eu_checkreturn(compile(s, proto, head, is_tail)); /* is in tail position if this is in tail position */
-			improper = proto->code_length; /* the index of the instruction after the false branch*/
+				/* compile false branch */
+				tail = _eupair_tail(_euvalue_to_pair(tail)); /* (false . '()) */
+				head = _eupair_head(_euvalue_to_pair(tail)); /* false */
+				_eu_checkreturn(compile(s, proto, head, is_tail)); /* is in tail position if this is in tail position */
+				improper = proto->code_length; /* the index of the instruction after the false branch*/
 
-			/* update the test instruction */
-			proto->code[index] = ITEST(length + 1 - index);
-			/* update the jump instruction */
-			proto->code[length] = IJUMP(improper - length);
+				/* update the test instruction */
+				proto->code[index] = ITEST(length + 1 - index);
+				/* update the jump instruction */
+				proto->code[length] = IJUMP(improper - length);
+			} else {
+				/* update the test statement to point to after the true branch */
+				proto->code[index] = ITEST(proto->code_length - index);
+			}
 
 			return EU_RESULT_OK;
 		} else if (eusymbol_equal_cstr(head, "set!")) { /* (set! var value) */

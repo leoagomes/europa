@@ -41,6 +41,8 @@ struct europa_proto {
 struct europa_closure {
 	EU_OBJ_COMMON_HEADER;
 
+	eu_byte status; /*!< internal status information */
+
 	eu_proto* proto; /*!< europa function prototype */
 	eu_cfunc cf; /*!< C function closure */
 
@@ -51,13 +53,15 @@ struct europa_closure {
 struct europa_continuation {
 	EU_OBJ_COMMON_HEADER;
 
+	eu_short tag; /*!< creation tag */
+
 	eu_continuation* previous; /*!< previous call frame */
 	eu_continuation* next; /*!< next call frame */
 
 	eu_table* env; /*!< call frame environment */
-	eu_pair* rib; /*!< frame value rib */
+	eu_value rib; /*!< frame value rib */
 
-	eu_proto* proto; /*!< prototype in execution (used for GC marking) */
+	eu_closure* cl; /*!< closure in execution (used for GC marking) */
 	eu_instruction* pc; /*!< saved program counter */
 };
 
@@ -72,9 +76,18 @@ enum {
 	EU_OP_ASSIGN,
 	EU_OP_ARGUMENT,
 	EU_OP_CONTI,
+	EU_OP_NUATE,
 	EU_OP_APPLY,
 	EU_OP_RETURN,
 	EU_OP_FRAME,
+	EU_OP_HALT,
+};
+
+enum {
+	EU_CLSTATUS_WAITING,
+	EU_CLSTATUS_RUNNING,
+	EU_CLSTATUS_STOPPED,
+	EU_CLSTATUS_FINISHED,
 };
 
 /* warning: currently assumes 32-bit */
@@ -130,8 +143,8 @@ eu_integer eucl_hash(eu_closure* cl);
 		(vptr)->value.object = _eucont_to_obj(s);\
 	} while (0)
 
-eu_continuation* eucont_new(europa* s, eu_cfunc cfunc, eu_pair* body, eu_pair* formals,
-	eu_table* env);
+eu_continuation* eucont_new(europa* s, eu_short tag, eu_continuation* previous,
+	eu_table* env, eu_value* rib, eu_closure* cl, eu_instruction* pc);
 
 eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cl);
 eu_result eucont_destroy(europa* s, eu_continuation* cl);
@@ -141,9 +154,8 @@ eu_integer eucont_hash(eu_continuation* cl);
 eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk);
 
 /* virtual machine related functions and macros */
-eu_result euvm_call();
-
-
+eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments);
+eu_result euvm_initialize_state(europa* s);
 
 /* run time macros and functions */
 eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud);

@@ -31,15 +31,7 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
 	if (cl == NULL)
 		return NULL;
 
-	/* if is a C closure, store the environment as is and return */
-	if (cf != NULL) {
-		cl->env = env;
-		cl->cf = cf;
-		return cl;
-	}
-
-	/* Europa closure */
-	cl->cf = NULL;
+	cl->cf = cf; /* set c function */
 	cl->proto = proto; /* set the prototype */
 
 	/* create new environment table */
