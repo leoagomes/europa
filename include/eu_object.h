@@ -26,7 +26,6 @@ enum eu_type {
 	EU_TYPE_SYMBOL,
 	EU_TYPE_STRING,
 	EU_TYPE_ERROR,
-	EU_TYPE_EXCEPTION,
 
 	EU_TYPE_PAIR,
 	EU_TYPE_VECTOR,
@@ -42,6 +41,9 @@ enum eu_type {
 	EU_TYPE_USERDATA,
 	EU_TYPE_LAST
 };
+
+extern const char* eu_type_names[];
+#define eu_type_name(type) (eu_type_names[type > EU_TYPE_LAST ? EU_TYPE_LAST : type])
 
 /** flag to signal if a type is garbage collected */
 #define EU_TYPEFLAG_COLLECTABLE (1 << 7)

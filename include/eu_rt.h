@@ -41,28 +41,24 @@ struct europa_proto {
 struct europa_closure {
 	EU_OBJ_COMMON_HEADER;
 
-	eu_byte status; /*!< internal status information */
+	eu_table* env; /*!< closure creation environment */
 
 	eu_proto* proto; /*!< europa function prototype */
 	eu_cfunc cf; /*!< C function closure */
-
-	eu_table* env; /*!< closure environment */
 };
 
 /** Continuation structure. */
 struct europa_continuation {
 	EU_OBJ_COMMON_HEADER;
 
-	eu_short tag; /*!< creation tag */
-
 	eu_continuation* previous; /*!< previous call frame */
-	eu_continuation* next; /*!< next call frame */
 
 	eu_table* env; /*!< call frame environment */
 	eu_value rib; /*!< frame value rib */
+	eu_value* rib_lastpos; /*!< last rib slot position */
 
-	eu_closure* cl; /*!< closure in execution (used for GC marking) */
-	eu_instruction* pc; /*!< saved program counter */
+	eu_closure* cl; /*!< closure in execution */
+	unsigned int pc; /*!< saved program counter */
 };
 
 /* vm instruction set related definitions */
@@ -76,7 +72,6 @@ enum {
 	EU_OP_ASSIGN,
 	EU_OP_ARGUMENT,
 	EU_OP_CONTI,
-	EU_OP_NUATE,
 	EU_OP_APPLY,
 	EU_OP_RETURN,
 	EU_OP_FRAME,
@@ -143,8 +138,9 @@ eu_integer eucl_hash(eu_closure* cl);
 		(vptr)->value.object = _eucont_to_obj(s);\
 	} while (0)
 
-eu_continuation* eucont_new(europa* s, eu_short tag, eu_continuation* previous,
-	eu_table* env, eu_value* rib, eu_closure* cl, eu_instruction* pc);
+eu_continuation* eucont_new(europa* s, eu_continuation* previous,
+	eu_table* env, eu_value* rib, eu_value* rib_lastpos, eu_closure* cl,
+	unsigned int pc);
 
 eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cl);
 eu_result eucont_destroy(europa* s, eu_continuation* cl);
@@ -154,7 +150,8 @@ eu_integer eucont_hash(eu_continuation* cl);
 eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk);
 
 /* virtual machine related functions and macros */
-eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments);
+eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
+	eu_value* out);
 eu_result euvm_initialize_state(europa* s);
 
 /* run time macros and functions */

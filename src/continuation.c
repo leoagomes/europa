@@ -1,20 +1,20 @@
 #include "eu_rt.h"
 
-eu_continuation* eucont_new(europa* s, eu_short tag, eu_continuation* previous,
-	eu_table* env, eu_value* rib, eu_closure* cl, eu_instruction* pc) {
+eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
+	eu_value* rib, eu_value* rib_lastpos, eu_closure* cl, unsigned int pc) {
 	eu_continuation* cont;
 
-	cont = eugc_new_object(s, EU_TYPE_CONTINUATION | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_continuation));
+	cont = _euobj_to_cont(eugc_new_object(s, EU_TYPE_CONTINUATION |
+		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_continuation)));
 	if (cont == NULL)
 		return NULL;
 
-	cont->tag = tag;
 	cont->previous = previous;
-	cont->next = NULL;
 	cont->env = env;
 	cont->cl = cl;
 	cont->pc = pc;
+	cont->rib = *rib;
+	cont->rib_lastpos = rib_lastpos;
 
 	return cont;
 }
@@ -31,9 +31,6 @@ eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
 	/* mark linked continuations */
 	if (cont->previous) {
 		_eu_checkreturn(mark(s, _eucont_to_obj(cont->previous)));
-	}
-	if (cont->next) {
-		_eu_checkreturn(mark(s, _eucont_to_obj(cont->next)));
 	}
 
 	/* mark environment and rib */

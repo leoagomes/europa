@@ -3,6 +3,7 @@
 #include "eu_error.h"
 #include "eu_symbol.h"
 #include "eu_number.h"
+#include "eu_util.h"
 
 #define OPCMASK 0xFF
 #define OPCSHIFT 24
@@ -12,42 +13,62 @@
 #define val_part(x) (x & VALMASK)
 #define off_part(x) (val_part(x) - (VALMASK >> 1))
 
+#define CALL_META_NAME "@@call"
+#define ARGS_KEY_NAME "@@args"
+
 /**
- * @brief Prepares a closure for applying; setting formals to their respective
- * values.
+ * @brief Prepares the state's environment for running a closure, by extending
+ * the environment in which it was defined and setting the state's environment to
+ * it.
  * 
  * @param s The Europa state.
  * @param cl The target closure.
  * @param args The argument list value.
  * @return The result of the operation.
  */
-eu_result prepare_for_apply(europa* s, eu_closure* cl, eu_value* args) {
+eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	eu_proto* proto;
 	eu_value *tv, *cv, *cf;
+	eu_table* new_env;
+	eu_value key;
+	int length, improper, i;
 
-	/* a C closure should already be prepared */
-	if (cl->cf != NULL)
+	/* beacause C functions don't need to use the argument rib, we can leave
+	 * C closure arguments in the rib when calling them, preventing one table
+	 * creation */
+	if (cl->cf) {
+		/* place their creation environment in env */
+		s->env = cl->env;
+		/* place the arguments in rib */
+		s->rib = *args;
+		s->rib_lastpos = NULL;
 		return EU_RESULT_OK;
-
-	/* check if argument list is valid */
-	if (!_euvalue_is_type(args, EU_TYPE_PAIR)) {
-		_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
-			"Closure application argument list isn't a list."));
-		return EU_RESULT_ERROR;
 	}
 
-	proto = cl->proto;
+	/* europa closure */
+	/* count number of parameters in environment */
+	length = eutil_list_length(s, _euproto_formals(cl->proto), &improper);
+	new_env = eutable_new(s, length + improper);
+	if (new_env == NULL) {
+		_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+			"Could not create new environment."));
+		return EU_RESULT_ERROR;
+	}
+	/* set its index to point to the closure's environment */
+	_eutable_set_index(new_env, cl->env);
 
 	/* add proper elements */
-	for (cv = args, cf = _euproto_formals(proto);
+	for (i = 0, cv = args, cf = _euproto_formals(cl->proto);
 		!_euvalue_is_null(cf) && _euvalue_is_type(cf, EU_TYPE_PAIR);
+		i++,
 		cv = _eupair_tail(_euvalue_to_pair(cv)),
 		cf = _eupair_tail(_euvalue_to_pair(cf))) {
 
 		/* check if there is an arity problem */
 		if (_euvalue_is_null(cv)) {
-			_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
-				"Expected more arguments in closure application."));
+			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				"Expected %s%d arguments in closure application, got %d.",
+				improper ? ">" : "", length, i));
 			return EU_RESULT_ERROR;
 		}
 
@@ -59,12 +80,15 @@ eu_result prepare_for_apply(europa* s, eu_closure* cl, eu_value* args) {
 			return EU_RESULT_ERROR;
 		}
 
-		/* get environment slot */
-		_eu_checkreturn(eutable_get(s, cl->env, _eupair_head(_euvalue_to_pair(cf)),
-			&tv));
-		if (tv == NULL)
-			goto bad_closure_environment;
-
+		/* create formal key */
+		_eu_checkreturn(eutable_create_key(s, new_env,
+			_eupair_head(_euvalue_to_pair(cf)), &tv));
+		if (tv == NULL) {
+			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				"Could not add formal %s to the new environment.",
+				_eusymbol_text(_euvalue_to_symbol(_eupair_head(_euvalue_to_pair(cf))))));
+			return EU_RESULT_ERROR;
+		}
 		/* place the value */
 		*tv = *(_eupair_head(_euvalue_to_pair(cv)));
 	}
@@ -75,24 +99,22 @@ eu_result prepare_for_apply(europa* s, eu_closure* cl, eu_value* args) {
 	 * correct value for it */
 	if (!_euvalue_is_null(cf)) {
 		/* get the slot in the environment */
-		_eu_checkreturn(eutable_get(s, cl->env, cf, &tv));
-		/* check for errors */
-		if (tv == NULL)
-			goto bad_closure_environment;
+		_eu_checkreturn(eutable_create_key(s, new_env, cf, &tv));
+		if (tv == NULL) {
+			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				"Could not add formal %s to the new environment.",
+				_eusymbol_text(_euvalue_to_symbol(cf))));
+			return EU_RESULT_ERROR;
+		}
 
 		/* place the argument list there */
-		*tv = *args;
-		return EU_RESULT_OK;
+		*tv = *cv;
 	}
 
-	/* the closure's environment is properly set */
-	return EU_RESULT_OK;
+	/* set the new environment, potentially losing the previous one */
+	s->env = new_env;
 
-	bad_closure_environment:
-	/* closure wasn't initialized properly */
-	_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
-		"Closure was not initialized properly when constructed."));
-	return EU_RESULT_ERROR;
+	return EU_RESULT_OK;
 }
 
 eu_result prepare_state(europa* s, eu_closure* cl) {
@@ -121,8 +143,7 @@ eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
 }
 
 eu_result check_off_in_code(europa* s, int off, const char* inst) {
-	if (s->ccl->proto->code + s->ccl->proto->code_length < s->pc + off ||
-		s->ccl->proto->code > s->pc + off) {
+	if (s->pc + off > s->ccl->proto->code_length) {
 		_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid jumping offset for %s instruction.", inst));
 		return EU_RESULT_ERROR;
@@ -130,18 +151,48 @@ eu_result check_off_in_code(europa* s, int off, const char* inst) {
 	return EU_RESULT_OK;
 }
 
-eu_result add_rib_value(europa* s, eu_value* v) {
+void set_cc(europa* s, eu_continuation* cont) {
+	if (cont == NULL) { /* nothing else to run */
+		s->ccl = NULL;
+		s->env = NULL;
+		s->pc = 0;
+		s->status = EU_SSTATUS_STOPPED;
+		return;
+	}
 
+	s->ccl = cont->cl;
+	s->previous = cont->previous;
+	s->pc = cont->pc;
+	s->env = cont->env;
+	s->rib = cont->rib;
+	s->rib_lastpos = cont->rib_lastpos;
+}
+
+/* WARNING: DOES NOT PREPARE THE ENVIRONMENT, USE prepare_environment FOR THAT */
+void set_closure(europa* s, eu_closure* cl) {
+	s->ccl = cl; /* set current closure */
+
+	/* only clean up the rib if closure is not C closure, because arguments of a
+	 * c closure are passed through it */
+	if (cl->cf == NULL) {
+		s->rib = _null;
+		s->rib_lastpos = &(s->rib);
+	}
+
+	s->pc = 0;
 }
 
 /**
  * @brief Starts a vm execution loop.
  * 
+ * This will make the vm continue executing from its current state. In order to
+ * start running code, whatever it is that calls this function should've
+ * properly set the state already.
+ * 
  * @param s The Europa state.
- * @param cl The target closure.
  * @return The result of the operation.
  */
-eu_result euvm_execute(europa* s, eu_closure* cl) {
+eu_result euvm_execute(europa* s) {
 	eu_result res;
 	eu_instruction ir;
 	eu_value* tv;
@@ -149,30 +200,79 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 	eu_closure *c;
 	eu_continuation* cont;
 	eu_pair* pair;
+	eu_closure* cl;
 
-	/* if c closure, increase tag */
-	if (cl->cf) {
-		s->tag += 1;
-		cl->status = EU_CLSTATUS_RUNNING;
-		res = cl->cf(s);
-		cl->status = EU_CLSTATUS_FINISHED;
-		s->tag -= 1;
-		return EU_RESULT_OK;
-	}
-
-	/* europa closure, start vm loop */
-	ir = *s->pc;
-	while (opc_part(ir) != EU_OP_HALT) {
-		proto = s->ccl->proto;
+	/* we need to do the execution loop
+	 *
+	 * because it makes no sense to try to run no code (s->ccl == NULL) or having
+	 * no environment (s->env == NULL), we use that as a condition for stopping
+	 * the fetch/decode/execute loop.
+	 * 
+	 * this stopping condition effectvely makes it so that whenever running code
+	 * returns, but s->previous is NULL (meaning the top-level call returned),
+	 * we stop runnning the F/D/E loop and return OK, leaving the result of the
+	 * computation in the state's accumulator.
+	 */
+	while (s->ccl != NULL && s->env != NULL) {
+		/* shorten some names */
 		cl = s->ccl;
 
+		/* the current thing to execute might be Europa code or C code */
+		if (cl->cf) { /* we need to run a C procedure */
+			/* call it, saving return value */
+			res = (cl->cf)(s);
+
+			/* The return value of C closure will be either:
+			 * * OK - in which case the function properly returned and we need
+			 *        to "discard" its frame
+			 * * SOME ERROR VALUE - in which case an error occured and we should
+			 *                      return it.
+			 * * CONTINUE - in which case the closure decided to call back into
+			 *              other code that is managed by the VM.
+			 */
+			if (res == EU_RESULT_OK) {
+				/* the closure ran properly, return to previous frame */
+				set_cc(s, s->previous);
+				continue; /* restart the loop with the previous frame as state */
+
+			} else if (res == EU_RESULT_CONTINUE) {
+				/* the C closure called Europa code (or another C closure)
+				 * This means that the current state is already set up to
+				 * continue the computation, be it the continuation that was
+				 * called or a closure. What we need to do, then, is just
+				 * continue on with the loop.
+				 */
+				continue;
+			} else {
+				/* an error occured, we should return it */
+				return res;
+			}
+		}
+
+		/* at this point we must be trying to run some scheme code */
+
+		/* first fetch the next instruction */
+		vmfetch:
+		if (s->pc > c->proto->code_length) { /* check if PC is in bounds */
+			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				"Tried running code after code buffer."
+				"(PC %d is inconsistent; code length is %d.)",
+				s->pc, c->proto->code_length));
+			return EU_RESULT_ERROR;
+		}
+		ir = c->proto->code[s->pc]; /* fetch instruction into IR */
+
+		/* shorten some more names */
+		proto = c->proto;
+
 		switch (opc_part(ir)) {
+		case EU_OP_NOP: break;
 		case EU_OP_REFER:
 			/* check if instruction value is in constant range */
 			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "REFER"));
 			/* get the env's value for the symbol constant key */
-			_eu_checkreturn(eutable_rget(s, cl->env, &(proto->constants[val_part(ir)]),
-				&tv));
+			_eu_checkreturn(eutable_rget(s, cl->env,
+				&(proto->constants[val_part(ir)]), &tv));
 			/* check if could get reference */
 			if (tv == NULL) {
 				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
@@ -183,12 +283,14 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 			/* put the value in the accumulator */
 			s->acc = *tv;
 			break;
+
 		case EU_OP_CONST:
 			/* check if instruction value is in constant range */
 			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "CONST"));
 			/* move it to the accumulator */
 			s->acc = proto->constants[val_part(ir)];
 			break;
+
 		case EU_OP_CLOSE:
 			/* check if value is in subproto range */
 			_eu_checkreturn(check_val_in_subprotos(s, val_part(ir), "CLOSE"));
@@ -204,6 +306,7 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 			/* place it in the accumulator */
 			_eu_makeclosure(_eu_acc(s), c);
 			break;
+
 		case EU_OP_TEST:
 			/* check whether offset is in code range */
 			_eu_checkreturn(check_off_in_code(s, off_part(ir), "TEST"));
@@ -212,11 +315,17 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 				!_euvalue_to_bool(_eu_acc(s))) {
 				/* if the acc isn't the true object, jump to offset */
 				s->pc += off_part(ir);
-				/* go to instruction fetch */
-				goto fetch_next;
+				goto vmfetch;
 			}
 			/* in case the accumulator is #t, just continue */
 			break;
+
+		case EU_OP_JUMP:
+			/* check whether offset is in boundaries */
+			_eu_checkreturn(check_off_in_code(s, off_part(ir), "JUMP"));
+			s->pc += off_part(ir);
+			goto vmfetch;
+
 		case EU_OP_ASSIGN:
 			/* check whether value is in constant range */
 			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "ASSIGN"));
@@ -233,9 +342,11 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 			/* set the value slot to the value in the accumulator */
 			*tv = s->acc;
 			break;
+
 		case EU_OP_CONTI:
 			/* create a continuation from the current state */
-			cont = eucont_new(s, s->tag, s->previous, s->env, &s->rib, s->ccl, s->pc);
+			cont = eucont_new(s, s->previous, s->env, &s->rib, s->rib_lastpos,
+				s->ccl, s->pc);
 			if (cont == NULL) {
 				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create continuation."));
@@ -259,27 +370,26 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 				s->rib_lastpos = _eupair_tail(pair);
 			}
 			break;
+
 		case EU_OP_FRAME:
 			/* check if return offset is valid */
 			_eu_checkreturn(check_off_in_code(s, off_part(ir), "FRAME"));
 			/* create a new continuation */
-			cont = eucont_new(s, s->tag, s->previous, s->env, &s->rib, s->ccl,
-				s->pc + off_part(ir));
+			cont = eucont_new(s, s->previous, s->env, &s->rib, s->rib_lastpos,
+				s->ccl, s->pc + off_part(ir));
 			if (cont == NULL) {
 				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create continuation."));
 				return EU_RESULT_ERROR;
 			}
 			/* link previous to this if applicable */
-			if (s->previous) {
-				s->previous->next = cont;
-			}
 
 			/* change current state values */
 			s->previous = cont;
 			s->rib = _null;
 			s->rib_lastpos = &s->rib;
 			break;
+
 		case EU_OP_ARGUMENT:
 			/* add the accumulator to the rib */
 			pair = eupair_new(s, _eu_acc(s), &_null);
@@ -293,17 +403,91 @@ eu_result euvm_execute(europa* s, eu_closure* cl) {
 			/* update last pos */
 			s->rib_lastpos = _eupair_tail(pair);
 			break;
-		case EU_OP_APPLY: /* handle calling a value (can be closure, continuation or other object (like a table)) */
+
+		case EU_OP_APPLY: /* handle calling a value (can be closure, continuation or a table) */
+			/* TODO: add support for type indexes */
+
+			/* fail if type isn't table, closure or continuation, for now */
+			if (!_euvalue_is_type(_eu_acc(s), EU_TYPE_TABLE) &&
+				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CLOSURE) &&
+				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CONTINUATION)) {
+				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+					"Tried applying/calling something of invalid type %s.",
+					eu_type_name(_euvalue_type(_eu_acc(s)))));
+				return EU_RESULT_OK;
+			}
+
+			/* if the target value is a table, we need to check it for a '@@call'
+			 * function */
+			if (_euvalue_is_type(_eu_acc(s), EU_TYPE_TABLE)) {
+				_eu_checkreturn(eutable_rget_symbol(s, _euvalue_to_table(_eu_acc(s)),
+					CALL_META_NAME, &tv));
+				/* check for correct type */
+				if (tv == NULL || !_euvalue_is_type(tv, EU_TYPE_CLOSURE)) {
+					_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+						"Could not call table. Invalid value for " CALL_META_NAME "."));
+					return EU_RESULT_ERROR;
+				}
+				/* we have a proper closure at tv, prepend the table in acc to the
+				 * rib */
+				pair = eupair_new(s, _eu_acc(s), &s->rib);
+				if (pair == NULL) {
+					_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+						"Could not add called table to argument rib."));
+					return EU_RESULT_ERROR;
+				}
+				_eu_makepair(&(s->rib), pair);
+				/* finally, place what's in tv in the accumulator and continue
+				 * with the APPLY instruction */
+				s->acc = *tv;
+			}
+
+			/* at this point, acc is either a closure or a continuation */
+			if (_euvalue_is_type(_eu_acc(s), EU_TYPE_CLOSURE)) {
+				/* it is a closure, so run one */
+				c = _euvalue_to_closure(_eu_acc(s));
+
+				/* prepare the state's environment */
+				_eu_checkreturn(prepare_environment(s, c, &(s->rib)));
+				/* set current closure */
+				set_closure(s, c);
+
+				/* the current state is set up, so we can continue on with the
+				 * F/D/E loop */
+				continue;
+
+			} else { /* it is a continuation */
+				cont = _euvalue_to_cont(_eu_acc(s));
+
+				/* we need to set the accumulator to the first argument */
+				if (!_euvalue_is_pair(&(s->rib))) {
+					s->acc = s->rib;
+				} else {
+					s->acc = *_eupair_head(_euvalue_to_pair(_eu_acc(s)));
+				}
+
+				/* place the continuation in the state */
+				set_cc(s, cont);
+				continue; /* start the loop again */
+			}
 			break;
+
+		case EU_OP_RETURN:
+			/* set the current frame to the previous, leaving acc untouched */
+			set_cc(s, s->previous);
+			continue;
+
+		case EU_OP_HALT:
+			/* make the current frame invalid, leaving acc untouched */
+			set_cc(s, NULL);
+			continue;
+
 		default:
 			break;
 		}
 
 		/* advance to next instruction */
-		(s->pc)++;
-
-		fetch_next: /* fetch next instruction */
-		ir = *(s->pc);
+		s->pc++;
 	}
 
 	return EU_RESULT_OK;
@@ -322,7 +506,9 @@ eu_result euvm_initialize_state(europa* s) {
 	s->previous = NULL;
 	s->rib = _null;
 	s->rib_lastpos = &s->rib;
-	s->tag = 0;
+	s->level = 0;
+
+	return EU_RESULT_OK;
 }
 
 /**
@@ -331,15 +517,19 @@ eu_result euvm_initialize_state(europa* s) {
  * @param s The Europa state.
  * @param cl The target closure.
  * @param args The target arguments.
+ * @param out Where to place the returned value.
  * @return The result of the operation.
  */
-eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args) {
-	/* prepare given arguments */
-	_eu_checkreturn(prepare_for_apply(s, cl, args));
-
-	/* initially set up the state */
+eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* out) {
+	/* place the closure in the current continuation */
+	_eu_checkreturn(prepare_environment(s, cl, args));
+	set_closure(s, cl);
 
 	/* do the execution */
-	_eu_checkreturn(euvm_execute(s, cl));
+	_eu_checkreturn(euvm_execute(s));
+
+	if (out) /* return the value, if asked */
+		*out = s->acc;
+
 	return EU_RESULT_OK;
 }

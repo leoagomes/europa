@@ -33,6 +33,11 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
 
 	cl->cf = cf; /* set c function */
 	cl->proto = proto; /* set the prototype */
+	cl->env = env; /* set the creation environment */
+
+	return cl;
+
+	/* TODO: remove code below */
 
 	/* create new environment table */
 	length = eutil_list_length(s, _euproto_formals(proto), &improper);

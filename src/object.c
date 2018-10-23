@@ -22,6 +22,12 @@ eu_value _true = EU_VALUE_TRUE;
 eu_value _false = EU_VALUE_FALSE;
 eu_value _eof = EU_VALUE_EOF;
 
+const char* eu_type_names[] = {
+	"null", "boolean", "character", "eof", "symbol", "string", "error", "pair",
+	"vector", "bytevector", "table", "port", "closure", "continuation", "prototype",
+	"c-pointer", "userdata", "something-invalid"
+};
+
 /** Checks whether a value is of a given type.
  * 
  * @param value The value structure pointer.

@@ -39,10 +39,18 @@
  */
 eu_symbol* eusymbol_new(europa* s, void* text) {
 	eu_symbol* sym;
+	eu_value *tv;
 
 	/* if symbol text is not a valid utf-8 string, the call is invalid. */
 	if (utf8valid(text))
 		return NULL;
+
+	/* check if symbol already exists in internalized table */
+	eutable_rget_symbol(s, _eu_global(s)->internalized, text, &tv);
+	if (tv != NULL) {
+		/* returning it if it does */
+		return _euvalue_to_symbol(tv);
+	} /* TODO: eventually add symbols to the internalized table dynamically */
 
 	size_t text_size = utf8size(text);
 

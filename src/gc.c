@@ -190,7 +190,6 @@ eu_result eugc_naive_mark(europa* s, eu_gcobj* obj) {
 	case EU_TYPE_SYMBOL:
 	case EU_TYPE_STRING:
 	case EU_TYPE_BYTEVECTOR:
-	case EU_TYPE_EXCEPTION:
 	default:
 		break;
 	}
@@ -294,7 +293,6 @@ eu_result eugco_destroy(europa* s, eu_gcobj* obj) {
 	case EU_TYPE_SYMBOL:
 	case EU_TYPE_STRING:
 	case EU_TYPE_BYTEVECTOR:
-	case EU_TYPE_EXCEPTION:
 	default:
 		break;
 	}

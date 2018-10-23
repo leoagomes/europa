@@ -42,7 +42,7 @@ eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
 	_eu_checkreturn(eutable_create_key(s, t, &sv, &tv));\
 	if (tv == NULL)\
 		return EU_RESULT_BAD_RESOURCE;\
-	_eu_makebool(tv, EU_TRUE);\
+	*tv = sv;\
 } while (0)
 
 /** Bootstraps the internalized table.
@@ -67,10 +67,8 @@ eu_result euglobal_bootstrap_internalized(europa* s) {
 	__add_symbol("eq?", sym, s, t, symvalue, tvalue);
 	__add_symbol("eqv?", sym, s, t, symvalue, tvalue);
 	__add_symbol("equal?", sym, s, t, symvalue, tvalue);
-	__add_symbol("+", sym, s, t, symvalue, tvalue);
-	__add_symbol("-", sym, s, t, symvalue, tvalue);
-	__add_symbol("*", sym, s, t, symvalue, tvalue);
-	__add_symbol("/", sym, s, t, symvalue, tvalue);
+	__add_symbol("@@args", sym, s, t, symvalue, tvalue);
+	__add_symbol("@@call", sym, s, t, symvalue, tvalue);
 
 	/* set internalized*/
 	_eu_global(s)->internalized = t;
@@ -132,8 +130,8 @@ europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 	}
 
 	/* setup initial state */
-	if ((res = euvm_intialize_state(s))) {
-		checkset(err, res);
+	if ((res = euvm_initialize_state(s))) {
+		_checkset(err, res);
 	}
 
 	return s;
