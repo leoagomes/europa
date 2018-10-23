@@ -30,7 +30,7 @@ eu_result check_formals(europa* s, eu_value* formals) {
 	/* invalid type for formals part */
 	if (!_euvalue_is_type(formals, EU_TYPE_SYMBOL)
 		&& !_euvalue_is_type(formals, EU_TYPE_PAIR)) {
-		_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 			"Invalid type for lambda formals. Expected symbol or pair (list)."));
 		return EU_RESULT_ERROR;
 	}
@@ -56,7 +56,7 @@ eu_result check_formals(europa* s, eu_value* formals) {
 	return EU_RESULT_OK;
 
 	formal_not_symbol:
-	_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+	_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 		"Invalid formal list parameter type. Expected formals to be symbols."));
 	return EU_RESULT_ERROR;
 }
@@ -78,12 +78,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* make sure arity is correct */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"quote can't be called in an improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length != 1) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"bad quote arity: expected 1 argument, got %d.", length));
 				return EU_RESULT_ERROR;
 			}
@@ -100,12 +100,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check arity */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"lambda can't be used with an improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length < 2) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"lambda expects at least <formals> and one expression for the <body>."));
 				return EU_RESULT_ERROR;
 			}
@@ -137,12 +137,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check arity */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"if can't be used with improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length > 3 || length <= 1) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"bad if arity: expected 2 or 3 arguments, got %d.", length));
 				return EU_RESULT_ERROR;
 			}
@@ -190,12 +190,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check arity */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"set! can't be used in an improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length != 2) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"bad set! arity: expected 2 arguments, got %d.", length));
 				return EU_RESULT_ERROR;
 			}
@@ -203,7 +203,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check if variable name parameter is actually a symbol */
 			head = _eupair_head(_euvalue_to_pair(tail));
 			if (!_euvalue_is_type(head, EU_TYPE_SYMBOL)) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"bad set! syntax, expected first argument to be an identifier (symbol)."));
 				return EU_RESULT_ERROR;
 			}
@@ -223,12 +223,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check arity */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"call/cc can't be used in an improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length != 2) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"bad call/cc arity: expected 1 arguments, got %d.", length));
 				return EU_RESULT_ERROR;
 			}
@@ -262,12 +262,12 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* check arity */
 			length = eutil_list_length(s, tail, &improper);
 			if (length < 0 || improper) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"begin can't be used in an improper list."));
 				return EU_RESULT_ERROR;
 			}
 			if (length == 0) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"begin needs at least one expression in its body."));
 				return EU_RESULT_ERROR;
 			}

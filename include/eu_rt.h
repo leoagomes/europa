@@ -155,8 +155,6 @@ eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
 eu_result euvm_initialize_state(europa* s);
 
 /* run time macros and functions */
-eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud);
-
 eu_result eurt_evaluate(europa* s, eu_value* value);
 eu_result eurt_eval(europa* s, eu_value* value);
 

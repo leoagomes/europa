@@ -50,7 +50,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	length = eutil_list_length(s, _euproto_formals(cl->proto), &improper);
 	new_env = eutable_new(s, length + improper);
 	if (new_env == NULL) {
-		_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 			"Could not create new environment."));
 		return EU_RESULT_ERROR;
 	}
@@ -66,7 +66,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 
 		/* check if there is an arity problem */
 		if (_euvalue_is_null(cv)) {
-			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 				"Expected %s%d arguments in closure application, got %d.",
 				improper ? ">" : "", length, i));
 			return EU_RESULT_ERROR;
@@ -75,7 +75,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 		/* check if argument list is still behaving properly */
 		if (!_euvalue_is_type(cv, EU_TYPE_PAIR)) {
 			/* if it is not, error */
-			_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 				"Closure application arguments aren't a proper list."));
 			return EU_RESULT_ERROR;
 		}
@@ -84,7 +84,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 		_eu_checkreturn(eutable_create_key(s, new_env,
 			_eupair_head(_euvalue_to_pair(cf)), &tv));
 		if (tv == NULL) {
-			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 				"Could not add formal %s to the new environment.",
 				_eusymbol_text(_euvalue_to_symbol(_eupair_head(_euvalue_to_pair(cf))))));
 			return EU_RESULT_ERROR;
@@ -101,7 +101,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 		/* get the slot in the environment */
 		_eu_checkreturn(eutable_create_key(s, new_env, cf, &tv));
 		if (tv == NULL) {
-			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 				"Could not add formal %s to the new environment.",
 				_eusymbol_text(_euvalue_to_symbol(cf))));
 			return EU_RESULT_ERROR;
@@ -126,7 +126,7 @@ eu_result prepare_state(europa* s, eu_closure* cl) {
 
 eu_result check_val_in_constant(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->constantc <= val) {
-		_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid constant index at %s instruction.", inst));
 		return EU_RESULT_ERROR;
 	}
@@ -135,7 +135,7 @@ eu_result check_val_in_constant(europa* s, int val, const char* inst) {
 
 eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->subprotoc <= val) {
-		_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid subproto index at %s instruction.", inst));
 		return EU_RESULT_ERROR;
 	}
@@ -144,7 +144,7 @@ eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
 
 eu_result check_off_in_code(europa* s, int off, const char* inst) {
 	if (s->pc + off > s->ccl->proto->code_length) {
-		_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid jumping offset for %s instruction.", inst));
 		return EU_RESULT_ERROR;
 	}
@@ -254,7 +254,7 @@ eu_result euvm_execute(europa* s) {
 		/* first fetch the next instruction */
 		vmfetch:
 		if (s->pc > c->proto->code_length) { /* check if PC is in bounds */
-			_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 				"Tried running code after code buffer."
 				"(PC %d is inconsistent; code length is %d.)",
 				s->pc, c->proto->code_length));
@@ -275,7 +275,7 @@ eu_result euvm_execute(europa* s) {
 				&(proto->constants[val_part(ir)]), &tv));
 			/* check if could get reference */
 			if (tv == NULL) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"Could not reference %s in environment.",
 					_eusymbol_text(_euvalue_to_symbol(&(proto->constants[val_part(ir)])))));
 				return EU_RESULT_ERROR;
@@ -299,7 +299,7 @@ eu_result euvm_execute(europa* s) {
 			/* create a new closure from it and current environment */
 			c = eucl_new(s, NULL, p, s->env);
 			if (c == NULL) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create closure."));
 				return EU_RESULT_BAD_ALLOC;
 			}
@@ -334,7 +334,7 @@ eu_result euvm_execute(europa* s) {
 				&tv));
 			/* check if could get reference */
 			if (tv == NULL) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"Could not set %s in environment.",
 					_eusymbol_text(_euvalue_to_symbol(&(proto->constants[val_part(ir)])))));
 				return EU_RESULT_ERROR;
@@ -348,7 +348,7 @@ eu_result euvm_execute(europa* s) {
 			cont = eucont_new(s, s->previous, s->env, &s->rib, s->rib_lastpos,
 				s->ccl, s->pc);
 			if (cont == NULL) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create continuation."));
 				return EU_RESULT_ERROR;
 			}
@@ -359,7 +359,7 @@ eu_result euvm_execute(europa* s) {
 			if (val_part(ir)) {
 				pair = eupair_new(s, _eu_acc(s), &_null);
 				if (pair == NULL) {
-					_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 						"Could not create cell to hold argument value."));
 					return EU_RESULT_ERROR;
 				}
@@ -378,7 +378,7 @@ eu_result euvm_execute(europa* s) {
 			cont = eucont_new(s, s->previous, s->env, &s->rib, s->rib_lastpos,
 				s->ccl, s->pc + off_part(ir));
 			if (cont == NULL) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create continuation."));
 				return EU_RESULT_ERROR;
 			}
@@ -394,7 +394,7 @@ eu_result euvm_execute(europa* s) {
 			/* add the accumulator to the rib */
 			pair = eupair_new(s, _eu_acc(s), &_null);
 			if (pair == NULL) {
-				_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create pair to hold argument."));
 				return EU_RESULT_ERROR;
 			}
@@ -411,7 +411,7 @@ eu_result euvm_execute(europa* s) {
 			if (!_euvalue_is_type(_eu_acc(s), EU_TYPE_TABLE) &&
 				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CLOSURE) &&
 				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CONTINUATION)) {
-				_eu_checkreturn(europa_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"Tried applying/calling something of invalid type %s.",
 					eu_type_name(_euvalue_type(_eu_acc(s)))));
 				return EU_RESULT_OK;
@@ -424,7 +424,7 @@ eu_result euvm_execute(europa* s) {
 					CALL_META_NAME, &tv));
 				/* check for correct type */
 				if (tv == NULL || !_euvalue_is_type(tv, EU_TYPE_CLOSURE)) {
-					_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 						"Could not call table. Invalid value for " CALL_META_NAME "."));
 					return EU_RESULT_ERROR;
 				}
@@ -432,7 +432,7 @@ eu_result euvm_execute(europa* s) {
 				 * rib */
 				pair = eupair_new(s, _eu_acc(s), &s->rib);
 				if (pair == NULL) {
-					_eu_checkreturn(europa_set_error(s, EU_ERROR_NONE, NULL,
+					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 						"Could not add called table to argument rib."));
 					return EU_RESULT_ERROR;
 				}

@@ -6,5 +6,6 @@
 extern MunitSuite gcsuite;
 extern MunitSuite readsuite;
 extern MunitSuite tablesuite;
+extern MunitSuite evalsuite;
 
 #endif /* __SUITES_H__ */

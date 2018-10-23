@@ -26,7 +26,7 @@ europa* bootstrap_default_instance(void) {
 	 * memory management to the GC
 	 * 
 	 * TODO: maybe sometime use something provided by an auxilary library */
-	s = europa_new(rlike, NULL, NULL, &err);
+	s = eu_new(rlike, NULL, NULL, &err);
 	return s;
 }
 

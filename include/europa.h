@@ -64,11 +64,16 @@ struct europa {
 #define _eu_reset_err(s) (_eu_err(s) = NULL)
 
 eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic);
-eu_result europa_init(europa* s);
+eu_result eu_init(europa* s);
 
-europa* europa_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err);
+europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err);
 
-eu_result europa_set_error(europa* s, int flags, eu_error* nested, void* error_text);
-eu_result europa_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
+eu_result eu_set_error(europa* s, int flags, eu_error* nested, void* error_text);
+eu_result eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
+
+eu_result eu_do_string(europa* s, void* text, eu_result* out);
+
+/* TODO: add a define to keep stdio out */
+eu_result eu_do_file(europa* s, const char* filename, eu_result* out);
 
 #endif /* __EUROPA_H__ */
