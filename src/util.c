@@ -68,7 +68,7 @@ int unicodetoutf8(int c) {
  * 
  * the number of elements may be considered (return + improper)
  * */
-int eulist_length(europa* s, eu_value* v, int* improper) {
+int eutil_list_length(europa* s, eu_value* v, int* improper) {
 	int count;
 
 	/* empty list: length = 0 */
@@ -87,7 +87,8 @@ int eulist_length(europa* s, eu_value* v, int* improper) {
 		v = _eupair_tail(_euvalue_to_pair(v));
 
 		/* check if improper list */
-		if (!_euvalue_is_type(v, EU_TYPE_PAIR)) {
+		if (!_euvalue_is_type(v, EU_TYPE_PAIR) &&
+			!_euvalue_is_null(v)) {
 			*improper = 1; /* mark improper */
 			break;
 		}

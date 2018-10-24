@@ -24,15 +24,51 @@
 #include "eu_commons.h"
 #include "eu_object.h"
 
-/* In order for continuations to work with C closures, the current computation
- * state for the C closure needs to be tracked. This is done thorugh 'tagging'.
+/* 
+ * I decided to try fixing the continuation problem by "flattening" the C stack.
  * 
- * A tag is basically a label inside the C closure which, through macros, are
- * associated to an incrementing numeric value.
- * A C closure should first declare its tags inside a dispatcher macro. This will
- * create, effectively, a sort of jump table, where the dispatcher will jump, based
- * on the 'tag' value in the continuation.
- * The closure should then have "tags" wherever 
+ * Every time a C Closure (functions exposed to Europa code, but that are actually
+ * written in C) wants to call back into Europa code, it actually returns a 
+ * "CONTINUE" signal to the top level VM call, which properly does the call.
+ * 
+ * In order to continue a C Closure's execution past a function call -- or code
+ * that could possibly capture the current continuation, for that matter -- it
+ * needs to "tag" its body.
+ * A "tag" is simply a label (as in goto) associated to a specific value for the
+ * state's program counter. In the beginning of a C Closure function's body there
+ * needs to be a dispatcher macro use with tag declarations. The code this macro
+ * generates is basically a "if (s->pc == 0) goto tag_1;",
+ * "if (s->pc == 1) goto tag_2;", etc.
+ * Then, the tagging macros should be used whenever the C closure wants to call
+ * into Europa code. This macro basically increments the current state's PC (s->pc++)
+ * and creates a label with the tag's name.
+ * 
+ * Because of this possibility that the function will return "in the middle of its
+ * execution", we can't guarantee that values in the C stack will be the same
+ * before and after a tag. This means C Closures should transfer all data to the
+ * state's environemnt prior to doing a function call that might fall in the cases
+ * described above (where it would have to return "CONTINUE") and load its state
+ * from the environment after every tag.
+ * 
+ * If you think that the impact of constantly doing hashtable referencing operations
+ * is too big, you can make use of the fact that Europa never touches a C Closure's
+ * environment, by essentially using the eu_table* to store some void* user data
+ * of yours (that absolutely must be managed by the GC).
+ * 
+ * This means that C closures can't keep their state in the C stack, having to
+ * store all state inside their 'env'. This is probably inefficient, but a solution
+ * nonetheless.
+ * 
  */
+
+#define _eucc_dispatcher(s, dcl) do { \
+		int __eudi = 0;\
+		dcl\
+	} while (0)
+
+#define _eucc_dtag(tagname) if (__eudi++ == (s)->pc) { goto tagname; }
+
+
+
 
 #endif

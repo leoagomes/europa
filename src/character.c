@@ -24,6 +24,6 @@ eu_uinteger euchar_hash(eu_value* v) {
  * @return The result code.
  */
 eu_result euchar_eqv(eu_value* a, eu_value* b, eu_value* out) {
-	_eu_makebool(out, _euchar_char(a) == _euchar_char(b));
+	_eu_makebool(out, _euvalue_to_char(a) == _euvalue_to_char(b));
 	return EU_RESULT_OK;
 }

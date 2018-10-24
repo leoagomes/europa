@@ -503,11 +503,11 @@ MunitResult test_read_vector(MunitParameter params[], void* fixture) {
 	munit_assert_not_null(out.value.object);
 
 	vec = _euobj_to_vector(out.value.object);
-	munit_assert_int(_euvector_ref(vec, 0).type, ==, EU_TYPE_NUMBER);
-	munit_assert_int(_euvector_ref(vec, 0).value.i, ==, 0);
-	munit_assert_int(_euvector_ref(vec, 1).type, ==, EU_TYPE_NUMBER);
-	munit_assert_int(_euvector_ref(vec, 1).value.i, ==, 10);
-	munit_assert_int(_euvector_ref(vec, 2).type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(_euvector_ref(vec, 0)->type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(_euvector_ref(vec, 0)->value.i, ==, 0);
+	munit_assert_int(_euvector_ref(vec, 1)->type, ==, EU_TYPE_NUMBER);
+	munit_assert_int(_euvector_ref(vec, 1)->value.i, ==, 10);
+	munit_assert_int(_euvector_ref(vec, 2)->type, ==, EU_TYPE_NUMBER);
 
 	return MUNIT_OK;
 }

@@ -40,9 +40,7 @@ eu_result check_formals(europa* s, eu_value* formals) {
 		return EU_RESULT_OK;
 
 	/* list of identifiers, possibly improper */
-	for(v = formals;
-		!_euvalue_is_null(_eupair_tail(_euvalue_to_pair(v))) &&
-		_euvalue_is_type(_eupair_tail(_euvalue_to_pair(v)), EU_TYPE_PAIR);
+	for(v = formals; _euvalue_is_type(v, EU_TYPE_PAIR);
 		v = _eupair_tail(_euvalue_to_pair(v))) {
 		/* check if pair's head (the name) is actually a symbol */
 		if (!_euvalue_is_type(_eupair_head(_euvalue_to_pair(v)), EU_TYPE_SYMBOL))
@@ -124,7 +122,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* create a prototype from the formals (in head) and source (in v) */
 			subproto = euproto_new(s, head, 0, v, 0, 0);
 			/* compile the body (with the prepended "begin") */
-			_eu_checkreturn(compile_application(s, subproto, tail, 1));
+			_eu_checkreturn(compile_application(s, subproto, &beginpair, 1));
 			/* add a return instruction */
 			_eu_checkreturn(euproto_append_instruction(s, subproto, IRETURN()));
 			/* add the compiled prototype as a subprototype */
@@ -380,6 +378,8 @@ eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
 
 	/* top level compile call */
 	_eu_checkreturn(compile(s, top, v, 1));
+	/* add return instruction to prototype */
+	_eu_checkreturn(euproto_append_instruction(s, top, IRETURN()));
 
 	/* create closure from top level prototype */
 	cl = eucl_new(s, NULL, top, s->global->env);

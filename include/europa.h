@@ -21,10 +21,10 @@ typedef int (*eu_cfunc)(europa* s);
 
 typedef struct europa_table eu_table;
 struct europa_global {
+	EU_OBJ_COMMON_HEADER;
 	eu_gc gc; /*!< global state GC */
 	eu_cfunc panic; /*!< global panic function */
 	europa* main; /*!< the main state */
-	eu_table* type_indexes[EU_TYPE_LAST]; /*!< index tables for primitive types */
 	eu_table* internalized; /*!< internalized strings and symbols */
 	eu_table* env; /*!< global environment */
 };
@@ -63,17 +63,16 @@ struct europa {
 
 #define _eu_reset_err(s) (_eu_err(s) = NULL)
 
-eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic);
-eu_result eu_init(europa* s);
-
 europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err);
+eu_result eu_terminate(europa* s);
 
 eu_result eu_set_error(europa* s, int flags, eu_error* nested, void* error_text);
 eu_result eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
 
-eu_result eu_do_string(europa* s, void* text, eu_result* out);
+eu_result eu_do_string(europa* s, void* text, eu_value* out);
 
 /* TODO: add a define to keep stdio out */
-eu_result eu_do_file(europa* s, const char* filename, eu_result* out);
+eu_result eu_do_file(europa* s, const char* filename, eu_value* out);
+
 
 #endif /* __EUROPA_H__ */

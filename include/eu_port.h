@@ -50,6 +50,7 @@ eu_uinteger euport_hash(eu_port* port);
 
 /* internal functions */
 /* input */
+eu_result euport_read(europa* s, eu_port* port, eu_value* out);
 eu_result euport_read_char(europa* s, eu_port* port, int* out);
 eu_result euport_peek_char(europa* s, eu_port* port, int* out);
 eu_result euport_read_line(europa* s, eu_port* port, eu_value* out);
@@ -59,7 +60,15 @@ eu_result euport_read_u8(europa* s, eu_port* port, eu_value* out);
 eu_result euport_peek_u8(europa* s, eu_port* port, eu_value* out);
 eu_result euport_u8_ready(europa* s, eu_port* port, int* ready);
 
-eu_result euport_read(europa* s, eu_port* port, eu_value* out);
+eu_result euport_write(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v);
+eu_result euport_display(europa* s, eu_port* port, eu_value* v);
+eu_result euport_newline(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_char(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_u8(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_bytevector(europa* s, eu_port* port, eu_value* v);
+eu_result euport_flush(europa* s, eu_port* port, eu_value* v);
 
 
 /* output */

@@ -253,17 +253,17 @@ eu_result euvm_execute(europa* s) {
 
 		/* first fetch the next instruction */
 		vmfetch:
-		if (s->pc > c->proto->code_length) { /* check if PC is in bounds */
+		if (s->pc > cl->proto->code_length) { /* check if PC is in bounds */
 			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 				"Tried running code after code buffer."
 				"(PC %d is inconsistent; code length is %d.)",
-				s->pc, c->proto->code_length));
+				s->pc, cl->proto->code_length));
 			return EU_RESULT_ERROR;
 		}
-		ir = c->proto->code[s->pc]; /* fetch instruction into IR */
+		ir = cl->proto->code[s->pc]; /* fetch instruction into IR */
 
 		/* shorten some more names */
-		proto = c->proto;
+		proto = cl->proto;
 
 		switch (opc_part(ir)) {
 		case EU_OP_NOP: break;
@@ -271,7 +271,7 @@ eu_result euvm_execute(europa* s) {
 			/* check if instruction value is in constant range */
 			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "REFER"));
 			/* get the env's value for the symbol constant key */
-			_eu_checkreturn(eutable_rget(s, cl->env,
+			_eu_checkreturn(eutable_rget(s, s->env,
 				&(proto->constants[val_part(ir)]), &tv));
 			/* check if could get reference */
 			if (tv == NULL) {

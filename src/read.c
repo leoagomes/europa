@@ -1394,7 +1394,7 @@ eu_result pread_list(parser* p, eu_value* out) {
 		/* if this is not the end of the list, we need to allocate a new pair
 		 * to hold the next element in it head and place it in the current pair's
 		 * tail */
-		if (!isrpar(p->current) && !isdot(p->current)) {
+		if (!isrpar(p->current) && !(isdot(p->current) && isitspace(p->peek))) {
 			/* allocate the next pair */
 			nextpair = eupair_new(p->s, &_null, &_null);
 			if (nextpair == NULL)
@@ -1426,6 +1426,9 @@ eu_result pread_list(parser* p, eu_value* out) {
 			(char)p->current);
 		return EU_RESULT_ERROR;
 	}
+
+	/* the closing parenthesis ')' is still in the buffer, so we should remove it */
+	_eu_checkreturn(padvance(p));
 
 	return EU_RESULT_OK;
 }

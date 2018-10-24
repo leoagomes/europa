@@ -11,25 +11,26 @@
 #include "eu_error.h"
 #include "eu_rt.h"
 #include "eu_port.h"
-#include "port/eu_mport.h"
+#include "ports/eu_mport.h"
 
 #include <stdarg.h>
 #include <stdio.h>
 
-/** Initializes a global environment.
- * 
- * @param g the global paremeter.
- * @param f the realloc-like function.
- * @param ud user data for the f function.
- * @return Whether any errors occured.
- */
-eu_result euglobal_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
+eu_result global_basic_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
 	/* initialize the garbage collector */
 	_eu_checkreturn(eugc_init(_euglobal_gc(g), ud, f));
 
 	/* initialize other fields */
 	g->panic = panic;
 	g->internalized = NULL;
+
+	return EU_RESULT_OK;
+}
+
+eu_result global_environment_init(europa* s, int pred_size) {
+	s->global->env = eutable_new(s, pred_size);
+	if (s->global->env == NULL)
+		return EU_RESULT_BAD_ALLOC;
 
 	return EU_RESULT_OK;
 }
@@ -92,51 +93,67 @@ eu_result euglobal_bootstrap_internalized(europa* s) {
  */
 europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 	europa* s;
+	eu_global* gl;
 	eu_result res;
 
-	/* allocate memory for the state */
-	s = (f)(ud, NULL, sizeof(europa));
-	if (s == NULL) { /* allocation failed */
+	/* Even the main state is just an instance in the global's GC, so we must
+	 * first allocate a global. */
+	gl = (f)(ud, NULL, sizeof(eu_global));
+	if (gl == NULL) {
 		/* set error variable */
 		_checkset(err, EU_RESULT_BAD_ALLOC);
 		return NULL;
 	}
 
-	/* allocate memory for the global */
-	_eu_global(s) = (f)(ud, NULL, sizeof(eu_global));
-	if (_eu_global(s) == NULL) { /* allocation failed */
-		/* free the state we just allocated */
-		(f)(ud, s, 0);
-		/* set error variable */
-		_checkset(err, EU_RESULT_BAD_ALLOC);
+	/* now we initialize the global state at least to a point where the GC works
+	 * properly */
+	if ((res = global_basic_init(gl, f, ud, panic))) {
+		_checkset(err, EU_RESULT_ERROR);
+		/* free the allocated global */
+		(f)(ud, gl, 0);
 		return NULL;
 	}
 
-	/* try initializing the global environment */
-	if ((res = euglobal_init(_eu_global(s), f, ud, panic))) {
-		/* free all allocated resources */
-		(f)(ud, _eu_global(s), 0);
-		(f)(ud, s, 0);
+	/* grab the state as a gc object */
+	europa fake;
+	fake.global = gl;
+	s = cast(europa*, eugc_new_object(&fake, EU_TYPE_STATE | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(europa)));
+	if (s == NULL) {
+		s = &fake;
+		goto fail;
+	}
 
-		/* set the error variable if it exists */
+	s->global = gl;
+	gl->main = s;
+
+	/* just create the environment table */
+	if ((res = global_environment_init(s, 0))) {
 		_checkset(err, res);
-		return NULL;
+		goto fail;
 	}
-
-	/* set the current context as the main for the global environment */
-	_eu_global(s)->main = s;
 
 	/* bootstrap internalized table */
 	if ((res = euglobal_bootstrap_internalized(s))) {
 		_checkset(err, res);
+		goto fail;
 	}
 
 	/* setup initial state */
 	if ((res = euvm_initialize_state(s))) {
 		_checkset(err, res);
+		goto fail;
 	}
 
 	return s;
+
+	fail:
+	/* terminate the gc */
+	if ((res = eugc_destroy(s))) {
+		_checkset(err, res);
+	}
+	(f)(ud, gl, 0);
+	return NULL;
 }
 
 /**
@@ -204,7 +221,7 @@ eu_result eu_do_string(europa* s, void* text, eu_value* out) {
 	eu_value obj;
 
 	/* create a memory port for the text */
-	p = _eumport_to_port(eumport_from_str(s, EU_PORT_FLAG_OUTPUT | EU_PORT_FLAG_TEXTUAL, text);
+	p = _eumport_to_port(eumport_from_str(s, EU_PORT_FLAG_OUTPUT | EU_PORT_FLAG_TEXTUAL, text));
 	if (p == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -212,7 +229,38 @@ eu_result eu_do_string(europa* s, void* text, eu_value* out) {
 	_eu_checkreturn(euport_read(s, p, &obj));
 
 	/* evaluate it */
-	_eu_checkreturn(eu_evaluate(s, &obj, out));
+	_eu_checkreturn(eurt_evaluate(s, &obj, out));
 
 	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Terminates a state.
+ * 
+ * @param s The target state.
+ * @return The result of the operation.
+ */
+eu_result eu_terminate(europa* s) {
+	eu_result res;
+	eu_global* gl;
+	eu_realloc f;
+	void* ud;
+
+	if (s != s->global->main) {
+		/* if we're not the main state, leave this job to the GC */
+		return EU_RESULT_OK;
+	}
+
+	/* save the free function, its user data and the global state */
+	gl = s->global;
+	f = gl->gc.realloc;
+	ud = gl->gc.ud;
+
+	/* destroy everything in the GC */
+	res = eugc_destroy(s);
+
+	/* free the global state */
+	(f)(ud, gl, 0);
+
+	return res; /* return whether the GC destruction was OK */
 }

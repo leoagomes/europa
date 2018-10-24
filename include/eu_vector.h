@@ -37,8 +37,8 @@ struct europa_vector {
 
 #define _euvector_length(v) ((v)->length)
 #define _euvector_values(v) (&((v)->_value))
-#define _euvector_ref(v, i) (_euvector_values(v)[(i)])
-#define _euvector_set(v, i, value) (_euvector_ref(v, i) = (value))
+#define _euvector_ref(v, i) (_euvector_values(v) + (i))
+#define _euvector_set(v, i, value) (*_euvector_ref(v, i) = (value))
 
 /* function declarations */
 eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length);

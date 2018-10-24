@@ -28,14 +28,15 @@ eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud) {
 	return jmp.res;
 }
 
+eu_result eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
+	eu_value chunk;
 
-eu_result eurt_evaluate(europa* s, eu_value* value) {
+	/* compile the value */
+	_eu_checkreturn(eucode_compile(s, v, &chunk));
 
-	/* setup initial state */
-
-}
-
-eu_result eurt_eval(europa* s, eu_value* value) {
+	/* run it in the vm */
+	_eu_checkreturn(euvm_doclosure(s, _euvalue_to_closure(&chunk), &_null,
+		out));
 
 	return EU_RESULT_OK;
 }

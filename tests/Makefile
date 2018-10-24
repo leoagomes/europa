@@ -5,7 +5,7 @@ PROJ_INCLUDE=../include
 EXECUTABLE=test
 LIBRARY=../build/europa.a
 SOURCES=main.c
-OBJECTS=gc.o read.o helpers.o table.o
+OBJECTS=gc.o read.o helpers.o table.o eval.o
 
 CC?=gcc
 

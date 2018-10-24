@@ -20,7 +20,8 @@ typedef eu_result (*eu_gcmark)(europa* s, eu_gcobj* obj);
 enum eugc_color {
 	EUGC_COLOR_WHITE = 0, /* object not marked for collection */
 	EUGC_COLOR_GREY, /* object currently marked, but references not */
-	EUGC_COLOR_BLACK /* object marked and references marked */
+	EUGC_COLOR_BLACK, /* object marked and references marked */
+	EUGC_DO_NOT_TOUCH, /* should absolutely not touch and leave to the destructor */
 };
 
 /** the marked flag */
@@ -37,7 +38,6 @@ struct europa_gc {
 	eu_realloc realloc; /*!< the realloc-like function */
 
 	eu_gcobj* last_obj; /*!< the last object created by the garbage collector */
-
 };
 
 /* helper macros to translate semantically to stdlib functions */
