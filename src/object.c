@@ -58,7 +58,7 @@ eu_bool euvalue_is_null(eu_value* value) {
  * @param object The object.
  * @return A boolean representing if the object is null.
  */
-eu_bool euobj_is_null(eu_gcobj* obj) {
+eu_bool euobj_is_null(eu_object* obj) {
 	return _euobj_is_null(obj);
 }
 
@@ -67,7 +67,7 @@ eu_bool euobj_is_null(eu_gcobj* obj) {
  * @param obj The object.
  * @return A boolean representing whether the object is of the type.
  */
-eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type) {
+eu_bool euobj_is_type(eu_object* obj, eu_byte type) {
 	if (obj == NULL)
 		return (type == EU_TYPE_NULL);
 	return _euobj_is_type(obj, type);

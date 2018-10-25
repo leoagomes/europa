@@ -21,7 +21,7 @@ struct europa_vector {
 /* conversion macros */
 
 #define _euobj_to_vector(o) cast(eu_vector*, o)
-#define _euvector_to_obj(v) cast(eu_gcobj*, v)
+#define _euvector_to_obj(v) cast(eu_object*, v)
 
 #define _euvalue_to_vector(v) _euobj_to_vector((v)->value.object)
 #define _euvector_to_value(v) { \

@@ -34,7 +34,7 @@ struct europa_port {
 
 
 #define _euobj_to_port(o) cast(eu_port*, o)
-#define _euport_to_obj(v) cast(eu_gcobj*, v)
+#define _euport_to_obj(v) cast(eu_object*, v)
 
 #define _euvalue_to_port(v) _euobj_to_port(&((v)->value.object))
 #define _eu_makeport(vptr, v) do {\

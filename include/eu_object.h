@@ -11,7 +11,7 @@
 #include "eu_int.h"
 
 /* type definitions */
-typedef struct europa_gcobj eu_gcobj;
+typedef struct europa_gcobj eu_object;
 typedef struct europa_value eu_value;
 
 /* internal value representation. */
@@ -56,7 +56,7 @@ extern const char* eu_type_names[];
 
 /** union of values for language types */
 union eu_values {
-	eu_gcobj* object; /*!< garbage collected objects */
+	eu_object* object; /*!< garbage collected objects */
 
 	eu_integer i; /*!< (fixnum) integer number value */
 	eu_real r; /*!< (floating) real number value */
@@ -76,8 +76,8 @@ struct europa_value {
 
 /** common fields to all garbage collected objects. */
 #define EU_OBJ_COMMON_HEADER \
-	eu_gcobj* _next; /*!< next object in object chain */\
-	eu_gcobj* _previous; /*!< previous object in chain */\
+	eu_object* _next; /*!< next object in object chain */\
+	eu_object* _previous; /*!< previous object in chain */\
 	eu_byte _type; /*!< the type of the object */\
 	eu_byte _mark
 
@@ -141,8 +141,8 @@ extern eu_value _eof;
 /* value functions */
 eu_bool euvalue_is_null(eu_value* value);
 eu_bool euvalue_is_type(eu_value* value, eu_byte type);
-eu_bool euobj_is_null(eu_gcobj* obj);
-eu_bool euobj_is_type(eu_gcobj* obj, eu_byte type);
+eu_bool euobj_is_null(eu_object* obj);
+eu_bool euobj_is_type(eu_object* obj, eu_byte type);
 
 eu_uinteger euvalue_hash(eu_value* v);
 eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out);

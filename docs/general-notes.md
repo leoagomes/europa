@@ -11,7 +11,7 @@ This part tries to document some aspects of Europa's code.
 ### Naming Conventions
 
 All Europa specific types are prefixed with `eu_`, so Europa's garbage collected
-objects should sit under the type `eu_gcobj`.
+objects should sit under the type `eu_object`.
 
 All Europa functions and macros are prefixed by "eu", then followed by their
 "internal namespace", which is normally the name of the object the function

@@ -14,7 +14,7 @@ typedef struct europa_gc eu_gc;
 typedef struct europa europa;
 
 /** The function an object should call to mark its references. */
-typedef eu_result (*eu_gcmark)(europa* s, eu_gcobj* obj);
+typedef eu_result (*eu_gcmark)(europa* s, eu_object* obj);
 
 /** Possible object colors during garbage collection. */
 enum eugc_color {
@@ -37,12 +37,12 @@ struct europa_gc {
 	void* ud; /*!< user data passed to the realloc-like function */
 	eu_realloc realloc; /*!< the realloc-like function */
 
-	eu_gcobj* last_obj; /*!< the last object created by the garbage collector */
+	eu_object* last_obj; /*!< the last object created by the garbage collector */
 
-	eu_gcobj root_head;
-	eu_gcobj objs_head; /*!< the circular object list's head */
+	eu_object root_head;
+	eu_object objs_head; /*!< the circular object list's head */
 
-	eu_gcobj* root_set; /*!< list of root objects */
+	eu_object* root_set; /*!< list of root objects */
 };
 
 /* helper macros to translate semantically to stdlib functions */
@@ -54,16 +54,16 @@ struct europa_gc {
 eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
 eu_result eugc_destroy(europa* s);
 
-eu_gcobj* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
+eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 
-eu_result eugc_own(europa* s, eu_gcobj* obj);
-eu_result eugc_give(europa* s, eu_gcobj* obj);
+eu_result eugc_own(europa* s, eu_object* obj);
+eu_result eugc_give(europa* s, eu_object* obj);
 
-eu_result eugc_add_to_root_set(europa* s, eu_gcobj* obj);
+eu_result eugc_add_to_root_set(europa* s, eu_object* obj);
 
 /* naive mark and sweep */
-eu_result eugc_naive_collect(europa* s, eu_gcobj* root);
-eu_result eugc_naive_mark(europa* s, eu_gcobj* root);
+eu_result eugc_naive_collect(europa* s, eu_object* root);
+eu_result eugc_naive_mark(europa* s, eu_object* root);
 eu_result eugc_naive_sweep(europa* s);
 
 #endif /* __EUROPA_GC_H__ */

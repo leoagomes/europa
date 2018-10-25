@@ -27,7 +27,7 @@ struct europa_string {
 
 /* conversion macros */
 
-#define _eustring_to_obj(s) cast(eu_gcobj*, s)
+#define _eustring_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_string(o) cast(eu_string*, o)
 
 #define _euvalue_to_string(v) _euobj_to_string((v)->value.object)

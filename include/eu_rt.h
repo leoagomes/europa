@@ -93,7 +93,7 @@ enum {
 #define OFFBIAS (0xFFFFFF >> 1)
 
 /* prototype structure functions and macros */
-#define _euproto_to_obj(s) cast(eu_gcobj*, s)
+#define _euproto_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_proto(o) cast(eu_proto*, o)
 #define _euvalue_to_proto(v) _euobj_to_proto((v)->value.object)
 #define _eu_makeproto(vptr, s) do {\
@@ -115,7 +115,7 @@ eu_integer euproto_add_subproto(europa* s, eu_proto* proto, eu_proto* subproto,
 	int* index);
 
 /* closure structure macros and functions */
-#define _euclosure_to_obj(s) cast(eu_gcobj*, s)
+#define _euclosure_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_closure(o) cast(eu_closure*, o)
 #define _euvalue_to_closure(v) _euobj_to_closure((v)->value.object)
 #define _eu_makeclosure(vptr, s) do {\
@@ -130,7 +130,7 @@ eu_result eucl_destroy(europa* s, eu_closure* cl);
 eu_integer eucl_hash(eu_closure* cl);
 
 /* continuation structure macros and functions */
-#define _eucont_to_obj(s) cast(eu_gcobj*, s)
+#define _eucont_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_cont(o) cast(eu_continuation*, o)
 #define _euvalue_to_cont(v) _euobj_to_cont((v)->value.object)
 #define _eu_makecont(vptr, s) do {\

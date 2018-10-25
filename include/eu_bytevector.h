@@ -15,7 +15,7 @@ struct europa_bytevector {
 	eu_byte _data; /*!< first byte of the vector's data.*/
 };
 
-#define _eubvector_to_obj(v) cast(eu_gcobj*, v)
+#define _eubvector_to_obj(v) cast(eu_object*, v)
 #define _euobj_to_bvector(o) cast(eu_bvector*, o)
 
 #define _euvalue_to_bvector(v) _euobj_to_bvector((v)->value.object)

@@ -15,7 +15,7 @@ struct europa_pair {
 	eu_value tail; /*!< The second/tail/cdr value. */
 };
 
-/* eu_gcobj* and eu_value type checks */
+/* eu_object* and eu_value type checks */
 /** check if object is a pair */
 #define _euobj_is_pair(o) _euobj_is_type(o, EU_TYPE_PAIR)
 /** check if value is a pair */
@@ -25,7 +25,7 @@ struct europa_pair {
 /** converts a gcobj* to a pair* */
 #define _euobj_to_pair(obj) cast(eu_pair*, (obj))
 /** converts a pair* to a gcobj* */
-#define _eupair_to_obj(p) cast(eu_gcobj*, (p))
+#define _eupair_to_obj(p) cast(eu_object*, (p))
 
 /* type conversions to/from eu_value */
 /** gets a pair* from a value* */

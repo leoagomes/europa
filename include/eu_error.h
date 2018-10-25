@@ -26,7 +26,7 @@ struct europa_error {
 
 /* conversion macros */
 
-#define _euerror_to_obj(s) cast(eu_gcobj*, s)
+#define _euerror_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_error(o) cast(eu_error*, o)
 
 #define _euvalue_to_error(v) _euobj_to_error((v)->value.object)

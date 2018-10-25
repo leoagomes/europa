@@ -74,7 +74,7 @@ eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
 	eu_result res;
 	eu_integer i;
 	eu_value* values;
-	eu_gcobj* obj;
+	eu_object* obj;
 
 	if (vec == NULL)
 		return EU_RESULT_NULL_ARGUMENT;

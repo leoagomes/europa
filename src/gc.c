@@ -19,7 +19,7 @@
 #define eugco_markblack(obj) ((obj)->_mark = EUGC_COLOR_BLACK)
 
 /* forward function declarations */
-eu_result eugco_destroy(europa* s, eu_gcobj* obj);
+eu_result eugco_destroy(europa* s, eu_object* obj);
 
 /* function definitions */
 
@@ -53,8 +53,8 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
  * @return The result of the operation.
  */
 eu_result eugc_destroy(europa* s) {
-	eu_gcobj* currentobj;
-	eu_gcobj* tmp;
+	eu_object* currentobj;
+	eu_object* tmp;
 	eu_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
@@ -85,8 +85,8 @@ eu_result eugc_destroy(europa* s) {
  * @param gc The garbage collector structure.
  * @param type The type of the new 
  */
-eu_gcobj* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
-	eu_gcobj* obj;
+eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
+	eu_object* obj;
 	eu_gc* gc = _eu_gc(s);
 
 	/* alloc object memory */
@@ -117,7 +117,7 @@ eu_gcobj* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
  * @param root The object from which to start marking.
  * @return A result pertaining to the garbage collection process.
  */
-eu_result eugc_naive_collect(europa* s, eu_gcobj* root) {
+eu_result eugc_naive_collect(europa* s, eu_object* root) {
 	eu_result res;
 	eu_gc* gc = _eu_gc(s);
 
@@ -143,7 +143,7 @@ eu_result eugc_naive_collect(europa* s, eu_gcobj* root) {
  * @param gc the GC structure.
  * @param obj the object to mark.
  */
-eu_result eugc_naive_mark(europa* s, eu_gcobj* obj) {
+eu_result eugc_naive_mark(europa* s, eu_object* obj) {
 	eu_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
@@ -213,7 +213,7 @@ eu_result eugc_naive_mark(europa* s, eu_gcobj* obj) {
  * @return The result of the operation.
  */
 eu_result eugc_naive_sweep(europa* s) {
-	eu_gcobj *current, *aux;
+	eu_object *current, *aux;
 	eu_result res;
 	eu_gc* gc = _eu_gc(s);
 
@@ -272,7 +272,7 @@ eu_result eugc_naive_sweep(europa* s) {
 		return res;\
 	}
 
-eu_result eugco_destroy(europa* s, eu_gcobj* obj) {
+eu_result eugco_destroy(europa* s, eu_object* obj) {
 	eu_result res;
 	eu_gc* gc = _eu_gc(s);
 
@@ -325,7 +325,7 @@ eu_result eugco_destroy(europa* s, eu_gcobj* obj) {
  * @param obj The object to adopt.
  * @return The result.
  */
-eu_result eugc_own(europa* s, eu_gcobj* obj) {
+eu_result eugc_own(europa* s, eu_object* obj) {
 	eu_gc* gc = _eu_gc(s);
 
 	if (obj == &(_eu_gc(s)->objs_head))
@@ -349,7 +349,7 @@ eu_result eugc_own(europa* s, eu_gcobj* obj) {
  * @param obj The object of which to give up ownership.
  * @return The result.
  */
-eu_result eugc_give(europa* s, eu_gcobj* obj) {
+eu_result eugc_give(europa* s, eu_object* obj) {
 	if (obj == &(_eu_gc(s)->objs_head))
 		return EU_RESULT_BAD_ARGUMENT;
 

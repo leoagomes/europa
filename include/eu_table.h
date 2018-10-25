@@ -37,7 +37,7 @@ struct europa_table {
 	struct europa_table* index; /*!< the table's index */
 };
 
-#define _eutable_to_obj(s) cast(eu_gcobj*, s)
+#define _eutable_to_obj(s) cast(eu_object*, s)
 #define _euobj_to_table(o) cast(eu_table*, o)
 
 #define _euvalue_to_table(v) _euobj_to_table((v)->value.object)
