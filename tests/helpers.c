@@ -206,8 +206,9 @@ void disas_proto(europa* s, eu_proto* proto) {
 		}
 	}
 
-	printf("subprototypes: [\n");
+	printf("subprototypes: [");
 	for (i = 0; i < proto->subprotoc; i++) {
+		printf("\n");
 		disas_proto(s, proto->subprotos[i]);
 	}
 	printf("]\n");

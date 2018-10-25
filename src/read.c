@@ -879,20 +879,21 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
+#define VECTOR_GROWTH_RATE 5
+
 eu_result pread_vector(parser* p, eu_value* out) {
 	eu_result res;
 	eu_value temp;
-	void *buf, *next;
-	size_t size, remaining;
 	eu_vector* vec;
 	eu_integer count = 0;
+	int size;
 
 	/* match '#(' */
 	_checkreturn(res, pmatchstring(p, "#("));
 
-	/* initialize buffer variables */
-	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
-	remaining = size;
+	/* allocate a vector */
+	size = 0;
+	vec = NULL;
 
 	while (p->current != CRPAR && !iseof(p->current)) {
 		/* skip intertoken space */
@@ -901,19 +902,31 @@ eu_result pread_vector(parser* p, eu_value* out) {
 		/* read a <datum> element */
 		_checkreturn(res, pread_datum(p, &temp));
 
-		/* append it to the buffer */
-		_checkreturn(res, gbuf_append_value(p, &buf, &next, &size, &remaining,
-			&temp));
+		/* append it to the vector */
+		/* check if we need to grow the vector */
+		if (size - (count + 1) <= 0) {
+			size += VECTOR_GROWTH_RATE;
+			vec = eugc_realloc(_eu_gc(p->s), vec,
+				sizeof(eu_vector) + ((size - 1) * sizeof(eu_value)));
+			if (vec == NULL) {
+				seterrorf(p, "Could not grow read vector to size %d.", size);
+				return EU_RESULT_BAD_ALLOC;
+			}
+		}
+		/* set the value at the appropriate index */
+		*_euvector_ref(vec, count) = temp;
+
 		count++;
 	}
 
-	/* make the vector */
-	vec = euvector_new(p->s, cast(eu_value*, buf), count);
+	/* correct vector length */
+	vec->length = count;
+
+	/* give vector ownership to the GC */
+	_checkreturn(res, eugc_own(p->s, _euvector_to_obj(vec)));
+
 	/* set the return to it */
 	_eu_makevector(out, vec);
-
-	/* release the buffer */
-	_checkreturn(res, gbuf_terminate(p, &buf));
 
 	return EU_RESULT_OK;
 }

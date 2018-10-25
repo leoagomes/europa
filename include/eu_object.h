@@ -76,8 +76,9 @@ struct europa_value {
 
 /** common fields to all garbage collected objects. */
 #define EU_OBJ_COMMON_HEADER \
-	eu_gcobj* _next; /*!< last object allocated by the gc */\
-	eu_byte _type; /*!< the type of the object */ \
+	eu_gcobj* _next; /*!< next object in object chain */\
+	eu_gcobj* _previous; /*!< previous object in chain */\
+	eu_byte _type; /*!< the type of the object */\
 	eu_byte _mark
 
 /** Garbage Collected object abstraction. */

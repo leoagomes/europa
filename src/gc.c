@@ -40,6 +40,10 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
 	/* initializing the list of objects. */
 	gc->last_obj = NULL;
 
+	gc->objs_head._mark = EUGC_DO_NOT_TOUCH;
+	gc->objs_head._next = &(gc->objs_head);
+	gc->objs_head._previous = &(gc->objs_head);
+
 	return EU_RESULT_OK;
 }
 
@@ -60,13 +64,13 @@ eu_result eugc_destroy(europa* s) {
 	currentobj = gc->last_obj;
 	while (currentobj != NULL) {
 		eugco_destroy(s, currentobj);
-		currentobj = currentobj->_next;
+		currentobj = currentobj->_previous;
 	}
 
 	/* then free their memories */
 	currentobj = gc->last_obj;
 	while (currentobj != NULL) {
-		tmp = currentobj->_next;
+		tmp = currentobj->_previous;
 		eugc_free(gc, currentobj);
 		currentobj = tmp;
 	}
@@ -91,8 +95,11 @@ eu_gcobj* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 		return NULL;
 
 	/* add object to object list */
-	obj->_next = gc->last_obj;
-	gc->last_obj = obj;
+	obj->_next = gc->objs_head._next;
+	obj->_previous = &(gc->objs_head);
+	gc->objs_head._next->_previous = obj;
+	gc->objs_head._next = obj;
+
 	eugco_markwhite(obj);
 
 	/* initialize other fields */
@@ -199,24 +206,32 @@ eu_result eugc_naive_mark(europa* s, eu_gcobj* obj) {
 	return EU_RESULT_OK;
 }
 
+/**
+ * @brief Performs the sweeping stage of a naive mark-and-sweep GC.
+ * 
+ * @param s The Europa state.
+ * @return The result of the operation.
+ */
 eu_result eugc_naive_sweep(europa* s) {
-	eu_gcobj *current, **last_next;
+	eu_gcobj *current, *aux;
 	eu_result res;
 	eu_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	current = gc->last_obj;
-	last_next = &(gc->last_obj);
+	/* start at just after the head */
+	current = gc->objs_head._next;
 
-	while (current != NULL) {
+	while (current != &(gc->objs_head)) { /* run until we've reached the head again */
 		switch (current->_mark) {
 		/* remove objects that couldn't be reached during the mark stage */
 		case EUGC_COLOR_WHITE:
-			/* point the last node's "next" to the current's next, removing it
-			 * from the object list */
-			*last_next = current->_next;
+			/* remove the object from the list */
+			current->_next->_previous = current->_previous;
+			current->_previous->_next = current->_next;
+
+			aux = current->_next; /* save the next object */
 
 			/* run the object's destructor */
 			res = eugco_destroy(s, current);
@@ -224,30 +239,29 @@ eu_result eugc_naive_sweep(europa* s) {
 			/* free the chunk of memory */
 			eugc_free(gc, current);
 
-			/* go to next object */
-			current = *last_next;
-			break;
+			current = aux; /* correct next and restart loop */
+			continue;
 
 		/* keep reachable objects */
 		case EUGC_COLOR_BLACK:
 			/* mark reachable object as white (for next cycle) */
 			eugco_markwhite(current);
-			/* save the current "next" as the place to put the address of the
-			 * next black-turned-white object in the object list */
-			last_next = &(current->_next);
+			break;
 
-			/* go to next object */
-			current = current->_next;
+		/* do not touch objects with the do not touch color */
+		case EUGC_DO_NOT_TOUCH:
 			break;
 
 		/* finding a grey node during sweep is an error */
 		/* finding a node with a different color is also an error */
 		case EUGC_COLOR_GREY:
 		default:
-			current = current->_next;
 			/* TODO: report error (return error?)*/
 			break;
 		}
+
+		/* go to next object */
+		current = current->_next;
 	}
 
 	return EU_RESULT_OK;
@@ -296,6 +310,54 @@ eu_result eugco_destroy(europa* s, eu_gcobj* obj) {
 	default:
 		break;
 	}
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Tells the GC to take ownership of an object.
+ * 
+ * This object will **not** be checked for ownership, which means that if you
+ * call this function on an object that's already managed by the GC, it might
+ * cause all kids of problems.
+ * 
+ * @param s The Europa state.
+ * @param obj The object to adopt.
+ * @return The result.
+ */
+eu_result eugc_own(europa* s, eu_gcobj* obj) {
+	eu_gc* gc = _eu_gc(s);
+
+	if (obj == &(_eu_gc(s)->objs_head))
+		return EU_RESULT_BAD_ARGUMENT;
+
+	/* add object to object list */
+	obj->_next = gc->objs_head._next;
+	obj->_previous = &(gc->objs_head);
+	gc->objs_head._next->_previous = obj;
+	gc->objs_head._next = obj;
+
+	eugco_markwhite(obj);
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Tells the GC to give up ownership of an object.
+ * 
+ * @param s The Europa state.
+ * @param obj The object of which to give up ownership.
+ * @return The result.
+ */
+eu_result eugc_give(europa* s, eu_gcobj* obj) {
+	if (obj == &(_eu_gc(s)->objs_head))
+		return EU_RESULT_BAD_ARGUMENT;
+
+	/* remove object from its list */
+	obj->_next->_previous = obj->_previous;
+	obj->_previous->_next = obj->_next;
+
+	obj->_mark = EUGC_DO_NOT_TOUCH; /* don't touch it ever again */
 
 	return EU_RESULT_OK;
 }

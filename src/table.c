@@ -224,8 +224,9 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i) {
  */
 eu_result eutable_destroy(europa* s, eu_table* t) {
 	/* manually free the node array if applicable */
-	if (t->nodes != &_dummy)
+	if (t->nodes != &_dummy) {
 		eugc_free(_eu_gc(s), t->nodes);
+	}
 
 	return EU_RESULT_OK;
 }

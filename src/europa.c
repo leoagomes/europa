@@ -125,7 +125,7 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 	}
 
 	s->global = gl;
-	gl->main = s;
+	s->global->main = s;
 
 	/* just create the environment table */
 	if ((res = global_environment_init(s, 0))) {

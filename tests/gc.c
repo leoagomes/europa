@@ -86,8 +86,8 @@ int object_in_list(europa* s, eu_gcobj* obj) {
 
 	gc = _eu_gc(s);
 
-	current = gc->last_obj;
-	while (current) {
+	current = gc->objs_head._next;
+	while (current != &(gc->objs_head)) {
 		if (obj == current)
 			return 1;
 		current = current->_next;
