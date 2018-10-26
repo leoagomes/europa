@@ -25,7 +25,7 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str) {
 	port->type = EU_PORT_TYPE_MEMORY;
 	port->flags = flags;
 	port->size = size;
-	port->mem = (eu_byte*)eugc_malloc(_eu_gc(s), size);
+	port->mem = (eu_byte*)_eugc_malloc(_eu_gc(s), size);
 	if (port->mem == NULL)
 		return NULL;
 
@@ -46,7 +46,7 @@ eu_result eumport_destroy(europa* s, eu_mport* port) {
 		return EU_RESULT_NULL_ARGUMENT;
 
 	if (port->mem)
-		eugc_free(_eu_gc(s), port->mem);
+		_eugc_free(_eu_gc(s), port->mem);
 
 	return EU_RESULT_OK;
 }

@@ -67,7 +67,7 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 	if (length == 0) {
 		/* free the nodes array in case it wasn't the dummy already */
 		if ((t->nodes != &_dummy) && _eutable_last_free(t) != NULL)
-			eugc_free(_eu_gc(s), t->nodes);
+			_eugc_free(_eu_gc(s), t->nodes);
 
 		t->last_free = NULL;
 		t->nodes = &_dummy;
@@ -78,7 +78,7 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 		size = twoto(t->lsize);
 
 		t->nodes = cast(eu_tnode*,
-			eugc_malloc(_eu_gc(s), sizeof(eu_tnode) * size));
+			_eugc_malloc(_eu_gc(s), sizeof(eu_tnode) * size));
 		if (t->nodes == NULL) /* check for bad allocation */
 			return EU_RESULT_BAD_ALLOC;
 
@@ -148,7 +148,7 @@ eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 
 	/* free old nodes */
 	if (old_nodes != &_dummy)
-		eugc_free(_eu_gc(s), old_nodes);
+		_eugc_free(_eu_gc(s), old_nodes);
 
 	return EU_RESULT_OK;
 }
@@ -225,7 +225,7 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i) {
 eu_result eutable_destroy(europa* s, eu_table* t) {
 	/* manually free the node array if applicable */
 	if (t->nodes != &_dummy) {
-		eugc_free(_eu_gc(s), t->nodes);
+		_eugc_free(_eu_gc(s), t->nodes);
 	}
 
 	return EU_RESULT_OK;

@@ -46,9 +46,11 @@ struct europa_gc {
 };
 
 /* helper macros to translate semantically to stdlib functions */
-#define eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL, (s)))
-#define eugc_realloc(gc,ptr,s) ((gc)->realloc((gc)->ud, (ptr), (s)))
-#define eugc_free(gc,ptr) ((gc)->realloc((gc)->ud, (ptr), 0))
+#define _eugc_malloc(gc,s) ((gc)->realloc((gc)->ud, NULL, (s)))
+#define _eugc_realloc(gc,ptr,s) ((gc)->realloc((gc)->ud, (ptr), (s)))
+#define _eugc_free(gc,ptr) ((gc)->realloc((gc)->ud, (ptr), 0))
+#define _eugc_objs_head(gc) (&((gc)->objs_head))
+#define _eugc_root_head(gc) (&((gc)->root_head))
 
 /* function declarations */
 eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
@@ -59,7 +61,11 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 eu_result eugc_own(europa* s, eu_object* obj);
 eu_result eugc_give(europa* s, eu_object* obj);
 
-eu_result eugc_add_to_root_set(europa* s, eu_object* obj);
+eu_result eugc_move_to_root(europa* s, eu_object* obj);
+eu_result eugc_move_off_root(europa* s, eu_object* obj);
+
+eu_result eugc_remove_object(europa* s, eu_object* obj);
+eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj);
 
 /* naive mark and sweep */
 eu_result eugc_naive_collect(europa* s, eu_object* root);

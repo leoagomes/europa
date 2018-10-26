@@ -279,7 +279,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 		/* check if the buffer has to be reallocated */
 		if (pos == size) {
 			size += MIN_CHUNK;
-			buf = eugc_realloc(_eu_gc(s), buf, size);
+			buf = _eugc_realloc(_eu_gc(s), buf, size);
 			if (!buf)
 				return EU_RESULT_BAD_ALLOC;
 		}
@@ -308,7 +308,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	out->value.object = _eustring_to_obj(eustring_new(s, buf));
 
 	/* free the buffer */
-	eugc_free(_eu_gc(s), buf);
+	_eugc_free(_eu_gc(s), buf);
 
 	return EU_RESULT_OK;
 }

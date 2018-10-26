@@ -71,7 +71,7 @@ eu_result eugc_destroy(europa* s) {
 	currentobj = gc->last_obj;
 	while (currentobj != NULL) {
 		tmp = currentobj->_previous;
-		eugc_free(gc, currentobj);
+		_eugc_free(gc, currentobj);
 		currentobj = tmp;
 	}
 
@@ -90,7 +90,7 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 	eu_gc* gc = _eu_gc(s);
 
 	/* alloc object memory */
-	obj = eugc_malloc(gc, size);
+	obj = _eugc_malloc(gc, size);
 	if (!obj)
 		return NULL;
 
@@ -237,7 +237,7 @@ eu_result eugc_naive_sweep(europa* s) {
 			res = eugco_destroy(s, current);
 
 			/* free the chunk of memory */
-			eugc_free(gc, current);
+			_eugc_free(gc, current);
 
 			current = aux; /* correct next and restart loop */
 			continue;
@@ -358,6 +358,100 @@ eu_result eugc_give(europa* s, eu_object* obj) {
 	obj->_previous->_next = obj->_next;
 
 	obj->_mark = EUGC_DO_NOT_TOUCH; /* don't touch it ever again */
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Removes an object from its list.
+ * 
+ * @param s The Europa state.
+ * @param obj The target object.
+ * @return The result of the operation.
+ */
+eu_result eugc_remove_object(europa* s, eu_object* obj) {
+	/* prevent the user from breaking the list */
+	if (obj == &(_eu_gc(s)->objs_head))
+		return EU_RESULT_BAD_ARGUMENT;
+
+	/* check if object is in any list */
+	if (!obj->_previous || !obj->_next || obj->_previous == obj || obj->_next == obj)
+		return EU_RESULT_OK;
+
+	/* remove it from the list */
+	obj->_next->_previous = obj->_previous; /* point next's previous to previous */
+	obj->_previous->_next = obj->_next; /* point previous' next to next */
+
+	/* remove its links */
+	obj->_next = obj->_previous = obj;
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Adds an object to the head's list.
+ * 
+ * This function does not remove the object from its list prior to adding it to
+ * the target list, so it should be removed by the user. This function also
+ * touches nothing except for the next and previous pointers for both objects,
+ * meaning it won't change any of the passed objects' marks or types.
+ * 
+ * @param s The Europa state.
+ * @param head The target list's head.
+ * @param obj The target object.
+ * @return The result of the operation.
+ */
+eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
+	/* add object to object list */
+	obj->_next = head->_next;
+	obj->_previous = head;
+	obj->_next->_previous = obj;
+	obj->_previous->_next = obj;
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Moves an object into the root set.
+ * 
+ * This will remove an object from its list and place it at the root set. If the
+ * object is already in the root set, this operation will effectively move it
+ * closer to the head. This will also set the object's color back to white.
+ * 
+ * @param s The Europa state.
+ * @param obj The target object.
+ * @return The result of the operation.
+ */
+eu_result eugc_move_to_root(europa* s, eu_object* obj) {
+	/* remove object from previous list */
+	_eu_checkreturn(eugc_remove_object(s, obj));
+	/* add object to root list */
+	_eu_checkreturn(eugc_add_object(s, _eugc_root_head(_eu_gc(s)), obj));
+	/* mark it white */
+	eugco_markwhite(obj);
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Moves an object from the root set into the object list.
+ * 
+ * This function removes the object from its list and moves it into the "normal"
+ * object list (the list traversed during sweeping phase). If the object is
+ * already in the object list, it will just be moved closer to the list's head.
+ * This also turns the object back into white.
+ * 
+ * @param s The Europa state.
+ * @param obj The target object.
+ * @return The result of the operation.
+ */
+eu_result eugc_move_off_root(europa* s, eu_object* obj) {
+	/* remove object from previous list */
+	_eu_checkreturn(eugc_remove_object(s, obj));
+	/* add it to the object list */
+	_eu_checkreturn(eugc_add_object(s, _eugc_objs_head(_eu_gc(s)), obj));
+	/* paint it white */
+	eugco_markwhite(obj);
 
 	return EU_RESULT_OK;
 }

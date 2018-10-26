@@ -15,7 +15,7 @@
 
 eu_result resize_constants(europa* s, eu_proto* proto, int size) {
 	proto->constants_size = size; /* new size */
-	proto->constants = eugc_realloc(_eu_gc(s), proto->constants,
+	proto->constants = _eugc_realloc(_eu_gc(s), proto->constants,
 		sizeof(eu_value) * size);
 
 	/* check for errors */
@@ -27,7 +27,7 @@ eu_result resize_constants(europa* s, eu_proto* proto, int size) {
 
 eu_result resize_subprotos(europa* s, eu_proto* proto, int size) {
 	proto->subprotos_size = size;
-	proto->subprotos = eugc_realloc(_eu_gc(s), proto->subprotos,
+	proto->subprotos = _eugc_realloc(_eu_gc(s), proto->subprotos,
 		sizeof(eu_proto) * size);
 
 	/* check for error */
@@ -39,7 +39,7 @@ eu_result resize_subprotos(europa* s, eu_proto* proto, int size) {
 
 eu_result resize_code(europa* s, eu_proto* proto, int size) {
 	proto->code_size = size;
-	proto->code = eugc_realloc(_eu_gc(s), proto->code,
+	proto->code = _eugc_realloc(_eu_gc(s), proto->code,
 		sizeof(eu_instruction) * size);
 
 	/* check for errors */
@@ -142,7 +142,7 @@ eu_result euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
 eu_result euproto_destroy(europa* s, eu_proto* p) {
 	/* only the code buffer is not garbage collected, so free it */
 	if (p->code) {
-		eugc_free(_eu_gc(s), p->code);
+		_eugc_free(_eu_gc(s), p->code);
 	}
 
 	return EU_RESULT_OK;
