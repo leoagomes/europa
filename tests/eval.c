@@ -147,6 +147,10 @@ eu_result simple_test_cl(europa* s) {
 	return EU_RESULT_OK;
 }
 
+eu_result ccl_continue(europa* s) {
+
+}
+
 MunitResult test_c_closures(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
 	eu_value *tv, key, result;

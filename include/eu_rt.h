@@ -153,6 +153,7 @@ eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk);
 eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
 	eu_value* out);
 eu_result euvm_initialize_state(europa* s);
+eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out);
 
 /* run time macros and functions */
 eu_result eurt_evaluate(europa* s, eu_value* value,  eu_value* out);

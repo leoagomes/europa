@@ -68,7 +68,15 @@
 
 #define _eucc_dtag(tagname) if (__eudi++ == (s)->pc) { goto tagname; }
 
+#define _eucc_tag(s, tn, what) do {\
+		((s)->pc)++;\
+		what\
+	} while (0);\
+	tn:
 
-
+#define _eucc_setup_env(what) \
+	do {\
+		what\
+	} while (0);
 
 #endif

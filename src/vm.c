@@ -117,40 +117,6 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	return EU_RESULT_OK;
 }
 
-eu_result prepare_state(europa* s, eu_closure* cl) {
-
-	/* set initial state */
-
-	return EU_RESULT_OK;
-}
-
-eu_result check_val_in_constant(europa* s, int val, const char* inst) {
-	if (s->ccl->proto->constantc <= val) {
-		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
-			"Invalid constant index at %s instruction.", inst));
-		return EU_RESULT_ERROR;
-	}
-	return EU_RESULT_OK;
-}
-
-eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
-	if (s->ccl->proto->subprotoc <= val) {
-		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
-			"Invalid subproto index at %s instruction.", inst));
-		return EU_RESULT_ERROR;
-	}
-	return EU_RESULT_OK;
-}
-
-eu_result check_off_in_code(europa* s, int off, const char* inst) {
-	if (s->pc + off > s->ccl->proto->code_length) {
-		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
-			"Invalid jumping offset for %s instruction.", inst));
-		return EU_RESULT_ERROR;
-	}
-	return EU_RESULT_OK;
-}
-
 void set_cc(europa* s, eu_continuation* cont) {
 	if (cont == NULL) { /* nothing else to run */
 		s->ccl = NULL;
@@ -182,6 +148,139 @@ void set_closure(europa* s, eu_closure* cl) {
 	s->pc = 0;
 }
 
+
+/**
+ * @brief Checks whether a value is inside the boundaries of the constant array.
+ * 
+ * @param s The Europa state.
+ * @param val The value.
+ * @param inst The instruction's name (for error reporting).
+ * @return 
+ */
+eu_result check_val_in_constant(europa* s, int val, const char* inst) {
+	if (s->ccl->proto->constantc <= val) {
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"Invalid constant index at %s instruction.", inst));
+		return EU_RESULT_ERROR;
+	}
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Checks whether a value is inside the boundaries of the subprotos array.
+ * 
+ * @param s 
+ * @param val 
+ * @param inst 
+ * @return eu_result 
+ */
+eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
+	if (s->ccl->proto->subprotoc <= val) {
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"Invalid subproto index at %s instruction.", inst));
+		return EU_RESULT_ERROR;
+	}
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Checks whether an offset is inside the boundaries of a prototype's code.
+ * 
+ * @param s 
+ * @param off 
+ * @param inst 
+ * @return eu_result 
+ */
+eu_result check_off_in_code(europa* s, int off, const char* inst) {
+	if (s->pc + off > s->ccl->proto->code_length) {
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"Invalid jumping offset for %s instruction.", inst));
+		return EU_RESULT_ERROR;
+	}
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Prepares the state for running a closure.
+ * 
+ * @param s 
+ * @param cl 
+ * @param args 
+ * @return eu_result 
+ */
+eu_result prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
+	/* place the closure in the current continuation */
+	_eu_checkreturn(prepare_environment(s, cl, args));
+	set_closure(s, cl);
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Prepares the state for running a continuation.
+ * 
+ * @param s 
+ * @param cont 
+ * @param args 
+ * @return eu_result 
+ */
+eu_result prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
+	/* we need to set the accumulator to the first argument */
+	if (!_euvalue_is_pair(args)) {
+		s->acc = s->rib;
+	} else {
+		s->acc = *_eupair_head(_euvalue_to_pair(args));
+	}
+
+	/* place the continuation in the state */
+	set_cc(s, cont);
+
+	return EU_RESULT_OK;
+}
+
+eu_result solve_value_application(europa* s, eu_value* v) {
+	eu_value *tv;
+	eu_pair* pair;
+
+	/* TODO: add support for type indexes */
+
+	/* fail if type isn't table, closure or continuation, for now */
+	if (!_euvalue_is_type(v, EU_TYPE_TABLE) &&
+		!_euvalue_is_type(v, EU_TYPE_CLOSURE) &&
+		!_euvalue_is_type(v, EU_TYPE_CONTINUATION)) {
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"Tried applying/calling something of invalid type %s.",
+			eu_type_name(_euvalue_type(v))));
+		return EU_RESULT_ERROR;
+	}
+
+	/* if the target value is a table, we need to check it for a '@@call'
+	* function */
+	if (_euvalue_is_type(v, EU_TYPE_TABLE)) {
+		_eu_checkreturn(eutable_rget_symbol(s, _euvalue_to_table(v),
+			CALL_META_NAME, &tv));
+		/* check for correct type */
+		if (tv == NULL || !_euvalue_is_type(tv, EU_TYPE_CLOSURE)) {
+			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
+				"Could not call table. Invalid value for " CALL_META_NAME "."));
+			return EU_RESULT_ERROR;
+		}
+
+		/* we have a proper closure at tv, prepend the table in acc to the
+			* rib */
+		pair = eupair_new(s, _eu_acc(s), &s->rib);
+		if (pair == NULL) {
+			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
+				"Could not add called table to argument rib."));
+			return EU_RESULT_ERROR;
+		}
+		_eu_makepair(&(s->rib), pair);
+		/* finally, place what's in tv in the accumulator and continue
+			* with the APPLY instruction */
+		s->acc = *tv;
+	}
+
+	return EU_RESULT_OK;
+}
 /**
  * @brief Starts a vm execution loop.
  * 
@@ -393,42 +492,9 @@ eu_result euvm_execute(europa* s) {
 			break;
 
 		case EU_OP_APPLY: /* handle calling a value (can be closure, continuation or a table) */
-			/* TODO: add support for type indexes */
-
-			/* fail if type isn't table, closure or continuation, for now */
-			if (!_euvalue_is_type(_eu_acc(s), EU_TYPE_TABLE) &&
-				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CLOSURE) &&
-				!_euvalue_is_type(_eu_acc(s), EU_TYPE_CONTINUATION)) {
-				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
-					"Tried applying/calling something of invalid type %s.",
-					eu_type_name(_euvalue_type(_eu_acc(s)))));
-				return EU_RESULT_OK;
-			}
-
-			/* if the target value is a table, we need to check it for a '@@call'
-			 * function */
-			if (_euvalue_is_type(_eu_acc(s), EU_TYPE_TABLE)) {
-				_eu_checkreturn(eutable_rget_symbol(s, _euvalue_to_table(_eu_acc(s)),
-					CALL_META_NAME, &tv));
-				/* check for correct type */
-				if (tv == NULL || !_euvalue_is_type(tv, EU_TYPE_CLOSURE)) {
-					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
-						"Could not call table. Invalid value for " CALL_META_NAME "."));
-					return EU_RESULT_ERROR;
-				}
-				/* we have a proper closure at tv, prepend the table in acc to the
-				 * rib */
-				pair = eupair_new(s, _eu_acc(s), &s->rib);
-				if (pair == NULL) {
-					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
-						"Could not add called table to argument rib."));
-					return EU_RESULT_ERROR;
-				}
-				_eu_makepair(&(s->rib), pair);
-				/* finally, place what's in tv in the accumulator and continue
-				 * with the APPLY instruction */
-				s->acc = *tv;
-			}
+			/* turn application's target into something callable (a closure or
+			 * continuation) */
+			_eu_checkreturn(solve_value_application(s, _eu_acc(s)));
 
 			/* at this point, acc is either a closure or a continuation */
 			if (_euvalue_is_type(_eu_acc(s), EU_TYPE_CLOSURE)) {
@@ -436,9 +502,7 @@ eu_result euvm_execute(europa* s) {
 				c = _euvalue_to_closure(_eu_acc(s));
 
 				/* prepare the state's environment */
-				_eu_checkreturn(prepare_environment(s, c, &(s->rib)));
-				/* set current closure */
-				set_closure(s, c);
+				_eu_checkreturn(prepare_for_closure(s, c, &(s->rib)));
 
 				/* the current state is set up, so we can continue on with the
 				 * F/D/E loop */
@@ -447,15 +511,9 @@ eu_result euvm_execute(europa* s) {
 			} else { /* it is a continuation */
 				cont = _euvalue_to_cont(_eu_acc(s));
 
-				/* we need to set the accumulator to the first argument */
-				if (!_euvalue_is_pair(&(s->rib))) {
-					s->acc = s->rib;
-				} else {
-					s->acc = *_eupair_head(_euvalue_to_pair(&(s->rib)));
-				}
+				/* prepare the state's environment */
+				prepare_for_continuation(s, cont, &(s->rib));
 
-				/* place the continuation in the state */
-				set_cc(s, cont);
 				continue; /* start the loop again */
 			}
 			break;
@@ -489,7 +547,7 @@ eu_result euvm_execute(europa* s) {
  */
 eu_result euvm_initialize_state(europa* s) {
 	s->acc = _null;
-	s->env = s->global->env;
+	s->env = NULL;
 	s->ccl = NULL;
 	s->previous = NULL;
 	s->rib = _null;
@@ -514,6 +572,64 @@ eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* ou
 	set_closure(s, cl);
 
 	/* do the execution */
+	_eu_checkreturn(euvm_execute(s));
+
+	if (out) /* return the value, if asked */
+		*out = s->acc;
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Applies some arguments to a target value.
+ * 
+ * If not a closure or continuation, the value will be solved_for_application.
+ * 
+ * @param s The target state.
+ * @param v The target value.
+ * @param args Arguments for the application.
+ * @param out Where to place the resulting value.
+ * @return The result of the operation.
+ */
+eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
+	int running = 0;
+
+	/* check if anything is being executed already */
+	if (s->ccl != NULL || s->env != NULL) {
+		running = 1;
+	}
+
+	/* place the applying argument into the accumulator */
+	s->acc = *v;
+	/* and the arguments in rib */
+	s->rib = *args;
+	/* there is no need to fix s->rib_lastpos now because when the function is
+	 * called, it will be reset to &s->rib */
+
+	/* turn whatever was passed into a closure or continuation */
+	_eu_checkreturn(solve_value_application(s, v));
+
+	/* s->acc is either a continuation or a closure */
+	switch (_euvalue_type(_eu_acc(s))) {
+	case EU_TYPE_CLOSURE:
+		_eu_checkreturn(prepare_for_closure(s, _euvalue_to_closure(_eu_acc(s)),
+			args));
+		break;
+	case EU_TYPE_CONTINUATION:
+		prepare_for_continuation(s, _euvalue_to_cont(_eu_acc(s)), args);
+		break;
+	default:
+		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"Invalid type %s in application after solving.",
+			eu_type_name(_euvalue_type(_eu_acc(s)))));
+		return EU_RESULT_ERROR;
+	}
+
+	/* if we're running anything, return a CONTINUE signal */
+	if (running)
+		return EU_RESULT_CONTINUE;
+
+	/* if we weren't already running, do the execution */
 	_eu_checkreturn(euvm_execute(s));
 
 	if (out) /* return the value, if asked */

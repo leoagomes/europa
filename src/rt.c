@@ -35,8 +35,7 @@ eu_result eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
 	_eu_checkreturn(eucode_compile(s, v, &chunk));
 
 	/* run it in the vm */
-	_eu_checkreturn(euvm_doclosure(s, _euvalue_to_closure(&chunk), &_null,
-		out));
+	_eu_checkreturn(euvm_apply(s, &chunk, &_null, out));
 
 	return EU_RESULT_OK;
 }
