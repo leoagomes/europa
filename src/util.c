@@ -71,6 +71,10 @@ int unicodetoutf8(int c) {
 int eutil_list_length(europa* s, eu_value* v, int* improper) {
 	int count;
 
+	/* initialize some values */
+	count = 0;
+	*improper = 0;
+
 	/* empty list: length = 0 */
 	if (_euvalue_is_null(v))
 		return 0;
@@ -80,8 +84,6 @@ int eutil_list_length(europa* s, eu_value* v, int* improper) {
 		return -1;
 
 	/* count number of elements */
-	count = 0;
-	*improper = 0;
 	while (!_euvalue_is_null(v)) {
 		count++;
 		v = _eupair_tail(_euvalue_to_pair(v));
