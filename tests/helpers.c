@@ -203,7 +203,7 @@ void disas_inst(europa* s, eu_proto* proto, eu_instruction inst) {
 		"conti", "apply", "return", "frame", "halt"
 	};
 	static const int opc_types[] = {
-		0, 1, 1, 3, 2, 2, 1, 0, 4, 0, 0, 0, 0,
+		0, 1, 1, 3, 2, 2, 1, 0, 2, 0, 0, 0, 0,
 	};
 	#define opc_part(i) ((i >> 24) & 0xFF)
 	#define val_part(i) (i & 0xFFFFFF)
@@ -223,29 +223,28 @@ void disas_inst(europa* s, eu_proto* proto, eu_instruction inst) {
 		printf(" [%d]", val_part(inst));
 		if (proto) {
 			printf("\t; ");
-			printvln(s, &(proto->constants[val_part(inst)]));
+			printv(s, &(proto->constants[val_part(inst)]));
 		}
-		printf("\n");
 		break;
 	case 2:
-		printf(" %d\n", off_part(inst));
+		printf(" %d", off_part(inst));
 		break;
 	case 3:
 		printf(" <%d>", val_part(inst));
 		if (proto) {
 			printf("\t; #<proto: %p>", proto->subprotos[val_part(inst)]);
 		}
-		printf("\n");
 		break;
 	case 4:
-		printf(" %d\n", val_part(inst));
+		printf(" %d", val_part(inst));
 		break;
 	case 0:
-		printf("\n");
 		break;
 	default:
 		break;
 	}
+
+	printf("\n");
 }
 
 void disas_proto(europa* s, eu_proto* proto) {

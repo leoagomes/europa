@@ -164,6 +164,12 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	/* two objects can only be eq? if they're the same type */
+	if (_euvalue_type(a) != _euvalue_type(b)) {
+		_eu_makebool(out, EU_FALSE);
+		return EU_RESULT_OK;
+	}
+
 	switch(_euvalue_type(a)) {
 	case EU_TYPE_NULL:
 		_eu_makebool(out, EU_TRUE);
@@ -206,6 +212,12 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
+
+	/* two objects can only be equal? if they're the same type */
+	if (_euvalue_type(a) != _euvalue_type(b)) {
+		_eu_makebool(out, EU_FALSE);
+		return EU_RESULT_OK;
+	}
 
 	switch(_euvalue_type(a)) {
 	case EU_TYPE_NULL:

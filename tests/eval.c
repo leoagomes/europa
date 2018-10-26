@@ -176,8 +176,15 @@ MunitResult test_simple_callcc(MunitParameter params[], void* fixture) {
 	eu_value result;
 
 	assert_ok(eu_do_string(s,
-		"(lambda (value) (call/cc (lambda (return) (return value))))", &result));
-	assertv_type(&result, EU_TYPE_CLOSURE);
+		"((lambda (value) (call/cc (lambda (return) (return value)))) 123)", &result));
+	assertv_type(&result, EU_TYPE_NUMBER);
+	assertv_int(&result, ==, 123);
+
+	assert_ok(eu_do_string(s,
+		"((lambda (c) (set! c (call/cc (lambda (i) i))) (if c (c #f) 1234)) #t)",
+		&result));
+	assertv_type(&result, EU_TYPE_NUMBER);
+	assertv_int(&result, ==, 1234);
 
 	return MUNIT_OK;
 }

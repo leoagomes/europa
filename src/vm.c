@@ -330,7 +330,7 @@ eu_result euvm_execute(europa* s) {
 			/* check whether value is in constant range */
 			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "ASSIGN"));
 			/* get the env's value for the symbol constant key */
-			_eu_checkreturn(eutable_rget(s, cl->env, &(proto->constants[val_part(ir)]),
+			_eu_checkreturn(eutable_rget(s, s->env, &(proto->constants[val_part(ir)]),
 				&tv));
 			/* check if could get reference */
 			if (tv == NULL) {
@@ -451,7 +451,7 @@ eu_result euvm_execute(europa* s) {
 				if (!_euvalue_is_pair(&(s->rib))) {
 					s->acc = s->rib;
 				} else {
-					s->acc = *_eupair_head(_euvalue_to_pair(_eu_acc(s)));
+					s->acc = *_eupair_head(_euvalue_to_pair(&(s->rib)));
 				}
 
 				/* place the continuation in the state */
