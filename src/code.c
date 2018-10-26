@@ -17,7 +17,7 @@
 #define ITEST(off) (opc_part(EU_OP_TEST) | offset_part(off))
 #define IJUMP(off) (opc_part(EU_OP_JUMP) | offset_part(off))
 #define IARGUMENT() (opc_part(EU_OP_ARGUMENT) | val_part(0))
-#define ICONTI(arg) (opc_part(EU_OP_CONTI) | val_part(arg))
+#define ICONTI(off) (opc_part(EU_OP_CONTI) | offset_part(off))
 #define IAPPLY() (opc_part(EU_OP_APPLY) | val_part(0))
 #define IRETURN() (opc_part(EU_OP_RETURN) | val_part(0))
 #define IFRAME(return_to) (opc_part(EU_OP_FRAME) | offset_part(return_to))
@@ -225,7 +225,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 					"call/cc can't be used in an improper list."));
 				return EU_RESULT_ERROR;
 			}
-			if (length != 2) {
+			if (length != 1) {
 				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 					"bad call/cc arity: expected 1 arguments, got %d.", length));
 				return EU_RESULT_ERROR;
@@ -241,8 +241,11 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 				_eu_checkreturn(euproto_append_instruction(s, proto, IFRAME(0)));
 			}
 
-			/* create continuation + add to rib instruction */
-			_eu_checkreturn(euproto_append_instruction(s, proto, ICONTI(1)));
+			/* create continuation instruction */
+			improper = proto->code_length;
+			_eu_checkreturn(euproto_append_instruction(s, proto, ICONTI(0)));
+			/* add it to the argument rib */
+			_eu_checkreturn(euproto_append_instruction(s, proto, IARGUMENT()));
 
 			/* compile the argument (which shouldn't be considered to be in tail position) */
 			_eu_checkreturn(compile(s, proto, _eupair_head(_euvalue_to_pair(tail)), 0));
@@ -254,6 +257,9 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			if (!is_tail) {
 				proto->code[index] = IFRAME(proto->code_length - index);
 			}
+
+			/* correct CONTI instruction offset */
+			proto->code[improper] = ICONTI(proto->code_length - improper);
 
 			return EU_RESULT_OK;
 		} else if (eusymbol_equal_cstr(head, "begin")) { /* (begin body...) */

@@ -26,9 +26,13 @@ void* rlike(void* ud, void* ptr, unsigned long long size);
 europa* bootstrap_default_instance(void);
 void terminate_default_instance(europa* s);
 
-void print_value(europa* s, eu_value* v);
-void print_valueln(europa* s, eu_value* v);
+void printv(europa* s, eu_value* v);
+void printvln(europa* s, eu_value* v);
+void printobj(europa* s, eu_object* obj);
+void printobjln(europa* s, eu_object* obj);
+
 void disas_closure(europa* s, eu_closure* cl);
 void disas_proto(europa* s, eu_proto* proto);
+void disas_inst(europa* s, eu_proto* proto, eu_instruction inst);
 
 #endif

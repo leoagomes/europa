@@ -344,31 +344,19 @@ eu_result euvm_execute(europa* s) {
 			break;
 
 		case EU_OP_CONTI:
+			/* check if continuation address is in boundaries */
+			_eu_checkreturn(check_off_in_code(s, off_part(ir), "CONTI"));
+
 			/* create a continuation from the current state */
 			cont = eucont_new(s, s->previous, s->env, &s->rib, s->rib_lastpos,
-				s->ccl, s->pc);
+				s->ccl, s->pc + off_part(ir));
 			if (cont == NULL) {
 				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 					"Could not create continuation."));
 				return EU_RESULT_ERROR;
 			}
 			/* place it in the accumulator */
-			_eu_makeclosure(_eu_acc(s), cont);
-
-			/* check whether to also add it to the argument list */
-			if (val_part(ir)) {
-				pair = eupair_new(s, _eu_acc(s), &_null);
-				if (pair == NULL) {
-					_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
-						"Could not create cell to hold argument value."));
-					return EU_RESULT_ERROR;
-				}
-
-				/* add value to rib */
-				_eu_makepair(s->rib_lastpos, pair);
-				/* update last position */
-				s->rib_lastpos = _eupair_tail(pair);
-			}
+			_eu_makecont(_eu_acc(s), cont);
 			break;
 
 		case EU_OP_FRAME:
