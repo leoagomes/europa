@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "europa.h"
 
+#include "eu_commons.h"
 #include "eu_symbol.h"
 #include "eu_pair.h"
 #include "eu_port.h"
@@ -147,8 +148,22 @@ eu_result simple_test_cl(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result ccl_continue(europa* s) {
+eu_result cl_that_calls(europa* s) {
+	eu_value v;
 
+	_eucc_dispatcher(s,
+		_eucc_dtag(argument_call)
+	);
+
+	_eucc_tag(s, argument_call,
+		_eu_checkreturn(eucc_frame(s));
+		_eu_checkreturn(eu_do_string(s, "1234", NULL));
+	)
+
+	v = *_eu_acc(s);
+	_eu_makeint(_eu_acc(s), _eunum_i(&v));
+
+	return EU_RESULT_OK;
 }
 
 MunitResult test_c_closures(MunitParameter params[], void* fixture) {
@@ -167,6 +182,12 @@ MunitResult test_c_closures(MunitParameter params[], void* fixture) {
 	assert_ok(eutable_create_key(s, s->global->env, &key, &tv));
 	munit_assert_not_null(tv);
 	_eu_makeclosure(tv, cl);
+
+	assert_ok(eu_do_string(s, "(c-function)", &result));
+	assertv_type(&result, EU_TYPE_NUMBER);
+	assertv_int(&result, ==, 1234);
+
+	cl->cf = cl_that_calls;
 
 	assert_ok(eu_do_string(s, "(c-function)", &result));
 	assertv_type(&result, EU_TYPE_NUMBER);

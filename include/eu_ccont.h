@@ -62,21 +62,26 @@
  */
 
 #define _eucc_dispatcher(s, dcl) do { \
-		int __eudi = 0;\
+		int __eudi = 1;\
+		if (s->pc == 0) goto _euccdis_start;\
 		dcl\
-	} while (0)
+		return EU_RESULT_OK;\
+	} while (0);\
+	_euccdis_start:\
+	s->pc++;
 
 #define _eucc_dtag(tagname) if (__eudi++ == (s)->pc) { goto tagname; }
 
-#define _eucc_tag(s, tn, what) do {\
-		((s)->pc)++;\
-		what\
-	} while (0);\
-	tn:
+#define _eucc_tag(s, tn, what) \
+	what \
+	tn: \
+	((s)->pc)++;
 
 #define _eucc_setup_env(what) \
 	do {\
 		what\
 	} while (0);
+
+eu_result eucc_frame(europa* s);
 
 #endif
