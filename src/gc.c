@@ -40,9 +40,15 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
 	/* initializing the list of objects. */
 	gc->last_obj = NULL;
 
+	/* set up object list head */
 	gc->objs_head._mark = EUGC_DO_NOT_TOUCH;
 	gc->objs_head._next = &(gc->objs_head);
 	gc->objs_head._previous = &(gc->objs_head);
+
+	/* set up root set head */
+	gc->root_head._mark = EUGC_DO_NOT_TOUCH;
+	gc->root_head._next = &(gc->root_head);
+	gc->root_head._previous = &(gc->root_head);
 
 	return EU_RESULT_OK;
 }
@@ -117,16 +123,19 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
  * @param root The object from which to start marking.
  * @return A result pertaining to the garbage collection process.
  */
-eu_result eugc_naive_collect(europa* s, eu_object* root) {
+eu_result eugc_naive_collect(europa* s) {
 	eu_result res;
+	eu_object* obj;
 	eu_gc* gc = _eu_gc(s);
 
-	if (gc == NULL || root == NULL)
+	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	/* mark */
-	if ((res = eugc_naive_mark(s, root)))
-		return res;
+	/* mark all objects in root set */
+	obj = gc->root_head._next;
+	while (obj != &(gc->root_head)) {
+		_eu_checkreturn(eugc_naive_mark(s, obj));
+	}
 
 	/* sweep */
 	if ((res = eugc_naive_sweep(s)))

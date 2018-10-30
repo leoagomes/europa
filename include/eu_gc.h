@@ -65,7 +65,7 @@ eu_result eugc_remove_object(europa* s, eu_object* obj);
 eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj);
 
 /* naive mark and sweep */
-eu_result eugc_naive_collect(europa* s, eu_object* root);
+eu_result eugc_naive_collect(europa* s);
 eu_result eugc_naive_mark(europa* s, eu_object* root);
 eu_result eugc_naive_sweep(europa* s);
 
