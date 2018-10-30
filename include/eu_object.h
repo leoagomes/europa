@@ -38,6 +38,7 @@ enum eu_type {
 	EU_TYPE_PROTO, /* function prototype */
 
 	EU_TYPE_STATE,
+	EU_TYPE_GLOBAL,
 	EU_TYPE_CPOINTER,
 	EU_TYPE_USERDATA,
 	EU_TYPE_LAST

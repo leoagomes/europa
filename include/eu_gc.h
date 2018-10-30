@@ -58,9 +58,6 @@ eu_result eugc_destroy(europa* s);
 
 eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 
-eu_result eugc_own(europa* s, eu_object* obj);
-eu_result eugc_give(europa* s, eu_object* obj);
-
 eu_result eugc_move_to_root(europa* s, eu_object* obj);
 eu_result eugc_move_off_root(europa* s, eu_object* obj);
 

@@ -923,7 +923,8 @@ eu_result pread_vector(parser* p, eu_value* out) {
 	}
 
 	/* give vector ownership to the GC */
-	_checkreturn(res, eugc_own(p->s, _euvector_to_obj(vec)));
+	_checkreturn(res, eugc_add_object(p->s, _eugc_objs_head(_eu_gc(p->s)),
+		_euvector_to_obj(vec)));
 
 	/* set the return to it */
 	_eu_makevector(out, vec);

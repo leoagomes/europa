@@ -190,6 +190,14 @@ eu_result eugc_naive_mark(europa* s, eu_object* obj) {
 		_eu_checkreturn(euproto_mark(s, eugc_naive_mark, _euobj_to_proto(obj)));
 		break;
 
+	case EU_TYPE_STATE:
+		_eu_checkreturn(eustate_mark(s, eugc_naive_mark, cast(europa*, obj)));
+		break;
+
+	case EU_TYPE_GLOBAL:
+		_eu_checkreturn(euglobal_mark(s, eugc_naive_mark, cast(eu_global*, obj)));
+		break;
+
 	case EU_TYPE_USERDATA:
 		break;
 
@@ -310,54 +318,6 @@ eu_result eugco_destroy(europa* s, eu_object* obj) {
 	default:
 		break;
 	}
-
-	return EU_RESULT_OK;
-}
-
-/**
- * @brief Tells the GC to take ownership of an object.
- * 
- * This object will **not** be checked for ownership, which means that if you
- * call this function on an object that's already managed by the GC, it might
- * cause all kids of problems.
- * 
- * @param s The Europa state.
- * @param obj The object to adopt.
- * @return The result.
- */
-eu_result eugc_own(europa* s, eu_object* obj) {
-	eu_gc* gc = _eu_gc(s);
-
-	if (obj == &(_eu_gc(s)->objs_head))
-		return EU_RESULT_BAD_ARGUMENT;
-
-	/* add object to object list */
-	obj->_next = gc->objs_head._next;
-	obj->_previous = &(gc->objs_head);
-	gc->objs_head._next->_previous = obj;
-	gc->objs_head._next = obj;
-
-	eugco_markwhite(obj);
-
-	return EU_RESULT_OK;
-}
-
-/**
- * @brief Tells the GC to give up ownership of an object.
- * 
- * @param s The Europa state.
- * @param obj The object of which to give up ownership.
- * @return The result.
- */
-eu_result eugc_give(europa* s, eu_object* obj) {
-	if (obj == &(_eu_gc(s)->objs_head))
-		return EU_RESULT_BAD_ARGUMENT;
-
-	/* remove object from its list */
-	obj->_next->_previous = obj->_previous;
-	obj->_previous->_next = obj->_next;
-
-	obj->_mark = EUGC_DO_NOT_TOUCH; /* don't touch it ever again */
 
 	return EU_RESULT_OK;
 }

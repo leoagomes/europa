@@ -75,4 +75,10 @@ eu_result eu_do_string(europa* s, void* text, eu_value* out);
 eu_result eu_do_file(europa* s, const char* filename, eu_value* out);
 
 
+eu_uinteger eustate_hash(europa* vec);
+eu_result eustate_mark(europa* s, eu_gcmark mark, europa* state);
+
+eu_uinteger euglobal_hash(eu_global* gl);
+eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* state);
+
 #endif /* __EUROPA_H__ */

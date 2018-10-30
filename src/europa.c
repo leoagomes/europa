@@ -5,6 +5,8 @@
  */
 #include "europa.h"
 
+#include "eu_gc.h"
+#include "eu_object.h"
 #include "eu_table.h"
 #include "eu_symbol.h"
 #include "eu_number.h"
@@ -17,6 +19,11 @@
 #include <stdio.h>
 
 eu_result global_basic_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
+	/* pretend this is a normal GC object */
+	g->_previous = g->_next = cast(eu_object*, g);
+	g->_mark = EUGC_COLOR_WHITE;
+	g->_type = EU_TYPE_GLOBAL | EU_TYPEFLAG_COLLECTABLE;
+
 	/* initialize the garbage collector */
 	_eu_checkreturn(eugc_init(_euglobal_gc(g), ud, f));
 
@@ -126,6 +133,12 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 
 	s->global = gl;
 	s->global->main = s;
+
+	/* insert the global into the GC's root set */
+	if ((res = eugc_move_to_root(s, cast(eu_object*, gl)))) {
+		_checkset(err, res);
+		goto fail;
+	}
 
 	/* just create the environment table */
 	if ((res = global_environment_init(s, 0))) {
@@ -263,4 +276,94 @@ eu_result eu_terminate(europa* s) {
 	(f)(ud, gl, 0);
 
 	return res; /* return whether the GC destruction was OK */
+}
+
+/**
+ * @brief Returns the hash of an Europa state.
+ * 
+ * @param s The target state.
+ * @return The hash.
+ */
+eu_uinteger eustate_hash(europa* s) {
+	return cast(eu_integer, s);
+}
+
+/**
+ * @brief Returns the hash of a global state.
+ * 
+ * @param gl The target global.
+ * @return The hash.
+ */
+eu_uinteger euglobal_hash(eu_global* gl) {
+	return cast(eu_integer, gl);
+}
+
+/**
+ * @brief Marks references of an Europa State.
+ * 
+ * @param s The Europa state.
+ * @param mark The marking function.
+ * @param state The target state (to be marked).
+ * @return The result of the operation.
+ */
+eu_result eustate_mark(europa* s, eu_gcmark mark, europa* state) {
+	if (!s || !mark || !state)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	if (state->ccl) { /* state is executing something */
+		/* mark current closure */
+		_eu_checkreturn(mark(s, _euclosure_to_obj(state->ccl)));
+
+		/* mark its environment */
+		_eu_checkreturn(mark(s, _eutable_to_obj(state->env)));
+
+		/* mark the stack */
+		_eu_checkreturn(mark(s, _eucont_to_obj(state->previous)));
+
+		/* mark the rib */
+		if (_euvalue_is_collectable(&state->rib)) {
+			_eu_checkreturn(mark(s, state->rib.value.object));
+		}
+
+		/* mark the accumulator */
+		if (_euvalue_is_collectable(&state->acc)) {
+			_eu_checkreturn(mark(s, state->acc.value.object));
+		}
+	}
+
+	/* mark the global state (which should be in the root set, anyway) */
+	if (state->global) {
+		_eu_checkreturn(mark(s, cast(eu_object*, state->global)));
+	}
+
+	/* mark any errors */
+	if (state->err) {
+		_eu_checkreturn(mark(s, _euerror_to_obj(state->err)));
+	}
+
+	return EU_RESULT_OK;
+}
+
+/**
+ * @brief Marks references of a global Europa State.
+ * 
+ * @param s The Europa state.
+ * @param mark The marking function.
+ * @param gl The target global state (to be marked).
+ * @return The result of the operation.
+ */
+eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
+	if (!s || !mark || !gl)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* mark the main state */
+	_eu_checkreturn(mark(s, cast(eu_object*, gl->main)));
+
+	/* mark internalized table */
+	_eu_checkreturn(mark(s, _eutable_to_obj(gl->internalized)));
+
+	/* mark global environment */
+	_eu_checkreturn(mark(s, _eutable_to_obj(gl->env)));
+
+	return EU_RESULT_OK;
 }
