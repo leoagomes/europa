@@ -6,6 +6,8 @@
 #include "ports/eu_mport.h"
 #include "eu_number.h"
 #include "utf8.h"
+#include "eu_error.h"
+#include "eu_bytevector.h"
 
 #include <string.h>
 
@@ -58,9 +60,20 @@ eu_uinteger eumport_hash(eu_mport* port) {
 /* internal use functions */
 /* input */
 
+#define _protect_read(s, port) \
+	do { \
+		if (port->flags ^ EU_PORT_FLAG_INPUT) {\
+			eu_set_error(s, EU_ERROR_READ, NULL, \
+				"Tried reading a port that is not input.");\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
 eu_result eumport_read_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_read(s, port);
 
 	if (port->next == NULL || port->rpos >= port->size || *(port->next) == '\0') {
 		*out = EOF;
@@ -75,6 +88,8 @@ eu_result eumport_read_char(europa* s, eu_mport* port, int* out) {
 eu_result eumport_peek_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_read(s, port);
 
 	if (port->next == NULL || port->rpos >= port->size || *(port->next) == '\0') {
 		*out = EOF;
@@ -96,6 +111,8 @@ eu_result eumport_read_line(europa* s, eu_mport* port, eu_value* out) {
 
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_read(s, port);
 
 	if (port->next == NULL || port->rpos >= port->size) {
 		*out = _eof;
@@ -148,6 +165,8 @@ eu_result eumport_char_ready(europa* s, eu_mport* port, int* ready) {
 	if (!s || !port || !ready)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	_protect_read(s, port);
+
 	if (!port->next || port->rpos >= port->size)
 		*ready = EU_FALSE;
 	else
@@ -167,6 +186,8 @@ eu_result eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out) {
 
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_read(s, port);
 
 	if (k < 0)
 		return EU_RESULT_BAD_ARGUMENT;
@@ -210,6 +231,8 @@ eu_result eumport_read_u8(europa* s, eu_mport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	_protect_read(s, port);
+
 	if (port->next == NULL || port->rpos >= port->size) {
 		*out = _eof;
 		return EU_RESULT_OK;
@@ -227,6 +250,8 @@ eu_result eumport_peek_u8(europa* s, eu_mport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	_protect_read(s, port);
+
 	if (port->next == NULL || port->rpos >= port->size) {
 		*out = _eof;
 		return EU_RESULT_OK;
@@ -240,9 +265,149 @@ eu_result eumport_u8_ready(europa* s, eu_mport* port, int* ready) {
 	if (!s || !port || !ready)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	_protect_read(s, port);
+
 	if (!port->next || port->rpos >= port->size)
 		*ready = EU_FALSE;
 	else
 		*ready = EU_TRUE;
+	return EU_RESULT_OK;
+}
+
+#define MPORT_GROWTH 64
+#define _protect_write(s, port) \
+	do { \
+		if (port->flags ^ EU_PORT_FLAG_OUTPUT) {\
+			eu_set_error(s, EU_ERROR_READ, NULL, \
+				"Tried writing a port that is not output.");\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+
+eu_result eumport_write(europa* s, eu_mport* port, eu_value* v) {
+}
+
+eu_result eumport_write_shared(europa* s, eu_mport* port, eu_value* v) {
+}
+
+eu_result eumport_write_simple(europa* s, eu_mport* port, eu_value* v) {
+}
+
+eu_result eumport_display(europa* s, eu_mport* port, eu_value* v) {
+}
+
+eu_result eumport_newline(europa* s, eu_mport* port, eu_value* v) {
+}
+
+eu_result eumport_write_char(europa* s, eu_mport* port, int c) {
+	ptrdiff_t pos;
+
+	if (!s || !port)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_write(s, port);
+
+	/* check buffer bounds */
+	if (port->next + utf8codepointsize(c) >= port->mem + port->size) {
+		pos = port->next - port->mem;
+
+		port->size += MPORT_GROWTH;
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		if (port->mem == NULL) { /* failed allocation */
+			return EU_RESULT_BAD_ALLOC;
+		}
+		port->next = port->mem + pos;
+	}
+
+	port->next = utf8catcodepoint(port->next, c, port->size);
+	/* this should never fail, but let's raise an error anyway */
+	if (port->next == NULL) {
+		_eu_checkreturn(eu_set_error(s, EU_ERROR_WRITE, NULL,
+			"Unexpected error concatenating character to memory port."));
+		return EU_RESULT_BAD_ALLOC;
+	}
+
+	return EU_RESULT_OK;
+}
+
+eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v) {
+	ptrdiff_t pos;
+
+	if (!s || !port)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	_protect_write(s, port);
+
+	/* check buffer bounds */
+	if (port->next + utf8codepointsize(c) >= port->mem + port->size) {
+		pos = port->next - port->mem;
+
+		port->size += MPORT_GROWTH;
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		if (port->mem == NULL) { /* failed allocation */
+			return EU_RESULT_BAD_ALLOC;
+		}
+		port->next = port->mem + pos;
+	}
+
+	*port->next = v;
+	port->next++;
+
+	return EU_RESULT_OK;
+}
+
+eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
+	ptrdiff_t pos;
+	size_t size;
+
+	size = _eubvector_length(v);
+
+	/* check buffer for space */
+	if (port->next + size >= port->mem + port->size) {
+		pos = port->next - port->mem;
+
+		port->size += MPORT_GROWTH + size;
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		if (port->mem == NULL) { /* failed allocation */
+			return EU_RESULT_BAD_ALLOC;
+		}
+		port->next = port->mem + pos;
+	}
+
+	/* copy to next */
+	memcpy(port->next, _eubvector_data(v), size);
+	port->next += size;
+
+	return EU_RESULT_OK;
+}
+
+eu_result eumport_flush(europa* s, eu_mport* port, eu_value* v) {
+	return EU_RESULT_OK;
+}
+
+eu_result eumport_write_string(europa* s, eu_mport* port, void* str) {
+	ptrdiff_t pos;
+	size_t size;
+
+	/* target string's size */
+	size = utf8size(str);
+
+	/* check buffer for space */
+	if (port->next + size >= port->mem + port->size) {
+		pos = port->next - port->mem;
+
+		port->size += MPORT_GROWTH + size;
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		if (port->mem == NULL) { /* failed allocation */
+			return EU_RESULT_BAD_ALLOC;
+		}
+		port->next = port->mem + pos;
+	}
+
+	/* copy to next */
+	memcpy(port->next, str, size);
+	port->next += size;
+
 	return EU_RESULT_OK;
 }

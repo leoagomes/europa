@@ -435,3 +435,13 @@ eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
 
 	return EU_RESULT_OK;
 }
+
+eu_result eufport_write(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_shared(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_simple(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_display(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_newline(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_char(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_u8(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_bytevector(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_flush(europa* s, eu_port* port, eu_value* v);

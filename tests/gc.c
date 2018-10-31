@@ -148,7 +148,6 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
-
 MunitTest gctests[] = {
 	{
 		"/object-creation",

@@ -9,6 +9,7 @@
 enum {
 	EU_ERROR_NONE, /* it makes no sense, I know */
 	EU_ERROR_READ,
+	EU_ERROR_WRITE,
 };
 
 /** error type definition */

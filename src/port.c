@@ -53,7 +53,7 @@ eu_uinteger euport_hash(eu_port* port) {
 /* internal functions */
 
 #define STATE_PORT_OUT_SWITCH(restype, func) \
-eu_result euport_ ## func (europa* s, eu_port* port, restype* out) {\
+eu_result euport_ ## func (europa* s, eu_port* port, restype out) {\
 	if (!s || !port || !out)\
 		return EU_RESULT_NULL_ARGUMENT;\
 	switch(port->type) {\
@@ -70,13 +70,13 @@ eu_result euport_ ## func (europa* s, eu_port* port, restype* out) {\
 	\
 }
 
-STATE_PORT_OUT_SWITCH(int, read_char)
-STATE_PORT_OUT_SWITCH(int, peek_char)
-STATE_PORT_OUT_SWITCH(eu_value, read_line)
-STATE_PORT_OUT_SWITCH(int, char_ready)
-STATE_PORT_OUT_SWITCH(eu_value, read_u8)
-STATE_PORT_OUT_SWITCH(eu_value, peek_u8)
-STATE_PORT_OUT_SWITCH(int, u8_ready)
+STATE_PORT_OUT_SWITCH(int*, read_char)
+STATE_PORT_OUT_SWITCH(int*, peek_char)
+STATE_PORT_OUT_SWITCH(eu_value*, read_line)
+STATE_PORT_OUT_SWITCH(int*, char_ready)
+STATE_PORT_OUT_SWITCH(eu_value*, read_u8)
+STATE_PORT_OUT_SWITCH(eu_value*, peek_u8)
+STATE_PORT_OUT_SWITCH(int*, u8_ready)
 
 eu_result euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
 	if (!s || !port || !out)
@@ -94,3 +94,15 @@ eu_result euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
 	}
 	return EU_RESULT_ERROR;
 }
+
+
+STATE_PORT_OUT_SWITCH(eu_value, euport_write)
+STATE_PORT_OUT_SWITCH(eu_value, euport_write_shared)
+STATE_PORT_OUT_SWITCH(eu_value, euport_write_simple)
+STATE_PORT_OUT_SWITCH(eu_value, euport_display)
+STATE_PORT_OUT_SWITCH(eu_value, euport_newline)
+STATE_PORT_OUT_SWITCH(int, euport_write_char)
+STATE_PORT_OUT_SWITCH(eu_byte, euport_write_u8)
+STATE_PORT_OUT_SWITCH(eu_value, euport_write_bytevector)
+STATE_PORT_OUT_SWITCH(eu_value, euport_flush)
+

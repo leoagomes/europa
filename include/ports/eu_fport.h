@@ -39,6 +39,16 @@ eu_result eufport_read_u8(europa* s, eu_fport* port, eu_value* out);
 eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_value* out);
 eu_result eufport_u8_ready(europa* s, eu_fport* port, int* ready);
 
+eu_result eufport_write(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_shared(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_simple(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_display(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_newline(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_char(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_u8(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_write_bytevector(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_flush(europa* s, eu_port* port, eu_value* v);
+
 /* output */
 
 #endif

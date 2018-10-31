@@ -5,6 +5,7 @@
 #include "eu_commons.h"
 #include "eu_object.h"
 #include "eu_port.h"
+#include "eu_bytevector.h"
 
 #include <stdio.h>
 
@@ -44,6 +45,17 @@ eu_result eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out);
 eu_result eumport_read_u8(europa* s, eu_mport* port, eu_value* out);
 eu_result eumport_peek_u8(europa* s, eu_mport* port, eu_value* out);
 eu_result eumport_u8_ready(europa* s, eu_mport* port, int* ready);
+
+eu_result eumport_write(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_write_shared(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_write_simple(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_display(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_newline(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_write_char(europa* s, eu_mport* port, int v);
+eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v);
+eu_result eumport_write_string(europa* s, eu_mport* port, void* str);
+eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v);
+eu_result eumport_flush(europa* s, eu_mport* port, eu_value* v);
 
 /* output */
 
