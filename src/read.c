@@ -486,7 +486,7 @@ eu_result pmatchstring(parser* p, void* str) {
 
 /* applies the casematch procedure over all characters in a string, just like
  * matchstring. */
-eu_result pmatchstringcase(parser* p, void* str) {
+eu_result pcasematchstring(parser* p, void* str) {
 	void* next;
 	int cp;
 	eu_result res;
@@ -519,7 +519,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 	switch (p->current) {
 		case 't':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#t' */
-				_checkreturn(res, pmatchstringcase(p, "true"));
+				_checkreturn(res, pcasematchstring(p, "true"));
 
 				if (!isdelimiter(p->current)) { /* in case it wasn't exactly '#true' */
 					seterror(p, "Invalid token provided when 'true' was expected.");
@@ -539,7 +539,7 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 			return EU_RESULT_OK;
 		case 'f':
 			if (!isdelimiter(p->peek)) { /* in case it wasnt exactly '#f' */
-				_checkreturn(res, pmatchstringcase(p, "false"));
+				_checkreturn(res, pcasematchstring(p, "false"));
 
 				if (!isdelimiter(p->current)) { /* in case it wasn't exactly '#false' */
 					seterror(p, "Invalid token provided when 'false' was expected.");
@@ -828,7 +828,7 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 	eu_bvector* vec;
 
 	/* match the '#u8(' */
-	_checkreturn(res, pmatchstringcase(p, "#u8("));
+	_checkreturn(res, pcasematchstring(p, "#u8("));
 
 	/* initialize auxilary buffer */
 	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
@@ -881,6 +881,9 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 
 #define VECTOR_GROWTH_RATE 5
 
+/*
+ * This reads a vector.
+ */
 eu_result pread_vector(parser* p, eu_value* out) {
 	eu_result res;
 	eu_value temp;
@@ -891,20 +894,34 @@ eu_result pread_vector(parser* p, eu_value* out) {
 	/* match '#(' */
 	_checkreturn(res, pmatchstring(p, "#("));
 
-	/* allocate a vector */
+	/* initialize the vector's size */
 	size = 0;
-	vec = NULL;
+
+	/* allocate the vector but only with the size of the GC header */
+	vec = _eugc_malloc(_eu_gc(p->s), sizeof(eu_object));
+	if (vec == NULL) {
+		seterror(p, "Could not create read vector header.");
+		return EU_RESULT_BAD_ALLOC;
+	}
+	/* initialize the header */
+	vec->_mark = EUGC_COLOR_WHITE;
+	vec->_previous = vec->_next = _euvector_to_obj(vec);
 
 	while (p->current != CRPAR && !iseof(p->current)) {
 		/* skip intertoken space */
 		_checkreturn(res, pskip_itspace(p));
-
 		/* read a <datum> element */
 		_checkreturn(res, pread_datum(p, &temp));
 
 		/* append it to the vector */
 		/* check if we need to grow the vector */
 		if (size - (count + 1) <= 0) {
+			/* because realloc'ing the vector may change its address, we have
+			 * to remove it from the root set */
+			if (vec) {
+				_checkreturn(res, eugc_remove_object(p->s, _euvector_to_obj(vec)));
+			}
+
 			size += VECTOR_GROWTH_RATE;
 			vec = _eugc_realloc(_eu_gc(p->s), vec,
 				sizeof(eu_vector) + ((size - 1) * sizeof(eu_value)));
@@ -912,6 +929,12 @@ eu_result pread_vector(parser* p, eu_value* out) {
 				seterrorf(p, "Could not grow read vector to size %d.", size);
 				return EU_RESULT_BAD_ALLOC;
 			}
+
+			/* reading a vector requires creating objects, which may cause a GC
+			 * cycle. in order to prevent read objects from being collected, we
+			 * add the current vector to the GC's root set. */
+			_checkreturn(res, eugc_add_object(p->s, _eugc_root_head(_eu_gc(p->s)),
+				_euvector_to_obj(vec)));
 		}
 		/* set the value at the appropriate index */
 		*_euvector_ref(vec, count) = temp;
@@ -923,8 +946,7 @@ eu_result pread_vector(parser* p, eu_value* out) {
 	}
 
 	/* give vector ownership to the GC */
-	_checkreturn(res, eugc_add_object(p->s, _eugc_objs_head(_eu_gc(p->s)),
-		_euvector_to_obj(vec)));
+	_checkreturn(res, eugc_move_off_root(p->s, _euvector_to_obj(vec)));
 
 	/* set the return to it */
 	_eu_makevector(out, vec);
@@ -1341,7 +1363,7 @@ eu_result pread_list(parser* p, eu_value* out) {
 	eu_result res;
 	int has_datum = 0;
 	int has_dot = 0;
-	eu_pair *pair, *nextpair;
+	eu_pair *first_pair, *pair, *nextpair;
 	eu_value *slot;
 
 	/* consume left parenthesis */
@@ -1355,10 +1377,13 @@ eu_result pread_list(parser* p, eu_value* out) {
 	}
 
 	/* setup the first pair */
-	pair = eupair_new(p->s, &_null, &_null);
+	first_pair = pair = eupair_new(p->s, &_null, &_null);
 	if (pair == NULL)
 		return EU_RESULT_BAD_ALLOC;
 	slot = _eupair_head(pair);
+
+	/* move pair to GC's root set */
+	_checkreturn(res, eugc_move_to_root(p->s, _eupair_to_obj(pair)));
 
 	/* place the first pair in out */
 	out->type = EU_TYPEFLAG_COLLECTABLE | EU_TYPE_PAIR;
@@ -1444,6 +1469,9 @@ eu_result pread_list(parser* p, eu_value* out) {
 	/* the closing parenthesis ')' is still in the buffer, so we should remove it */
 	_eu_checkreturn(padvance(p));
 
+	/* move first pair into object list again */
+	_checkreturn(res, eugc_move_off_root(p->s, _eupair_to_obj(pair)));
+
 	return EU_RESULT_OK;
 }
 
@@ -1466,6 +1494,9 @@ eu_result pread_abbreviation(parser* p, eu_value* out) {
 		return EU_RESULT_BAD_ALLOC;
 	/* place it on the output */
 	_eu_makepair(out, pair);
+
+	/* add it to GC root set */
+	_checkreturn(res, eugc_move_to_root(p->s, _eupair_to_obj(pair)));
 
 	/* read the abbreviation */
 	if (p->current == CSQUOT) {
@@ -1491,6 +1522,10 @@ eu_result pread_abbreviation(parser* p, eu_value* out) {
 
 	/* read the next datum into the new pair's head */
 	_checkreturn(res, pread_datum(p, _eupair_head(pair)));
+
+	/* remove the pair from the root set, putting it in object list */
+	_checkreturn(res, eugc_move_off_root(p->s, _eupair_to_obj(p->s)));
+
 	return EU_RESULT_OK;
 }
 
