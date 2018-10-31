@@ -62,7 +62,7 @@ eu_uinteger eumport_hash(eu_mport* port) {
 
 #define _protect_read(s, port) \
 	do { \
-		if (port->flags ^ EU_PORT_FLAG_INPUT) {\
+		if (!(port->flags & EU_PORT_FLAG_INPUT)) {\
 			eu_set_error(s, EU_ERROR_READ, NULL, \
 				"Tried reading a port that is not input.");\
 			return EU_RESULT_ERROR;\
@@ -277,27 +277,16 @@ eu_result eumport_u8_ready(europa* s, eu_mport* port, int* ready) {
 #define MPORT_GROWTH 64
 #define _protect_write(s, port) \
 	do { \
-		if (port->flags ^ EU_PORT_FLAG_OUTPUT) {\
+		if (!(port->flags & EU_PORT_FLAG_OUTPUT)) {\
 			eu_set_error(s, EU_ERROR_READ, NULL, \
 				"Tried writing a port that is not output.");\
 			return EU_RESULT_ERROR;\
 		}\
 	} while (0)
 
-
-eu_result eumport_write(europa* s, eu_mport* port, eu_value* v) {
-}
-
-eu_result eumport_write_shared(europa* s, eu_mport* port, eu_value* v) {
-}
-
-eu_result eumport_write_simple(europa* s, eu_mport* port, eu_value* v) {
-}
-
-eu_result eumport_display(europa* s, eu_mport* port, eu_value* v) {
-}
-
 eu_result eumport_newline(europa* s, eu_mport* port, eu_value* v) {
+	/* TODO: add a define for \r */
+	return eumport_write_char(s, port, '\n');
 }
 
 eu_result eumport_write_char(europa* s, eu_mport* port, int c) {
@@ -313,7 +302,7 @@ eu_result eumport_write_char(europa* s, eu_mport* port, int c) {
 		pos = port->next - port->mem;
 
 		port->size += MPORT_GROWTH;
-		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size);
 		if (port->mem == NULL) { /* failed allocation */
 			return EU_RESULT_BAD_ALLOC;
 		}
@@ -340,11 +329,11 @@ eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v) {
 	_protect_write(s, port);
 
 	/* check buffer bounds */
-	if (port->next + utf8codepointsize(c) >= port->mem + port->size) {
+	if (port->next + 1 >= port->mem + port->size) {
 		pos = port->next - port->mem;
 
 		port->size += MPORT_GROWTH;
-		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size);
 		if (port->mem == NULL) { /* failed allocation */
 			return EU_RESULT_BAD_ALLOC;
 		}
@@ -368,7 +357,7 @@ eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
 		pos = port->next - port->mem;
 
 		port->size += MPORT_GROWTH + size;
-		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size);
 		if (port->mem == NULL) { /* failed allocation */
 			return EU_RESULT_BAD_ALLOC;
 		}
@@ -382,7 +371,7 @@ eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_flush(europa* s, eu_mport* port, eu_value* v) {
+eu_result eumport_flush(europa* s, eu_mport* port) {
 	return EU_RESULT_OK;
 }
 
@@ -398,7 +387,7 @@ eu_result eumport_write_string(europa* s, eu_mport* port, void* str) {
 		pos = port->next - port->mem;
 
 		port->size += MPORT_GROWTH + size;
-		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size));
+		port->mem = _eugc_realloc(_eu_gc(s), port->mem, port->size);
 		if (port->mem == NULL) { /* failed allocation */
 			return EU_RESULT_BAD_ALLOC;
 		}

@@ -7,6 +7,7 @@
 #include "eu_commons.h"
 #include "eu_object.h"
 #include "eu_string.h"
+#include "eu_bytevector.h"
 
 /* type definitions */
 typedef struct europa_port eu_port;
@@ -65,10 +66,11 @@ eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v);
 eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v);
 eu_result euport_display(europa* s, eu_port* port, eu_value* v);
 eu_result euport_newline(europa* s, eu_port* port, eu_value* v);
-eu_result euport_write_char(europa* s, eu_port* port, eu_value* v);
-eu_result euport_write_u8(europa* s, eu_port* port, eu_value* v);
-eu_result euport_write_bytevector(europa* s, eu_port* port, eu_value* v);
-eu_result euport_flush(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_char(europa* s, eu_port* port, int v);
+eu_result euport_write_string(europa* s, eu_port* port, void* v);
+eu_result euport_write_u8(europa* s, eu_port* port, eu_byte v);
+eu_result euport_write_bytevector(europa* s, eu_port* port, eu_bvector* v);
+eu_result euport_flush(europa* s, eu_port* port);
 
 
 /* output */

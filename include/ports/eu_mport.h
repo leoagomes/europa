@@ -55,7 +55,7 @@ eu_result eumport_write_char(europa* s, eu_mport* port, int v);
 eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v);
 eu_result eumport_write_string(europa* s, eu_mport* port, void* str);
 eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v);
-eu_result eumport_flush(europa* s, eu_mport* port, eu_value* v);
+eu_result eumport_flush(europa* s, eu_mport* port);
 
 /* output */
 

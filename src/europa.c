@@ -234,7 +234,7 @@ eu_result eu_do_string(europa* s, void* text, eu_value* out) {
 	eu_value obj;
 
 	/* create a memory port for the text */
-	p = _eumport_to_port(eumport_from_str(s, EU_PORT_FLAG_OUTPUT | EU_PORT_FLAG_TEXTUAL, text));
+	p = _eumport_to_port(eumport_from_str(s, EU_PORT_FLAG_INPUT | EU_PORT_FLAG_TEXTUAL, text));
 	if (p == NULL)
 		return EU_RESULT_BAD_ALLOC;
 

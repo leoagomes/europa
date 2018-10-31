@@ -8,6 +8,34 @@
 #include "utf8.h"
 #include "eu_gc.h"
 #include "eu_number.h"
+#include "eu_error.h"
+
+#define _protect_read(s, port) \
+	do { \
+		if (port->flags ^ EU_PORT_FLAG_INPUT) {\
+			eu_set_error(s, EU_ERROR_READ, NULL, \
+				"Tried reading a port that is not input.");\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _protect_write(s, port) \
+	do { \
+		if (port->flags ^ EU_PORT_FLAG_OUTPUT) {\
+			eu_set_error(s, EU_ERROR_READ, NULL, \
+				"Tried writing a port that is not output.");\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _protect_file(s, port) \
+	do { \
+		if (port->file == NULL) {\
+			eu_set_error(s, EU_ERROR_NONE, NULL, \
+				"No valid file in port.");\
+			return EU_RESULT_BAD_RESOURCE;\
+		}\
+	} while (0)
 
 /** Opens a new file port.
  * 
@@ -158,8 +186,8 @@ eu_result eufport_read_char(europa* s, eu_fport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
 
 	return _read_utf8_codepoint(port, out);
 }
@@ -181,9 +209,10 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
+	_protect_file(s, port);
+	_protect_read(s, port);
+
 	file = port->file;
-	if (!file)
-		return EU_RESULT_BAD_RESOURCE;
 
 	/* read the first character */
 	first_char = fgetc(file);
@@ -261,8 +290,9 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* check if file is valid */
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
+
 	file = port->file;
 
 	/* check for end of file */
@@ -338,8 +368,9 @@ eu_result eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
+
 	file = port->file;
 
 	/* return the EOF object in case we're already at EOF */
@@ -379,8 +410,8 @@ eu_result eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
 
 	if (feof(port->file)) {
 		*out = _eof;
@@ -399,8 +430,8 @@ eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
 
 	if (feof(port->file)) {
 		*out = _eof;
@@ -424,8 +455,8 @@ eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (!port->file)
-		return EU_RESULT_BAD_RESOURCE;
+	_protect_file(s, port);
+	_protect_read(s, port);
 
 	/* return eof object if EOF is encountered before parsing any object */
 	if (feof(port->file)) {
@@ -436,12 +467,65 @@ eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_write(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_write_shared(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_write_simple(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_display(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_newline(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_write_char(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_write_u8(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_write_bytevector(europa* s, eu_port* port, eu_value* v);
-eu_result eufport_flush(europa* s, eu_port* port, eu_value* v);
+eu_result eufport_newline(europa* s, eu_fport* port, eu_value* v) {
+	return eufport_write_char(s, port, '\n');
+}
+
+eu_result eufport_write_char(europa* s, eu_fport* port, int v) {
+
+	_protect_file(s, port);
+	_protect_write(s, port);
+
+	putc(v, port->file);
+	return EU_RESULT_OK;
+}
+
+eu_result eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
+
+	_protect_file(s, port);
+	_protect_write(s, port);
+
+	fwrite(&v, sizeof(v), 1, port->file);
+	return EU_RESULT_OK;
+}
+
+eu_result eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
+	int i;
+
+	_protect_file(s, port);
+	_protect_write(s, port);
+
+	for (i = 0; i < _eubvector_length(v); i++) {
+		_eu_checkreturn(eufport_write_u8(s, port, _eubvector_ref(v, i)));
+	}
+	return EU_RESULT_OK;
+}
+
+eu_result eufport_write_string(europa* s, eu_fport* port, eu_string* v) {
+	eu_byte* b;
+
+	_protect_file(s, port);
+	_protect_write(s, port);
+
+	b = cast(eu_byte*, _eustring_text(v));
+
+	while (*b) {
+		_eu_checkreturn(eufport_write_u8(s, port, *b));
+		b++;
+	}
+
+	return EU_RESULT_OK;
+}
+
+eu_result eufport_flush(europa* s, eu_fport* port) {
+	_protect_file(s, port);
+	_protect_write(s, port);
+
+	if (fflush(port->file) == EOF) {
+		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
+			"Error flushing file."));
+		return EU_RESULT_ERROR;
+	}
+
+	return EU_RESULT_OK;
+}

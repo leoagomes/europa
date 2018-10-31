@@ -14,7 +14,7 @@ CFLAGS=-I$(LIB_INCLUDE) -I$(PROJ_INCLUDE)
 all: clean $(EXECUTABLE)
 
 $(EXECUTABLE): $(SOURCES) $(OBJECTS) $(LIBRARY)
-	$(CC) -o $@ $^ $(MUNIT_SOURCE) $(LIBRARY) $(CFLAGS)
+	$(CC) -o $@ $^ $(MUNIT_SOURCE) $(LIBRARY) $(CFLAGS) $(C_FLAGS)
 
 %.o: %.c
 	$(CC) -c -o $@ $^ $(CFLAGS)
