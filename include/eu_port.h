@@ -61,8 +61,9 @@ eu_result euport_read_u8(europa* s, eu_port* port, eu_value* out);
 eu_result euport_peek_u8(europa* s, eu_port* port, eu_value* out);
 eu_result euport_u8_ready(europa* s, eu_port* port, int* ready);
 
+/* obs: use memo=NULL for top level call */
 eu_result euport_write(europa* s, eu_port* port, eu_value* v);
-eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v);
+eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v, eu_table* memo);
 eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v);
 eu_result euport_display(europa* s, eu_port* port, eu_value* v);
 eu_result euport_newline(europa* s, eu_port* port, eu_value* v);

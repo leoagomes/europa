@@ -1,3 +1,8 @@
+/**
+ * @file write.c
+ * @author Leonardo G.
+ * @brief Port object writing procedures.
+ */
 #include <stdio.h>
 
 #include "eu_object.h"
@@ -16,9 +21,9 @@
 
 #include "utf8.h"
 
-
-eu_result euport_write(europa* s, eu_port* port, eu_value* v);
-eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v);
+/* big TODO: implement datum labels and write procedures that are guaranteed to
+ * terminate.
+ */
 
 #define NUMBUF_SIZE 128
 eu_result write_integer(europa* s, eu_port* port, eu_integer v) {
@@ -215,13 +220,13 @@ eu_result write_pair_simple(europa* s, eu_port* port, eu_value* p) {
 		if (v != p) { /* add a space character */
 			_eu_checkreturn(euport_write_char(s, port, ' '));
 		}
-		_eu_checkreturn(euport_write(s, port, v));
+		_eu_checkreturn(euport_write_simple(s, port, v));
 	}
 
 	/* check if improper list */
 	if (!_euvalue_is_null(v)) {
 		_eu_checkreturn(euport_write_string(s, port, " . "));
-		_eu_checkreturn(euport_write(s, port, v));
+		_eu_checkreturn(euport_write_simple(s, port, v));
 	}
 
 	/* write closing parenthesis ) */
@@ -238,7 +243,7 @@ eu_result write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
 
 	/* print vector elements */
 	for (i = 0; i < _euvector_length(vec); i++) {
-		_eu_checkreturn(euport_write(s, port, _euvector_ref(vec, i)));
+		_eu_checkreturn(euport_write_simple(s, port, _euvector_ref(vec, i)));
 	}
 
 	/* write closing parenthesis ) */
@@ -247,8 +252,15 @@ eu_result write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
 	return EU_RESULT_OK;
 }
 
+/**
+ * @brief Writes an object. This may not terminate if structure is circular.
+ * 
+ * @param s The Europa state.
+ * @param port The target port.
+ * @param v The target value.
+ * @return The result of the operation.
+ */
 eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
-
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_NULL:
 		return euport_write_string(s, port, "()");
@@ -313,12 +325,57 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 		return euport_write_char(s, port, '>');
 
 	default:
-		break;
+		return euport_write_string(s, port, "#<UNKNOWN TYPE>");
 	}
 
 	return EU_RESULT_OK;
 }
 
+/**
+ * @brief Writes a representation of an object to the target textual port. Effectively
+ * the implementation of `write`.
+ * 
+ * @remarks Since write-shared is not yet implemented, this relies entirely on
+ * write-simple, which means this may not terminate for circular structures.
+ * 
+ * @param s The Europa state.
+ * @param port The target port.
+ * @param v The target value.
+ * @return The result of the operation.
+ */
+eu_result euport_write(europa* s, eu_port* port, eu_value* v) {
+	/* TODO: implement datum labels and implement proper shared writing procedures */
+	return euport_write_simple(s, port, v);
+}
+
+/**
+ * @brief Same as write, but must use datum labels for values that appear more than
+ * once. WARNING: this is not properly implemented, and instead redirects the call to
+ * `write-simple`. This is a TODO.
+ * 
+ * @param s The Europa state.
+ * @param port The target port.
+ * @param v The target value.
+ * @param memo A memoization table. (Pass NULL on top-level call.)
+ * @return The result of the operation.
+ */
+eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v, eu_table* memo) {
+	return euport_write_simple(s, port, v);
+}
+
+/**
+ * @brief Writes a representation of the object to a textual port. This is
+ * intended to be human-readable, not machine readable.
+ * 
+ * This internally relies on write, which, at the moment, uses write-simple;
+ * this means this procedure is not guaranteed to terminate when passed 
+ * circular structures. Fixing this is a TODO.
+ * 
+ * @param s 
+ * @param port 
+ * @param v 
+ * @return eu_result 
+ */
 eu_result euport_display(europa* s, eu_port* port, eu_value* v) {
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_STRING:
@@ -328,7 +385,7 @@ eu_result euport_display(europa* s, eu_port* port, eu_value* v) {
 	case EU_TYPE_CHARACTER:
 		return euport_write_char(s, port, _euvalue_to_char(v));
 	default:
-		break;
+		return euport_write(s, port, v);
 	}
 	return EU_RESULT_OK;
 }
