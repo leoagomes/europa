@@ -32,8 +32,7 @@ static void* read_setup(MunitParameter params[], void* user_data) {
 static void read_teardown(void* fixture) {
 	europa* s;
 	s = (europa*)fixture;
-	if (s)
-		free(s);
+	terminate_default_instance(s);
 }
 
 MunitResult test_read_booleans(MunitParameter params[], void* fixture) {

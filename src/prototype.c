@@ -145,6 +145,14 @@ eu_result euproto_destroy(europa* s, eu_proto* p) {
 		_eugc_free(_eu_gc(s), p->code);
 	}
 
+	if (p->constants) {
+		_eugc_free(_eu_gc(s), p->constants);
+	}
+
+	if (p->subprotos) {
+		_eugc_free(_eu_gc(s), p->subprotos);
+	}
+
 	return EU_RESULT_OK;
 }
 

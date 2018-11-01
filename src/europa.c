@@ -131,6 +131,7 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 		goto fail;
 	}
 
+	s->err = NULL;
 	s->global = gl;
 	s->global->main = s;
 
@@ -271,9 +272,7 @@ eu_result eu_terminate(europa* s) {
 
 	/* destroy everything in the GC */
 	res = eugc_destroy(s);
-
-	/* free the global state */
-	(f)(ud, gl, 0);
+	/* since the global state lives as a GC object, it will have been freed */
 
 	return res; /* return whether the GC destruction was OK */
 }

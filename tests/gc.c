@@ -51,6 +51,7 @@ void gc_teardown(void* fixture) {
 		return;
 
 	s = (europa*)fixture;
+
 	terminate_default_instance(s);
 }
 

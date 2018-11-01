@@ -25,6 +25,10 @@
  * @todo Use a function provided by an auxilary library (to implement).
  */
 void* rlike(void* ud, void* ptr, unsigned long long size) {
+	if (size == 0) {
+		free(ptr);
+		return NULL;
+	}
 	return realloc(ptr, size);
 }
 

@@ -906,6 +906,7 @@ eu_result pread_vector(parser* p, eu_value* out) {
 	/* initialize the header */
 	vec->_mark = EUGC_COLOR_WHITE;
 	vec->_previous = vec->_next = _euvector_to_obj(vec);
+	vec->_type = EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE;
 
 	while (p->current != CRPAR && !iseof(p->current)) {
 		/* skip intertoken space */

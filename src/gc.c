@@ -12,6 +12,8 @@
 #include "eu_port.h"
 #include "eu_rt.h"
 
+#include <stdio.h>
+
 /* helper macros */
 #define eugco_mark(obj) ((obj)->_mark)
 #define eugco_markwhite(obj) ((obj)->_mark = EUGC_COLOR_WHITE)
@@ -66,17 +68,32 @@ eu_result eugc_destroy(europa* s) {
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	/* destroy all objects */
-	currentobj = gc->last_obj;
-	while (currentobj != NULL) {
+	/* destroy all normal objects */
+	currentobj = gc->objs_head._next;
+	while (currentobj != &(gc->objs_head)) {
 		eugco_destroy(s, currentobj);
-		currentobj = currentobj->_previous;
+		currentobj = currentobj->_next;
+	}
+	/* and root set objects */
+	currentobj = gc->root_head._next;
+	while (currentobj != &(gc->root_head)) {
+		eugco_destroy(s, currentobj);
+		currentobj = currentobj->_next;
 	}
 
 	/* then free their memories */
-	currentobj = gc->last_obj;
-	while (currentobj != NULL) {
-		tmp = currentobj->_previous;
+	currentobj = gc->objs_head._next;
+	while (currentobj != &(gc->objs_head)) {
+		tmp = currentobj->_next;
+		_eu_checkreturn(eugc_remove_object(s, currentobj));
+		_eugc_free(gc, currentobj);
+		currentobj = tmp;
+	}
+	/* and root set objects */
+	currentobj = gc->root_head._next;
+	while (currentobj != &(gc->root_head)) {
+		tmp = currentobj->_next;
+		_eu_checkreturn(eugc_remove_object(s, currentobj));
 		_eugc_free(gc, currentobj);
 		currentobj = tmp;
 	}
@@ -97,8 +114,15 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 
 	/* alloc object memory */
 	obj = _eugc_malloc(gc, size);
-	if (!obj)
-		return NULL;
+	if (!obj) {
+		/* if failed to allocate memory, perform a garbage collection cycle. */
+		if (eugc_naive_collect(s) != EU_RESULT_OK)
+			return NULL;
+		obj = _eugc_malloc(gc, size); /* try again */
+		if (!obj) { /* still not enough memory */
+			return NULL;
+		}
+	}
 
 	/* add object to object list */
 	obj->_next = gc->objs_head._next;
@@ -135,6 +159,7 @@ eu_result eugc_naive_collect(europa* s) {
 	obj = gc->root_head._next;
 	while (obj != &(gc->root_head)) {
 		_eu_checkreturn(eugc_naive_mark(s, obj));
+		obj = obj->_next;
 	}
 
 	/* sweep */
@@ -244,11 +269,10 @@ eu_result eugc_naive_sweep(europa* s) {
 		switch (current->_mark) {
 		/* remove objects that couldn't be reached during the mark stage */
 		case EUGC_COLOR_WHITE:
-			/* remove the object from the list */
-			current->_next->_previous = current->_previous;
-			current->_previous->_next = current->_next;
-
 			aux = current->_next; /* save the next object */
+
+			/* remove the object from the list */
+			_eu_checkreturn(eugc_remove_object(s, current));
 
 			/* run the object's destructor */
 			res = eugco_destroy(s, current);
@@ -293,7 +317,7 @@ eu_result eugco_destroy(europa* s, eu_object* obj) {
 	eu_result res;
 	eu_gc* gc = _eu_gc(s);
 
-	switch (obj->_type) {
+	switch (_euobj_type(obj)) {
 	/* objects that may reference external resources that need closing */
 	case EU_TYPE_TABLE:
 		checkreturn_result(res, eutable_destroy(s, _euobj_to_table(obj)));
