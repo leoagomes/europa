@@ -4,6 +4,7 @@
 #include "eu_symbol.h"
 #include "eu_number.h"
 #include "eu_util.h"
+#include "eu_port.h"
 
 #define OPCMASK 0xFF
 #define OPCSHIFT 24
@@ -634,6 +635,133 @@ eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 
 	if (out) /* return the value, if asked */
 		*out = s->acc;
+
+	return EU_RESULT_OK;
+}
+
+eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) {
+	static const char* opc_names[] = {
+		"nop", "refer", "const", "close", "test", "jump", "assign", "argument",
+		"conti", "apply", "return", "frame", "halt"
+	};
+	static const int opc_types[] = {
+		0, 1, 1, 3, 2, 2, 1, 0, 2, 0, 0, 0, 0,
+	};
+
+	int opindex = opc_part(inst);
+
+	if (opindex > EU_OP_HALT) {
+		_eu_checkreturn(euport_write_string(s, port, "\tUNKNOWN INSTRUCTION\n"));
+		return EU_RESULT_OK;
+	}
+
+	_eu_checkreturn(euport_write_string(s, port, (void*)opc_names[opindex]));
+
+	switch (opc_types[opindex]) {
+	case 1:
+		_eu_checkreturn(euport_write_string(s, port, " ["));
+		_eu_checkreturn(euport_write_integer(s, port, val_part(inst)));
+		if (proto) {
+			_eu_checkreturn(euport_write_string(s, port, "\t; "));
+			_eu_checkreturn(euport_write(s, port,
+				&(proto->constants[val_part(inst)])));
+		}
+		break;
+	case 2:
+		_eu_checkreturn(euport_write_char(s, port, ' '));
+		_eu_checkreturn(euport_write_integer(s, port, off_part(inst)));
+		break;
+	case 3:
+		_eu_checkreturn(euport_write_string(s, port, " <"));
+		_eu_checkreturn(euport_write_integer(s, port, val_part(inst)));
+		_eu_checkreturn(euport_write_char(s, port, '>'));
+		if (proto) {
+			_eu_checkreturn(euport_write_string(s, port, "\t; #<proto: 0x"));
+			_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_integer,
+				proto->subprotos[val_part(inst)])));
+			_eu_checkreturn(euport_write_char(s, port, '>'));
+		}
+		break;
+	case 0:
+		break;
+	default:
+		break;
+	}
+
+	return EU_RESULT_OK;
+}
+
+eu_result _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
+	_eu_checkreturn(euport_write_string(s, port, "Prototype 0x"));
+	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, proto)));
+	_eu_checkreturn(euport_write_string(s, port, ":\nSource:\n"));
+	_eu_checkreturn(euport_write(s, port, &proto->source));
+	_eu_checkreturn(euport_write_string(s, port, "\nFormals: "));
+	_eu_checkreturn(euport_write(s, port, &proto->formals));
+	_eu_checkreturn(euport_write_string(s, port, "\nCode:\n"));
+
+	int i;
+	for (i = 0; i < proto->code_length; i++) {
+		if (pc == i) {
+			_eu_checkreturn(euport_write_char(s, port, '*'));
+		}
+
+		_eu_checkreturn(euport_write_char(s, port, '\t'));
+		_eu_checkreturn(_disas_inst(s, port, proto, proto->code[i]));
+		_eu_checkreturn(euport_write_char(s, port, '\n'));
+	}
+
+	_eu_checkreturn(euport_write_string(s, port, "Subprototypes: [\n"));
+	for (i = 0; i < proto->subprotoc; i++) {
+		_eu_checkreturn(euport_write_char(s, port, '\n'));
+		_eu_checkreturn(_disas_proto(s, port, proto->subprotos[i], -1));
+	}
+	return euport_write_string(s, port, "]\n");
+}
+
+static eu_result _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc) {
+	_eu_checkreturn(euport_write_string(s, port, "Closure 0x"));
+	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, cl)));
+	_eu_checkreturn(euport_write_string(s, port, ":\n"));
+
+	if (cl->cf) {
+		_eu_checkreturn(euport_write_string(s, port,
+			"Closure is C closure.\n C function: 0x"));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, cl->cf)));
+		_eu_checkreturn(euport_write_char(s, port, '\n'));
+
+		return EU_RESULT_OK;
+	}
+
+	return _disas_proto(s, port, cl->proto, pc);
+}
+
+eu_result _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
+	_eu_checkreturn(euport_write_string(s, port, "Continuation 0x"));
+	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_integer, cont)));
+	_eu_checkreturn(euport_write_string(s, port, ":\nPC: "));
+
+	_eu_checkreturn(euport_write_integer(s, port, cont->pc));
+	_eu_checkreturn(euport_write_char(s, port, '\n'));
+
+	return _disas_closure(s, port, cont->cl, cont->pc);
+}
+
+eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
+
+	switch (_euvalue_type(v)) {
+	case EU_TYPE_CLOSURE:
+		return _disas_closure(s, port, _euvalue_to_closure(v), -1);
+	case EU_TYPE_PROTO:
+		return _disas_proto(s, port, _euvalue_to_proto(v), -1);
+	case EU_TYPE_CONTINUATION:
+		return _disas_cont(s, port, _euvalue_to_cont(v));
+	default:
+		euport_write_string(s, port, "Object of type ");
+		euport_write_string(s, port, cast(void*,eu_type_name(_euvalue_type(v))));
+		euport_write_string(s, port, " can't be disassembled.");
+		break;
+	}
 
 	return EU_RESULT_OK;
 }

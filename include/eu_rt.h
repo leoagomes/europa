@@ -8,6 +8,7 @@
 #include "eu_pair.h"
 #include "eu_int.h"
 #include "eu_commons.h"
+#include "eu_port.h"
 
 /* type definitions */
 typedef eu_result (*eu_pfunc)(europa* s, void* ud);
@@ -154,6 +155,7 @@ eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
 	eu_value* out);
 eu_result euvm_initialize_state(europa* s);
 eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out);
+eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v);
 
 /* run time macros and functions */
 eu_result eurt_evaluate(europa* s, eu_value* value,  eu_value* out);

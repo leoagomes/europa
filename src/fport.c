@@ -501,17 +501,18 @@ eu_result eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_write_string(europa* s, eu_fport* port, eu_string* v) {
+eu_result eufport_write_string(europa* s, eu_fport* port, void* v) {
 	eu_byte* b;
+	void* next;
+	int c;
 
 	_protect_file(s, port);
 	_protect_write(s, port);
 
-	b = cast(eu_byte*, _eustring_text(v));
-
-	while (*b) {
-		_eu_checkreturn(eufport_write_u8(s, port, *b));
-		b++;
+	next = v;
+	while (next) {
+		next = utf8codepoint(next, &c);
+		putc(c, port->file);
 	}
 
 	return EU_RESULT_OK;

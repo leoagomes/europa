@@ -26,7 +26,7 @@
  */
 
 #define NUMBUF_SIZE 128
-eu_result write_integer(europa* s, eu_port* port, eu_integer v) {
+eu_result euport_write_integer(europa* s, eu_port* port, eu_integer v) {
 	char b[NUMBUF_SIZE];
 	int pos, negative;
 	eu_integer val;
@@ -55,7 +55,7 @@ eu_result write_integer(europa* s, eu_port* port, eu_integer v) {
 	return EU_RESULT_OK;
 }
 
-eu_result write_hex_uint(europa* s, eu_port* port, eu_uinteger v) {
+eu_result euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger v) {
 	char d[NUMBUF_SIZE];
 	int pos, tv;
 	eu_uinteger val;
@@ -77,14 +77,14 @@ eu_result write_hex_uint(europa* s, eu_port* port, eu_uinteger v) {
 	return EU_RESULT_OK;
 }
 
-eu_result write_string_literal(europa* s, eu_port* port, void* text) {
+eu_result write_string_literal(europa* s, eu_port* port, const void* text) {
 	void *next;
 	int c;
 
 	/* write opening " */
 	_eu_checkreturn(euport_write_char(s, port, '"'));
 
-	next = text;
+	next = cast(void*, text);
 	while (next != NULL) {
 		next = utf8codepoint(next, &c);
 
@@ -159,7 +159,7 @@ eu_result write_bytevector(europa* s, eu_port* port, eu_bvector* bv) {
 			_eu_checkreturn(euport_write_char(s, port, ' '));
 		}
 		/* write the integer value at current bytevector index */
-		_eu_checkreturn(write_integer(s, port, _eubvector_ref(bv, i)));
+		_eu_checkreturn(euport_write_integer(s, port, _eubvector_ref(bv, i)));
 	}
 	/* writen ending ')' */
 	_eu_checkreturn(euport_write_char(s, port, ')'));
@@ -202,7 +202,7 @@ eu_result write_real(europa* s, eu_port* port, eu_real v) {
 
 eu_result write_number(europa* s, eu_port* port, eu_value* num) {
 	if (_eunum_is_exact(num))
-		return write_integer(s, port, _eunum_i(num));
+		return euport_write_integer(s, port, _eunum_i(num));
 	else
 		return write_real(s, port, _eunum_r(num));
 
@@ -287,12 +287,12 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 
 	case EU_TYPE_CLOSURE: 
 		_eu_checkreturn(euport_write_string(s, port, "#<procedure 0x"));
-		_eu_checkreturn(write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
 
 	case EU_TYPE_CONTINUATION:
 		_eu_checkreturn(euport_write_string(s, port, "#<continuation 0x"));
-		_eu_checkreturn(write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
 		break;
 
@@ -307,7 +307,7 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 
 	case EU_TYPE_GLOBAL:
 		_eu_checkreturn(euport_write_string(s, port, "#<global 0x"));
-		_eu_checkreturn(write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
 
 	case EU_TYPE_PORT:
@@ -316,12 +316,12 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 
 	case EU_TYPE_PROTO:
 		_eu_checkreturn(euport_write_string(s, port, "#<prototype 0x"));
-		_eu_checkreturn(write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
 
 	case EU_TYPE_TABLE: /* TODO: change, maybe? */
 		_eu_checkreturn(euport_write_string(s, port, "#<table 0x"));
-		_eu_checkreturn(write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
+		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
 
 	default:

@@ -73,6 +73,10 @@ eu_result euport_write_u8(europa* s, eu_port* port, eu_byte v);
 eu_result euport_write_bytevector(europa* s, eu_port* port, eu_bvector* v);
 eu_result euport_flush(europa* s, eu_port* port);
 
+/* obs: the following functions aren't to be considered stable */
+eu_result euport_write_integer(europa* s, eu_port* port, eu_integer v);
+eu_result euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger v);
+
 
 /* output */
 

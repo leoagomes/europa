@@ -99,6 +99,7 @@ STATE_PORT_OUT_SWITCH(eu_value*, newline)
 STATE_PORT_OUT_SWITCH(int, write_char)
 STATE_PORT_OUT_SWITCH(eu_byte, write_u8)
 STATE_PORT_OUT_SWITCH(eu_bvector*, write_bytevector)
+STATE_PORT_OUT_SWITCH(void*, write_string)
 
 eu_result euport_flush(europa* s, eu_port* port) {
 	switch (port->type) {
