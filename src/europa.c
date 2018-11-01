@@ -140,6 +140,10 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 		_checkset(err, res);
 		goto fail;
 	}
+	if ((res = eugc_move_to_root(s, cast(eu_object*, s)))) {
+		_checkset(err, res);
+		goto fail;
+	}
 
 	/* just create the environment table */
 	if ((res = global_environment_init(s, 0))) {
@@ -270,9 +274,16 @@ eu_result eu_terminate(europa* s) {
 	f = gl->gc.realloc;
 	ud = gl->gc.ud;
 
+	/* remove current state and global from gc */
+	_eu_checkreturn(eugc_remove_object(s, cast(eu_object*, gl)));
+	_eu_checkreturn(eugc_remove_object(s, cast(eu_object*, s)));
+
 	/* destroy everything in the GC */
 	res = eugc_destroy(s);
-	/* since the global state lives as a GC object, it will have been freed */
+	
+	/* release state and global */
+	(f)(ud, s, 0);
+	(f)(ud, gl, 0);
 
 	return res; /* return whether the GC destruction was OK */
 }
