@@ -76,6 +76,7 @@ enum {
 	EU_OP_APPLY,
 	EU_OP_RETURN,
 	EU_OP_FRAME,
+	EU_OP_DEFINE,
 	EU_OP_HALT,
 };
 
@@ -159,5 +160,11 @@ eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v);
 
 /* run time macros and functions */
 eu_result eurt_evaluate(europa* s, eu_value* value,  eu_value* out);
+
+/* library */
+eu_result euapi_procedureQ(europa* s);
+eu_result euapi_apply(europa* s);
+eu_result euapi_map(europa* s);
+eu_result euapi_for_each(europa* s);
 
 #endif

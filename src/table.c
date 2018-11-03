@@ -619,3 +619,30 @@ eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	}
 	return EU_RESULT_OK;
 }
+
+eu_result eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val) {
+	eu_value key, *v;
+	eu_symbol* keysym;
+
+	/* save passed value */
+	v = *val;
+
+	/* try getting the symbol */
+	_eu_checkreturn(eutable_get_symbol(s, t, text, val));
+	if (*val == NULL) {
+		/* not found, create it */
+		keysym = eusymbol_new(s, text);
+		if (keysym == NULL)
+			return EU_RESULT_BAD_ALLOC;
+		_eu_makesym(&key, keysym);
+
+		_eu_checkreturn(eutable_create_key(s, t, &key, val));
+	}
+
+	/* check if a valid value was passed */
+	if (v != NULL) {
+		**val = *v; /* set the slot in the table to it */
+	}
+
+	return EU_RESULT_OK;
+}

@@ -47,6 +47,11 @@ eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
 eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* str);
 
 /* library functions */
+eu_result euapi_register_symbol(europa* s);
 
+eu_result euapi_symbolQ(europa* s);
+eu_result euapi_symbolEQ(europa* s);
+eu_result euapi_symbol_to_string(europa* s);
+eu_result euapi_string_to_symbol(europa* s);
 
 #endif /* __EUROPA_SYMBOL_H__ */

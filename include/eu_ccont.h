@@ -23,6 +23,7 @@
 #include "eu_rt.h"
 #include "eu_commons.h"
 #include "eu_object.h"
+#include "eu_error.h"
 
 /* 
  * I decided to try fixing the continuation problem by "flattening" the C stack.
@@ -82,6 +83,86 @@
 		what\
 	} while (0);
 
+
+#define _eucc_argument(s, v, index) \
+	do {\
+		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
+		if ((v) == NULL) {\
+			eu_set_error_nf(s, EU_ERROR_NONE, (s)->err, 1024, \
+				"could not get argument #%d into C local %s.", (index), #v);\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _eucc_argument_type(s, v, index, type) \
+	do {\
+		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
+		if ((v) == NULL) {\
+			eu_set_error_nf(s, EU_ERROR_NONE, (s)->err, 1024, \
+				"could not get argument #%d into C local %s.", (index), #v);\
+			return EU_RESULT_ERROR;\
+		}\
+		if (!_euvalue_is_type((v), (type))) {\
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024, \
+				"Argument #%d of wrong type. Expected %s, got %s.", (index), \
+				eu_type_name((type)), eu_type_name(_euvalue_type(v))));\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _eucc_valid_rib(s) \
+	if (!_euvalue_is_pair(&(s)->rib)) {\
+		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL, \
+			"Argument rib is not a list."));\
+		return EU_RESULT_ERROR;\
+	}
+
+#define _eucc_arity_proper(s, count) \
+	do {\
+		int __got;\
+		if ((count) == 0 && !_euvalue_is_null(&((s)->rib))) {\
+			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL, \
+				"No arguments expected for procedure, but some were provided."));\
+			return EU_RESULT_ERROR;\
+		}\
+		_eucc_valid_rib(s)\
+		if ((__got = eulist_length(s, _euvalue_to_pair(&(s)->rib))) != (count)) {\
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024, \
+				"Bad arity: expected %d arguments, got %d.", (count), __got));\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _eucc_arity_improper(s, minimum) \
+	do {\
+		int __got;\
+		_eucc_valid_rib(s)\
+		if ((__got = eulist_length(s, _euvalue_to_pair(&(s)->rib))) < (minimum)) {\
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024, \
+				"Bad arity: expected at least %d arguments, got %d.", (minimum),\
+				__got));\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+#define _eucc_arguments(s) (&((s)->rib))
+
+#define _eucc_return(s) (_eu_acc(s))
+
+#define _eucc_check_type(s, v, what, expected) \
+	do {\
+		if (!_euvalue_is_type(v, expected)) {\
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024, \
+				"Bad type for " what ". Expected %s, got %s.", \
+				eu_type_name(expected), eu_type_name(_euvalue_type(v))));\
+			return EU_RESULT_ERROR;\
+		}\
+	} while (0)
+
+
 eu_result eucc_frame(europa* s);
+eu_result eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text, eu_cfunc cf);
+
+
 
 #endif

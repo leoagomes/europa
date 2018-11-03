@@ -443,6 +443,22 @@ eu_result euvm_execute(europa* s) {
 			*tv = s->acc;
 			break;
 
+		case EU_OP_DEFINE:
+			/* check whether value is in constant range */
+			_eu_checkreturn(check_val_in_constant(s, val_part(ir), "DEFINE"));
+			/* get the env's value for the symbol constant key */
+			_eu_checkreturn(eutable_rget(s, s->env, &(proto->constants[val_part(ir)]),
+				&tv));
+			/* check if could get reference */
+			if (tv == NULL) {
+				/* in which case, add it to the table */
+				_eu_checkreturn(eutable_create_key(s, s->env,
+					&(proto->constants[val_part(ir)]), &tv));
+			}
+			/* set the value slot to the value in the accumulator */
+			*tv = s->acc;
+			break;
+
 		case EU_OP_CONTI:
 			/* check if continuation address is in boundaries */
 			_eu_checkreturn(check_off_in_code(s, off_part(ir), "CONTI"));

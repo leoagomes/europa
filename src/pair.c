@@ -6,6 +6,10 @@
 #include "eu_pair.h"
 
 #include "eu_gc.h"
+#include "eu_error.h"
+#include "eu_ccont.h"
+#include "eu_rt.h"
+#include "eu_number.h"
 
 /** Creates a new (garbage collected) pair.
  * 
@@ -68,12 +72,195 @@ eu_uinteger eupair_hash(eu_pair* pair) {
 	return cast(eu_integer, pair);
 }
 
+eu_value* eulist_tail(europa* s, eu_pair* list, int k) {
+	eu_value *v, lv;
+	int i;
+
+	_eu_makepair(&lv, list);
+
+	for (i = k, v = &lv; i > 0 && _euvalue_is_type(v, EU_TYPE_PAIR);
+		v = _eupair_tail(_euvalue_to_pair(v)), i--) {
+	}
+
+	if (!_euvalue_is_type(v, EU_TYPE_PAIR)) {
+		eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+			"list-ref %d on improper or short list.", k);
+		return NULL;
+	}
+
+	return v;
+}
+
+eu_value* eulist_ref(europa* s, eu_pair* list, int k) {
+	eu_value* v;
+
+	v = eulist_tail(s, list, k);
+	if (v == NULL)
+		return NULL;
+
+	return _eupair_head(_euvalue_to_pair(v));
+}
+
+int eulist_length(europa* s, eu_pair* list) {
+	eu_value *v, lv;
+	int length;
+
+	_eu_makepair(&lv, list);
+
+	length = 0;
+	while (_euvalue_is_pair(v)) {
+		v = _eupair_tail(_euvalue_to_pair(v));
+		length++;
+	}
+
+	if (!_euvalue_is_null(v)) {
+		return -length;
+	}
+
+	return length;
+}
+
 /* the language API */
 
 /**
  * @addtogroup language_library
  * @{
  */
+
+/**
+ * @brief Registers pair procedures in the global environment.
+ * 
+ * @param s The Europa state.
+ * @return The result of the operation.
+ */
+eu_result euapi_register_pair(europa* s) {
+	eu_table* env;
+
+	env = s->env;
+
+	/* */
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "pair?", euapi_pairQ));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "cons", euapi_cons));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "car", euapi_car));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "cdr", euapi_cdr));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "set-car!", euapi_set_carB));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "set-cdr!", euapi_set_cdrB));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "null?", euapi_nullQ));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "list", euapi_list));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_pairQ(europa* s) {
+	eu_value* obj;
+
+	/* check procedure arity */
+	_eucc_arity_proper(s, 1);
+	/* get first argument */
+	_eucc_argument(s, obj, 0);
+	/* set the return to a boolean that says whether the passed value is a pair */
+	_eu_makebool(_eucc_return(s), _euvalue_is_pair(obj));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_cons(europa* s) {
+	eu_value *a, *b;
+	eu_pair* p;
+
+	/* check arity */
+	_eucc_arity_proper(s, 2);
+	/* read arguments */
+	_eucc_argument(s, a, 0);
+	_eucc_argument(s, b, 1);
+
+	p = eupair_new(s, a, b);
+	if (p == NULL) {
+		return EU_RESULT_BAD_ALLOC;
+	}
+
+	_eu_makepair(_eucc_return(s), p);
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_car(europa* s) {
+	eu_value *list;
+	eu_pair* p;
+
+	/* check arity */
+	_eucc_arity_proper(s, 2);
+	/* read arguments */
+	_eucc_argument_type(s, list, 0, EU_TYPE_PAIR);
+	/* set return to head */
+	*_eucc_return(s) = *_eupair_head(_euvalue_to_pair(list));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_cdr(europa* s) {
+	eu_value *list;
+	eu_pair* p;
+
+	/* check arity */
+	_eucc_arity_proper(s, 2);
+	/* read arguments */
+	_eucc_argument_type(s, list, 0, EU_TYPE_PAIR);
+	/* set return to tail */
+	*_eucc_return(s) = *_eupair_tail(_euvalue_to_pair(list));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_set_carB(europa* s) {
+	eu_value *pair, *value;
+	eu_pair* p;
+
+	/* check arity */
+	_eucc_arity_proper(s, 2);
+	/* read arguments */
+	_eucc_argument_type(s, pair, 0, EU_TYPE_PAIR);
+	_eucc_argument_type(s, value, 1, EU_TYPE_PAIR);
+
+	*_eupair_head(_euvalue_to_pair(pair)) = *value;
+	*_eucc_return(s) = _null;
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_set_cdrB(europa* s) {
+	eu_value *pair, *value;
+	eu_pair* p;
+
+	/* check arity */
+	_eucc_arity_proper(s, 2);
+	/* read arguments */
+	_eucc_argument_type(s, pair, 0, EU_TYPE_PAIR);
+	_eucc_argument(s, value, 1);
+
+	*_eupair_tail(_euvalue_to_pair(pair)) = *value;
+	*_eucc_return(s) = _null;
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_nullQ(europa* s) {
+	eu_value* obj;
+
+	/* check procedure arity */
+	_eucc_arity_proper(s, 1);
+	/* get first argument */
+	_eucc_argument(s, obj, 0);
+	/* set the return to a boolean that says whether the passed value is a pair */
+	_eu_makebool(_eucc_return(s), _euvalue_is_null(obj));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_list(europa* s) {
+	*_eucc_return(s) = s->rib;
+	return EU_RESULT_OK;
+}
 
 /**
  * @}

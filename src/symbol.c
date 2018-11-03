@@ -10,6 +10,7 @@
 #include "eu_util.h"
 #include "eu_number.h"
 #include "utf8.h"
+#include "eu_ccont.h"
 
 /*
  * Symbols:
@@ -145,3 +146,95 @@ eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* cstr) {
 		return EU_FALSE;
 	return !utf8cmp(_eusymbol_text(_euvalue_to_symbol(vsym)), cstr);
 }
+
+/**
+ * @addtogroup language_library
+ * @{
+ */
+
+eu_result euapi_register_symbol(europa* s) {
+	eu_table* env;
+
+	env = s->env;
+
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "symbol?", euapi_symbolQ));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "symbol->string", euapi_symbol_to_string));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "string->symbol", euapi_string_to_symbol));
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_symbolQ(europa* s) {
+	eu_value* object;
+
+	_eucc_arity_proper(s, 1); /* check arity */
+	_eucc_argument(s, object, 0); /* get argument */
+
+	_eu_makebool(_eucc_return(s), _euvalue_is_type(object, EU_TYPE_SYMBOL));
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_symbolEQ(europa* s) {
+	eu_value *current, *previous, *cv, *pv;
+
+	_eucc_arity_improper(s, 2); /* check arity */
+
+	/* initialize previous and current arguments */
+	previous = _eucc_arguments(s);
+	current = _eupair_tail(_euvalue_to_pair(previous));
+
+	while (!_euvalue_is_null(current)) {
+		/* get arguments */
+		pv = _eupair_head(_euvalue_to_pair(previous));
+		cv = _eupair_head(_euvalue_to_pair(current));
+
+		/* check whether symbols are equal */
+		_eu_checkreturn(eusymbol_eqv(pv, cv, _eucc_return(s)));
+		if (_eucc_return(s)->value.boolean == EU_FALSE)
+			return EU_RESULT_OK;
+
+		/* advance argument */
+		previous = current;
+		current = _eupair_tail(_euvalue_to_pair(current));
+	}
+
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_symbol_to_string(europa* s) {
+	eu_value* symbol;
+	eu_string* str;
+
+	_eucc_arity_proper(s, 1); /* check arity */
+	_eucc_argument_type(s, symbol, 0, EU_TYPE_SYMBOL); /* get argument */
+
+	/* create new string with symbol text */
+	str = eustring_new(s, _eusymbol_text(_euvalue_to_symbol(symbol)));
+	if (str == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	_eu_makestring(_eucc_return(s), str);
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_string_to_symbol(europa* s) {
+	eu_value* string;
+	eu_symbol* sym;
+
+	_eucc_arity_proper(s, 1); /* check arity */
+	_eucc_argument_type(s, string, 0, EU_TYPE_STRING); /* get argument */
+
+	/* create new symbol with string text */
+	sym = eusymbol_new(s, _eustring_text(_euvalue_to_string(string)));
+	if (sym == NULL)
+		return EU_RESULT_BAD_ALLOC;
+
+	_eu_makesym(_eucc_return(s), sym);
+	return EU_RESULT_OK;
+}
+
+
+
+/**
+ * @}
+ */

@@ -21,6 +21,7 @@
 #define IAPPLY() (opc_part(EU_OP_APPLY) | val_part(0))
 #define IRETURN() (opc_part(EU_OP_RETURN) | val_part(0))
 #define IFRAME(return_to) (opc_part(EU_OP_FRAME) | offset_part(return_to))
+#define IDEFINE(k) (opc_part(EU_OP_DEFINE) | val_part(k))
 
 eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail);
 
@@ -216,6 +217,73 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			_eu_checkreturn(euproto_append_instruction(s, proto, IASSIGN(index)));
 
 			return EU_RESULT_OK;
+		} else if (eusymbol_equal_cstr(head, "define")) { /* (define name thing) || (define (name args) body...) || (define (name . arglist) body...) */
+			/* check arity */
+			length = eutil_list_length(s, tail, &improper);
+			if (length < 0 || improper) {
+				_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
+					"define can't be used in an improper list."));
+				return EU_RESULT_ERROR;
+			}
+			if (length < 2) {
+				_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+					"bad define arity: expected at least 2 arguments, got %d.", length));
+				return EU_RESULT_ERROR;
+			}
+
+			/* make head be name or (name args ...) or (name . arglist) */
+			head = _eupair_head(_euvalue_to_pair(tail));
+			/* cell of third parameter */
+			tail = _eupair_head(_euvalue_to_pair(_eupair_tail(_euvalue_to_pair(tail))));
+
+			/* (define name value) */
+			if (_euvalue_is_type(head, EU_TYPE_SYMBOL)) {
+
+				/* compile the value parameter */
+				_eu_checkreturn(compile(s, proto, tail, 0)); /* the set variable name is never in tail position */
+
+				/* add name symbol to the constant list */
+				_eu_checkreturn(euproto_add_constant(s, proto, head, &index));
+				/* append the define instruction */
+				_eu_checkreturn(euproto_append_instruction(s, proto, IDEFINE(index)));
+
+				return EU_RESULT_OK;
+			}
+
+			/* (define (name args ...) body ...) also (name args . named) */
+			if (_euvalue_is_type(head, EU_TYPE_PAIR)) {
+
+				/* check whether formals are valid */
+				_eu_checkreturn(check_formals(s, _eupair_tail(_euvalue_to_pair(head))));
+
+				/* initialize the begin cell */
+				_eu_makesym(&beginsym, eusymbol_new(s, "begin"));
+				_eu_makepair(&beginpair, eupair_new(s, &beginsym, tail));
+
+				/* create a prototype from the formals (in head's cdr) and source (in v) */
+				subproto = euproto_new(s, _eupair_tail(_euvalue_to_pair(head)), 0, v, 0, 0);
+				/* compile the body (with the prepended "begin") */
+				_eu_checkreturn(compile_application(s, subproto, &beginpair, 1));
+				/* add a return instruction */
+				_eu_checkreturn(euproto_append_instruction(s, subproto, IRETURN()));
+				/* add the compiled prototype as a subprototype */
+				_eu_checkreturn(euproto_add_subproto(s, proto, subproto, &index));
+				/* add a close instruction */
+				_eu_checkreturn(euproto_append_instruction(s, proto, ICLOSE(index)));
+
+				/* add name symbol to the constant list */
+				_eu_checkreturn(euproto_add_constant(s, proto, _eupair_head(_euvalue_to_pair(head)), &index));
+				/* append the define instruction */
+				_eu_checkreturn(euproto_append_instruction(s, proto, IDEFINE(index)));
+
+				return EU_RESULT_OK;
+			}
+
+			_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
+				"define's name is of invalid type %s. Expected symbol or list.",
+				eu_type_name(_euvalue_type(head))));
+			return EU_RESULT_ERROR;
+
 		} else if (eusymbol_equal_cstr(head, "call/cc") /* (call/cc proc) */
 			|| eusymbol_equal_cstr(head, "call-with-current-continuation")) {
 			/* check arity */

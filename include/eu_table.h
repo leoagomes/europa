@@ -68,12 +68,12 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i);
 
 eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key,
 	eu_value** val);
+eu_result eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val);
 eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val);
 eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
 	eu_value** val);
 eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
 	eu_value** val);
-eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val);
 
 eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
 eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,

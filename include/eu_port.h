@@ -106,5 +106,25 @@ eu_result euapi_port_write_u8(europa* s);
 eu_result euapi_port_write_bytevector(europa* s);
 eu_result euapi_port_flush(europa* s);
 
+eu_result euapi_call_with_port(europa* s);
+eu_result euapi_call_with_input_file(europa* s);
+eu_result euapi_call_with_output_file(europa* s);
+eu_result euapi_input_portQ(europa* s);
+eu_result euapi_output_portQ(europa* s);
+eu_result euapi_binary_portQ(europa* s);
+eu_result euapi_textual_portQ(europa* s);
+eu_result euapi_portQ(europa* s);
+eu_result euapi_output_port_openQ(europa* s);
+eu_result euapi_input_port_openQ(europa* s);
+eu_result euapi_current_input_port(europa* s);
+eu_result euapi_current_output_port(europa* s);
+eu_result euapi_current_error_port(europa* s);
+eu_result euapi_open_input_file(europa* s);
+eu_result euapi_open_binary_input_file(europa* s);
+eu_result euapi_open_output_file(europa* s);
+eu_result euapi_open_binary_output_file(europa* s);
+eu_result euapi_close_port(europa* s);
+eu_result euapi_close_input_port(europa* s);
+eu_result euapi_close_output_port(europa* s);
 
 #endif

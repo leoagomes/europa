@@ -60,4 +60,32 @@ eu_integer eustring_size(eu_string* str);
 eu_result eustring_equal(eu_value* a, eu_value* b, eu_value* out);
 eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr);
 
+/* library */
+eu_result euapi_stringQ(europa* s);
+eu_result euapi_make_string(europa* s);
+eu_result euapi_string(europa* s);
+eu_result euapi_string_length(europa* s);
+eu_result euapi_string_ref(europa*s);
+eu_result euapi_string_setB(europa* s);
+eu_result euapi_stringEQ(europa* s);
+eu_result euapi_string_ciEQ(europa* s);
+eu_result euapi_stringLQ(europa* s);
+eu_result euapi_string_ciLQ(europa* s);
+eu_result euapi_stringGQ(europa* s);
+eu_result euapi_string_ciGQ(europa* s);
+eu_result euapi_stringLEQ(europa* s);
+eu_result euapi_string_ciLEQ(europa* s);
+eu_result euapi_stringGEQ(europa* s);
+eu_result euapi_stirng_ciGEQ(europa* s);
+eu_result euapi_string_upcase(europa* s);
+eu_result euapi_string_downcase(europa* s);
+eu_result euapi_string_foldcase(europa* s);
+eu_result euapi_substring(europa* s);
+eu_result euapi_string_append(europa* s);
+eu_result euapi_string_to_list(europa* s);
+eu_result euapi_list_to_string(europa* s);
+eu_result euapi_string_copy(europa* s);
+eu_result euapi_string_copyB(europa* s);
+eu_result euapi_string_fillB(europa* s);
+
 #endif /* __EUROPA_STRING_H__ */
