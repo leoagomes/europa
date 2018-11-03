@@ -13,4 +13,6 @@ int unicodetoutf8(int c);
 
 int eutil_list_length(europa* s, eu_value* v, int* improper);
 
+void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size);
+
 #endif /* __EUROPA_UTILS_H__ */

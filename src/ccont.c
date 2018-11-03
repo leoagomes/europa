@@ -22,7 +22,7 @@ eu_result eucc_frame(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result eucc_define_in_table(europa* s, eu_table* t, eu_table* env, void* text,
+eu_result eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text,
 	eu_cfunc cf) {
 	eu_closure* cl;
 	eu_value* tv, closure;

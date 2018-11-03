@@ -8,6 +8,7 @@
 #include "eu_pair.h"
 
 #include <string.h>
+#include <stdlib.h>
 
 eu_uinteger eutil_strb_hash(eu_byte* str, eu_uint len) {
 	eu_uinteger hash = 5381;
@@ -96,4 +97,20 @@ int eutil_list_length(europa* s, eu_value* v, int* improper) {
 		}
 	}
 	return count;
+}
+
+/**
+ * @brief A realloc-like function, based on stdlib's realloc.
+ * 
+ * @param ud User data.
+ * @param ptr The pointer to realloc.
+ * @param size The target memory size.
+ * @return void* The returned buffer address.
+ */
+void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size) {
+	if (size == 0) {
+		free(ptr);
+		return NULL;
+	}
+	return realloc(ptr, size);
 }
