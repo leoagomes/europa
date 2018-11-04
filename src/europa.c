@@ -131,6 +131,10 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 		goto fail;
 	}
 
+	s->input_port = NULL;
+	s->output_port = NULL;
+	s->error_port = NULL;
+
 	s->err = NULL;
 	s->global = gl;
 	s->global->main = s;
@@ -374,6 +378,16 @@ eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
 
 	/* mark global environment */
 	_eu_checkreturn(mark(s, _eutable_to_obj(gl->env)));
+
+	return EU_RESULT_OK;
+}
+
+eu_result eu_recover(europa* s, eu_error** err) {
+	if (err)
+		*err = s->err;
+
+	euvm_initialize_state(s);
+	s->err = NULL;
 
 	return EU_RESULT_OK;
 }

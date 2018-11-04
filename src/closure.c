@@ -34,6 +34,7 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
 	cl->cf = cf; /* set c function */
 	cl->proto = proto; /* set the prototype */
 	cl->env = env; /* set the creation environment */
+	cl->own_env = 1; /* set the closure  */
 
 	return cl;
 

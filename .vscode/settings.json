@@ -8,6 +8,7 @@
         "utf8.h": "c",
         "eu_eval.h": "c",
         "eu_rt.h": "c",
-        "eu_util.h": "c"
+        "eu_util.h": "c",
+        "eu_number.h": "c"
     }
 }

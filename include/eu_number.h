@@ -12,14 +12,16 @@
 
 #define _eu_makeint(vptr, num) \
 	do { \
+		eu_integer __num = (num); \
 		(vptr)->type = EU_TYPE_NUMBER; \
-		(vptr)->value.i = num; \
+		(vptr)->value.i = __num; \
 	} while(0)
 
 #define _eu_makereal(vptr, num) \
 	do { \
+		eu_real __num = (num); \
 		(vptr)->type = EU_TYPE_NUMBER | EU_NUMBER_REAL; \
-		(vptr)->value.r = num; \
+		(vptr)->value.r = __num; \
 	} while(0)
 
 #define _euvalue_is_number(v) (_euvalue_type(v) == EU_TYPE_NUMBER)
@@ -57,6 +59,8 @@ eu_result eunum_negate(europa* s, eu_value* a, eu_value* out);
 	} while(0)
 
 #define _euvalue_to_bool(v) ((v)->value.boolean)
+#define _eubool_is_false(v) (!((v)->value.boolean))
+#define _eubool_is_true(v) ((v)->value.boolean)
 
 eu_uinteger eubool_hash(eu_value* v);
 eu_result eubool_eqv(eu_value* a, eu_value* b, eu_value* out);
@@ -98,5 +102,10 @@ eu_result euapi_M(europa* s);
 eu_result euapi_D(europa* s);
 
 eu_result euapi_abs(europa* s);
+
+/* boolean */
+eu_result euapi_not(europa* s);
+eu_result euapi_booleanQ(europa* s);
+eu_result euapi_booleanEQ(europa* s);
 
 #endif

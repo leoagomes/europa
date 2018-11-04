@@ -226,6 +226,9 @@ eu_result euapi_register_number(europa* s) {
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "/", euapi_D));
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "abs", euapi_abs));
 
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "boolean?", euapi_booleanQ));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "not", euapi_not));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "boolean=?", euapi_booleanEQ));
 
 	return EU_RESULT_OK;
 }
@@ -741,6 +744,69 @@ eu_result euapi_abs(europa* s) {
 	*_eucc_return(s) = *val;
 	return EU_RESULT_OK;
 }
+
+eu_result euapi_not(europa* s) {
+	eu_value* obj;
+
+	_eucc_arity_proper(s, 1);
+	_eucc_argument(s, obj, 0);
+
+	if (_euvalue_is_type(obj, EU_TYPE_BOOLEAN) && _eubool_is_false(obj)) {
+		_eu_makebool(_eucc_return(s), EU_FALSE);
+		return EU_RESULT_OK;
+	}
+
+	_eu_makebool(_eucc_return(s), EU_TRUE);
+	return EU_RESULT_OK;
+}
+
+eu_result euapi_booleanQ(europa* s) {
+	eu_value* obj;
+
+	_eucc_arity_improper(s, 1);
+	_eucc_argument(s, obj, 0);
+
+	_eu_makebool(_eucc_return(s), _euvalue_is_type(obj, EU_TYPE_BOOLEAN) ?
+		EU_TRUE : EU_FALSE);
+	return EU_RESULT_OK;
+}
+
+#define zerooneify(b) ((b) ? 1 : 0)
+
+eu_result euapi_booleanEQ(europa* s) {
+	eu_value *current, *cv, *bool1;
+	int fbv, cbv;
+
+	/* check for at least two arguments */
+	_eucc_arity_improper(s, 2);
+
+	/* read first argument */
+	_eucc_argument_type(s, bool1, 0, EU_TYPE_BOOLEAN);
+	fbv = zerooneify(_euvalue_to_bool(bool1));
+
+	/* get cell for next argument */
+	current = _eupair_tail(_euvalue_to_pair(_eucc_arguments(s)));
+
+	/* assert that all are equal */
+	while (_euvalue_is_pair(current)) {
+		/* get current argument */
+		cv = _eupair_head(_euvalue_to_pair(current));
+		_eucc_check_type(s, cv, "argument", EU_TYPE_BOOLEAN);
+
+		/* turn it into 0 or 1 */
+		cbv = zerooneify(_euvalue_to_bool(current));
+
+		if (fbv ^ cbv) { /* values don't match */
+			_eu_makebool(_eucc_return(s), EU_FALSE);
+			return EU_RESULT_OK;
+		}
+	}
+
+	/* all arguments matched */
+	_eu_makebool(_eucc_return(s), EU_TRUE);
+	return EU_RESULT_OK;
+}
+
 
 /**
  * @}

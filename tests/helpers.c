@@ -24,7 +24,7 @@
  * 
  * @todo Use a function provided by an auxilary library (to implement).
  */
-void* rlike(void* ud, void* ptr, unsigned long long size) {
+void* rlike(void* ud, void* ptr, size_t size) {
 	if (size == 0) {
 		free(ptr);
 		return NULL;

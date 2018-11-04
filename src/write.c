@@ -88,6 +88,9 @@ eu_result write_string_literal(europa* s, eu_port* port, const void* text) {
 	while (next != NULL) {
 		next = utf8codepoint(next, &c);
 
+		if (c == 0)
+			break;
+
 		switch (c) {
 		/* handle characters that need escaping */
 		case '\\':
@@ -115,12 +118,13 @@ eu_result write_string_literal(europa* s, eu_port* port, const void* text) {
 int utf8isascii(void* text) {
 	int c;
 
-	while (text != NULL) {
+	do {
 		text = utf8codepoint(text, &c);
 
 		if (c > 0xFF)
 			return 0;
-	}
+	} while (text != NULL && c != 0);
+
 	return 1;
 }
 
@@ -220,7 +224,7 @@ eu_result write_pair_simple(europa* s, eu_port* port, eu_value* p) {
 		if (v != p) { /* add a space character */
 			_eu_checkreturn(euport_write_char(s, port, ' '));
 		}
-		_eu_checkreturn(euport_write_simple(s, port, v));
+		_eu_checkreturn(euport_write_simple(s, port, _eupair_head(_euvalue_to_pair(v))));
 	}
 
 	/* check if improper list */

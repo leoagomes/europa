@@ -46,6 +46,18 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 		return EU_RESULT_OK;
 	}
 
+	/* whoever set this closure to not have its environment must've known what
+	 * they were doing, because this can lead to all formals not being able to
+	 * be referenced */
+	if (!(cl->own_env)) {
+		/* this closure will run on its creation environment */
+		s->env = cl->env;
+		/* clean up the rib */
+		_eu_makenull(&s->rib);
+		s->rib_lastpos = &s->rib;
+		return EU_RESULT_OK;
+	}
+
 	/* europa closure */
 	/* count number of parameters in environment */
 	length = eutil_list_length(s, _euproto_formals(cl->proto), &improper);
@@ -121,7 +133,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 void set_cc(europa* s, eu_continuation* cont) {
 	if (cont == NULL) { /* nothing else to run */
 		s->ccl = NULL;
-		s->env = NULL;
+		s->env = _eu_global_env(s);
 		s->pc = 0;
 		s->status = EU_SSTATUS_STOPPED;
 		return;
@@ -564,7 +576,7 @@ eu_result euvm_execute(europa* s) {
  */
 eu_result euvm_initialize_state(europa* s) {
 	s->acc = _null;
-	s->env = NULL;
+	s->env = _eu_global_env(s);
 	s->ccl = NULL;
 	s->previous = NULL;
 	s->rib = _null;
@@ -612,7 +624,7 @@ eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 	int running = 0;
 
 	/* check if anything is being executed already */
-	if (s->ccl != NULL || s->env != NULL) {
+	if (s->ccl != NULL) {
 		running = 1;
 	}
 
@@ -658,7 +670,7 @@ eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) {
 	static const char* opc_names[] = {
 		"nop", "refer", "const", "close", "test", "jump", "assign", "argument",
-		"conti", "apply", "return", "frame", "halt"
+		"conti", "apply", "return", "frame", "define", "halt"
 	};
 	static const int opc_types[] = {
 		0, 1, 1, 3, 2, 2, 1, 0, 2, 0, 0, 0, 0,

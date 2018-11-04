@@ -41,6 +41,7 @@ struct europa_proto {
 /** Closure structure. */
 struct europa_closure {
 	EU_OBJ_COMMON_HEADER;
+	eu_byte own_env; /*!< whether the closure should have its own environment */
 
 	eu_table* env; /*!< closure creation environment */
 

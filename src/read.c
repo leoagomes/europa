@@ -1247,6 +1247,9 @@ eu_result pread_string(parser* p, eu_value* out) {
 		return EU_RESULT_ERROR;
 	}
 
+	/* consume the closing dquote */
+	_checkreturn(res, pconsume(p));
+
 	/* the string is valid, create the object */
 	str = pmake_string(p, buf);
 	if (str == NULL)
@@ -1572,6 +1575,9 @@ eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
 	if ((res = pread_datum(&p, out))) {
 		out->type = EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE;
 		out->value.object = _euerror_to_obj(p.error);
+
+		s->err = p.error;
+
 		return res;
 	}
 

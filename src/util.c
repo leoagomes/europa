@@ -6,6 +6,11 @@
 #include "eu_util.h"
 
 #include "eu_pair.h"
+#include "eu_number.h"
+#include "eu_symbol.h"
+#include "eu_string.h"
+#include "eu_port.h"
+#include "ports/eu_fport.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -113,4 +118,49 @@ void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size) {
 		return NULL;
 	}
 	return realloc(ptr, size);
+}
+
+/**
+ * @brief Registers standard library procedures.
+ * 
+ * @param s 
+ * @return eu_result 
+ */
+eu_result eutil_register_standard_library(europa* s) {
+
+	/* set the correct environment */
+	s->env = _eu_global_env(s);
+
+	/* numeric standard library */
+	_eu_checkreturn(euapi_register_number(s));
+	/* pair and list functions*/
+	_eu_checkreturn(euapi_register_pair(s));
+	/* symbol functions */
+	_eu_checkreturn(euapi_register_symbol(s));
+
+	return EU_RESULT_OK;
+}
+
+eu_result eutil_set_standard_ports(europa* s) {
+	eu_fport* port;
+
+	/* input port */
+	port = eufport_from_file(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT, stdin);
+	if (!port)
+		return EU_RESULT_BAD_ALLOC;
+	s->input_port = _eufport_to_port(port);
+
+	/* output port */
+	port = eufport_from_file(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_OUTPUT, stdout);
+	if (!port)
+		return EU_RESULT_BAD_ALLOC;
+	s->output_port = _eufport_to_port(port);
+
+	/* error port */
+	port = eufport_from_file(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_OUTPUT, stderr);
+	if (!port)
+		return EU_RESULT_BAD_ALLOC;
+	s->error_port = _eufport_to_port(port);
+
+	return EU_RESULT_OK;
 }

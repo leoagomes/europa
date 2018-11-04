@@ -22,7 +22,7 @@
 #define assertv_string_equal(vptr, str) munit_assert_string_equal(_eustring_text(_euvalue_to_string(vptr)), str)
 #define assertv_symbol_equal(vptr, str) munit_assert_string_equal(_eusymbol_text(_euvalue_to_symbol(vptr)), str)
 
-void* rlike(void* ud, void* ptr, unsigned long long size);
+void* rlike(void* ud, void* ptr, size_t size);
 europa* bootstrap_default_instance(void);
 void terminate_default_instance(europa* s);
 

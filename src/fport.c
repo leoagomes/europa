@@ -12,7 +12,7 @@
 
 #define _protect_read(s, port) \
 	do { \
-		if (port->flags ^ EU_PORT_FLAG_INPUT) {\
+		if (!(port->flags & EU_PORT_FLAG_INPUT)) {\
 			eu_set_error(s, EU_ERROR_READ, NULL, \
 				"Tried reading a port that is not input.");\
 			return EU_RESULT_ERROR;\
@@ -21,7 +21,7 @@
 
 #define _protect_write(s, port) \
 	do { \
-		if (port->flags ^ EU_PORT_FLAG_OUTPUT) {\
+		if (!(port->flags & EU_PORT_FLAG_OUTPUT)) {\
 			eu_set_error(s, EU_ERROR_READ, NULL, \
 				"Tried writing a port that is not output.");\
 			return EU_RESULT_ERROR;\
@@ -45,7 +45,6 @@
  * @return The resulting open port or NULL in case of errors.
  */
 eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
-	eu_fport* port;
 	FILE* file;
 
 	/* generate a fopen mode string based on the input flags */
@@ -64,13 +63,27 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
 	if (file == NULL)
 		return NULL;
 
-	/* allocate the garbage collected port */
+	return eufport_from_file(s, flags, file);
+}
+
+/**
+ * @brief Creates a File Port from a given stdlib FILE handle.
+ * 
+ * @param s The Europa state.
+ * @param flags The file's flags.
+ * @param file The file handle.
+ * @return A new File Port.
+ */
+eu_fport* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
+	eu_fport* port;
+
+	/* allocate a GC port */
 	port = _euobj_to_fport(eugc_new_object(s, EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_fport)));
 	if (port == NULL)
 		return NULL;
 
-	/* set the port object up */
+	/* set up object */
 	port->flags = flags;
 	port->type = EU_PORT_TYPE_FILE;
 	port->file = file;
@@ -512,6 +525,10 @@ eu_result eufport_write_string(europa* s, eu_fport* port, void* v) {
 	next = v;
 	while (next) {
 		next = utf8codepoint(next, &c);
+
+		if (c == 0)
+			break;
+
 		putc(c, port->file);
 	}
 

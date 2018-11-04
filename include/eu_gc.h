@@ -1,12 +1,14 @@
 #ifndef __EUROPA_GC_H__
 #define __EUROPA_GC_H__
 
+#include <stddef.h>
+
 #include "eu_commons.h"
 #include "eu_int.h"
 #include "eu_object.h"
 
 /** The realloc-like function provided to the garbage collector. */
-typedef void* (*eu_realloc)(void*, void*, unsigned long long);
+typedef void* (*eu_realloc)(void*, void*, size_t);
 
 /** GC structure definition */
 typedef struct europa_gc eu_gc;

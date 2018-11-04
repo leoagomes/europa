@@ -107,6 +107,7 @@ int eulist_length(europa* s, eu_pair* list) {
 
 	_eu_makepair(&lv, list);
 
+	v = &lv;
 	length = 0;
 	while (_euvalue_is_pair(v)) {
 		v = _eupair_tail(_euvalue_to_pair(v));
@@ -189,7 +190,7 @@ eu_result euapi_car(europa* s) {
 	eu_pair* p;
 
 	/* check arity */
-	_eucc_arity_proper(s, 2);
+	_eucc_arity_proper(s, 1);
 	/* read arguments */
 	_eucc_argument_type(s, list, 0, EU_TYPE_PAIR);
 	/* set return to head */
@@ -203,7 +204,7 @@ eu_result euapi_cdr(europa* s) {
 	eu_pair* p;
 
 	/* check arity */
-	_eucc_arity_proper(s, 2);
+	_eucc_arity_proper(s, 1);
 	/* read arguments */
 	_eucc_argument_type(s, list, 0, EU_TYPE_PAIR);
 	/* set return to tail */
@@ -220,7 +221,7 @@ eu_result euapi_set_carB(europa* s) {
 	_eucc_arity_proper(s, 2);
 	/* read arguments */
 	_eucc_argument_type(s, pair, 0, EU_TYPE_PAIR);
-	_eucc_argument_type(s, value, 1, EU_TYPE_PAIR);
+	_eucc_argument(s, value, 1);
 
 	*_eupair_head(_euvalue_to_pair(pair)) = *value;
 	*_eucc_return(s) = _null;

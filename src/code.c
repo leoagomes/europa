@@ -234,7 +234,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* make head be name or (name args ...) or (name . arglist) */
 			head = _eupair_head(_euvalue_to_pair(tail));
 			/* cell of third parameter */
-			tail = _eupair_head(_euvalue_to_pair(_eupair_tail(_euvalue_to_pair(tail))));
+			tail = _eupair_tail(_euvalue_to_pair(tail));
 
 			/* (define name value) */
 			if (_euvalue_is_type(head, EU_TYPE_SYMBOL)) {
@@ -440,13 +440,8 @@ eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
 	eu_closure* cl;
 	eu_value argssym;
 
-	/* create a symbol that represents the top level prototype's formals */
-	_eu_makesym(&argssym, eusymbol_new(s, "**chunk-args**"));
-	if (_euvalue_to_obj(&argssym) == NULL)
-		return EU_RESULT_BAD_ALLOC;
-
 	/* create the top level prototype */
-	top = euproto_new(s, &argssym, 0, v, 0, 0);
+	top = euproto_new(s, &_null, 0, v, 0, 0);
 	if (top == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -459,6 +454,9 @@ eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
 	cl = eucl_new(s, NULL, top, s->global->env);
 	if (cl == NULL)
 		return EU_RESULT_BAD_ALLOC;
+
+	/* set it to run on passed environment */
+	cl->own_env = EU_FALSE;
 
 	/* return the closure */
 	_eu_makeclosure(chunk, cl);
