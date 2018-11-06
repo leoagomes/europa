@@ -54,9 +54,11 @@ eu_result eupair_destroy(europa* s, eu_pair* pair);
 eu_uinteger eupair_hash(eu_pair* pair);
 
 /* list operating procedures */
+int eulist_is_list(europa* s, eu_value* list);
 eu_value* eulist_ref(europa* s, eu_pair* list, int k);
 eu_value* eulist_tail(europa* s, eu_pair* list, int k);
 int eulist_length(europa* s, eu_pair* list);
+eu_result eulist_copy(europa* s, eu_value* list, eu_value* out);
 
 /* the language API */
 eu_result euapi_pairQ(europa* s);

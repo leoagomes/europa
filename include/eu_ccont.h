@@ -68,15 +68,16 @@
 		dcl\
 		return EU_RESULT_OK;\
 	} while (0);\
-	_euccdis_start:\
-	s->pc++;
+	_euccdis_start:
 
 #define _eucc_dtag(tagname) if (__eudi++ == (s)->pc) { goto tagname; }
 
+#define _eucc_continue(s) return EU_RESULT_CONTINUE
+
 #define _eucc_tag(s, tn, what) \
+	((s)->pc)++;\
 	what \
 	tn: \
-	((s)->pc)++;
 
 #define _eucc_setup_env(what) \
 	do {\

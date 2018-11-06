@@ -117,6 +117,12 @@ extern eu_value _false;
 /** effective eof singleton */
 extern eu_value _eof;
 
+#define _eu_makecpointer(vptr, ptr) \
+	do {\
+		(vptr)->type = EU_TYPE_CPOINTER;\
+		(vptr)->value.p = (ptr);\
+	} while (0)
+
 /* function declarations */
 
 /** gets the raw type of a value */

@@ -163,6 +163,8 @@ eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v);
 eu_result eurt_evaluate(europa* s, eu_value* value,  eu_value* out);
 
 /* library */
+eu_result euapi_register_controls(europa* s);
+
 eu_result euapi_procedureQ(europa* s);
 eu_result euapi_apply(europa* s);
 eu_result euapi_map(europa* s);

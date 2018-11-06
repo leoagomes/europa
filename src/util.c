@@ -11,6 +11,7 @@
 #include "eu_string.h"
 #include "eu_port.h"
 #include "ports/eu_fport.h"
+#include "eu_rt.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -137,6 +138,8 @@ eu_result eutil_register_standard_library(europa* s) {
 	_eu_checkreturn(euapi_register_pair(s));
 	/* symbol functions */
 	_eu_checkreturn(euapi_register_symbol(s));
+	/* control functions */
+	_eu_checkreturn(euapi_register_controls(s));
 
 	return EU_RESULT_OK;
 }

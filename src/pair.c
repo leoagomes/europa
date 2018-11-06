@@ -121,6 +121,59 @@ int eulist_length(europa* s, eu_pair* list) {
 	return length;
 }
 
+int eulist_is_list(europa* s, eu_value* obj) {
+	eu_value* current;
+
+	if (!_euvalue_is_pair(obj))
+		return EU_FALSE;
+
+	current = obj;
+	do {
+		/* go to next pair */
+		current = _eupair_tail(_euvalue_to_pair(current));
+	} while (_euvalue_is_pair(current) && current != obj);
+
+	/* check if proper or improper */
+	if (_euvalue_is_null(current)) {
+		return EU_TRUE;
+	}
+
+	return EU_FALSE;
+}
+
+eu_result eulist_copy(europa* s, eu_value* list, eu_value* out) {
+	eu_pair* pair;
+
+	if (!s || !list || !out)
+		return EU_RESULT_NULL_ARGUMENT;
+
+	/* set out as a copy of the input (only useful in case it isn't a list) */
+	*out = *list;
+
+	/* iterate through list */
+	while (_euvalue_is_pair(list)) {
+		/* create a new pair for the current pair.
+		 * the effect of setting its tail to the pair's tail is that if the
+		 * list is proper, the tail of the last pair will be set to the null
+		 * value; if it is not proper, the last element wasn't a list and we
+		 * didn't know how to (or have the job to) clone it anyway, so it should
+		 * be left untouched.
+		 */
+		pair = eupair_new(s, _eupair_head(_euvalue_to_pair(list)),
+			_eupair_tail(_euvalue_to_pair(list)));
+		if (!pair)
+			return EU_RESULT_BAD_ALLOC;
+		_eu_makepair(out, pair);
+
+		/* go to next argument */
+		list = _eupair_tail(_euvalue_to_pair(list));
+		/* update output slot */
+		out = _eupair_tail(pair);
+	}
+
+	return EU_RESULT_OK;
+}
+
 /* the language API */
 
 /**

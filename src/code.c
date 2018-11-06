@@ -240,7 +240,9 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			if (_euvalue_is_type(head, EU_TYPE_SYMBOL)) {
 
 				/* compile the value parameter */
-				_eu_checkreturn(compile(s, proto, tail, 0)); /* the set variable name is never in tail position */
+				/* the set variable name is never in tail position */
+				_eu_checkreturn(compile(s, proto,
+					_eupair_head(_euvalue_to_pair(tail)), 0));
 
 				/* add name symbol to the constant list */
 				_eu_checkreturn(euproto_add_constant(s, proto, head, &index));
