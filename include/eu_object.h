@@ -123,6 +123,12 @@ extern eu_value _eof;
 		(vptr)->value.p = (ptr);\
 	} while (0)
 
+#define _eu_makeeof(vptr) \
+	do {\
+		(vptr)->type = EU_TYPE_EOF;\
+		(vptr)->value.i = 0;\
+	} while (0)
+
 /* function declarations */
 
 /** gets the raw type of a value */

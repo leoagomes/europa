@@ -82,6 +82,11 @@ eu_result euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger v);
 
 /* language interface */
 
+eu_result euapi_register_port(europa* s);
+
+eu_result euapi_eof_objectQ(europa* s);
+eu_result euapi_eof_object(europa* s);
+
 /* input */
 eu_result euapi_port_read(europa* s);
 eu_result euapi_port_read_char(europa* s);
@@ -98,6 +103,7 @@ eu_result euapi_port_read_bytevectorB(europa* s);
 /* output */
 eu_result euapi_port_write(europa* s);
 eu_result euapi_port_write_shared(europa* s);
+eu_result euapi_port_write_string(europa* s);
 eu_result euapi_port_write_simple(europa* s);
 eu_result euapi_port_display(europa* s);
 eu_result euapi_port_newline(europa* s);
@@ -106,6 +112,7 @@ eu_result euapi_port_write_u8(europa* s);
 eu_result euapi_port_write_bytevector(europa* s);
 eu_result euapi_port_flush(europa* s);
 
+/* these still need implementation */
 eu_result euapi_call_with_port(europa* s);
 eu_result euapi_call_with_input_file(europa* s);
 eu_result euapi_call_with_output_file(europa* s);

@@ -140,6 +140,8 @@ eu_result eutil_register_standard_library(europa* s) {
 	_eu_checkreturn(euapi_register_symbol(s));
 	/* control functions */
 	_eu_checkreturn(euapi_register_controls(s));
+	/* port functions */
+	_eu_checkreturn(euapi_register_port(s));
 
 	return EU_RESULT_OK;
 }
