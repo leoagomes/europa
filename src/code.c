@@ -305,16 +305,35 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			/* TODO: if anything bad happens, check the code below (everything, 
 			 * even after the else if */
 
+			/* create continuation instruction */
+			improper = proto->code_length;
+			_eu_checkreturn(euproto_append_instruction(s, proto, ICONTI(0)));
+
 			/* in case this isn't a tail call, add the frame instruction */
+			/* the reason why the frame is created _after_ the continuation is put
+			 * in the accumulator is because if we created the continuation after
+			 * the creation of the frame, restoring the continuation would restore
+			 * also the created frame just below the stack, which breaks everything
+			 * an example of code that would break if the frame was created before
+			 * creating the continuation is:
+			 * ((lambda ()
+			 *     (define counter 0)
+			 *     (define conti #f)
+			 *     (call/cc (lambda (c) (set! conti c)))
+			 * 
+			 *     (display counter) (newline)
+			 *     (set! counter (+ counter 1))
+			 * 
+			 *     (if (= counter 5)
+			 *         #t
+			 *         (conti))))
+			 */
 			if (!is_tail) {
 				/* since we don't know yet where to return to, use a stub address */
 				index = proto->code_length; /* save instruction's index */
 				_eu_checkreturn(euproto_append_instruction(s, proto, IFRAME(0)));
 			}
 
-			/* create continuation instruction */
-			improper = proto->code_length;
-			_eu_checkreturn(euproto_append_instruction(s, proto, ICONTI(0)));
 			/* add it to the argument rib */
 			_eu_checkreturn(euproto_append_instruction(s, proto, IARGUMENT()));
 
