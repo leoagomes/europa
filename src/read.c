@@ -1377,6 +1377,7 @@ eu_result pread_list(parser* p, eu_value* out) {
 	_checkreturn(res, pskip_itspace(p));
 	if (isrpar(p->current)) {
 		*out = _null;
+		_checkreturn(res, pconsume(p)); /* consume the closing parenthesis */
 		return EU_RESULT_OK;
 	}
 

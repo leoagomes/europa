@@ -673,7 +673,7 @@ eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction 
 		"conti", "apply", "return", "frame", "define", "halt"
 	};
 	static const int opc_types[] = {
-		0, 1, 1, 3, 2, 2, 1, 0, 2, 0, 0, 0, 0,
+		0, 1, 1, 3, 2, 2, 1, 0, 2, 0, 0, 0, 1, 0,
 	};
 
 	int opindex = opc_part(inst);
@@ -689,6 +689,7 @@ eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction 
 	case 1:
 		_eu_checkreturn(euport_write_string(s, port, " ["));
 		_eu_checkreturn(euport_write_integer(s, port, val_part(inst)));
+		_eu_checkreturn(euport_write_char(s, port, ']'));
 		if (proto) {
 			_eu_checkreturn(euport_write_string(s, port, "\t; "));
 			_eu_checkreturn(euport_write(s, port,

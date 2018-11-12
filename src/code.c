@@ -30,7 +30,8 @@ eu_result check_formals(europa* s, eu_value* formals) {
 
 	/* invalid type for formals part */
 	if (!_euvalue_is_type(formals, EU_TYPE_SYMBOL)
-		&& !_euvalue_is_type(formals, EU_TYPE_PAIR)) {
+		&& !_euvalue_is_type(formals, EU_TYPE_PAIR)
+		&& !_euvalue_is_type(formals, EU_TYPE_NULL)) {
 		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL,
 			"Invalid type for lambda formals. Expected symbol or pair (list)."));
 		return EU_RESULT_ERROR;
