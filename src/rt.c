@@ -53,6 +53,7 @@ eu_result euapi_register_controls(europa* s) {
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "apply", euapi_apply));
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "map", euapi_map));
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "for-each", euapi_for_each));
+	_eu_checkreturn(eucc_define_cclosure(s, env, env, "disassemble", euapi_disassemble));
 
 	return EU_RESULT_OK;
 }

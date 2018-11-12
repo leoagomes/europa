@@ -5,6 +5,7 @@
 #include "eu_number.h"
 #include "eu_util.h"
 #include "eu_port.h"
+#include "eu_ccont.h"
 
 #define OPCMASK 0xFF
 #define OPCSHIFT 24
@@ -776,6 +777,14 @@ eu_result _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
 	return _disas_closure(s, port, cont->cl, cont->pc);
 }
 
+/**
+ * @brief Disassembles a value, writing the output into port.
+ * 
+ * @param s The Europa state.
+ * @param port The target port.
+ * @param v The target value.
+ * @return The result of the operation.
+ */
 eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
 
 	switch (_euvalue_type(v)) {
@@ -788,9 +797,25 @@ eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
 	default:
 		euport_write_string(s, port, "Object of type ");
 		euport_write_string(s, port, cast(void*,eu_type_name(_euvalue_type(v))));
-		euport_write_string(s, port, " can't be disassembled.");
+		euport_write_string(s, port, " can't be disassembled.\n");
 		break;
 	}
 
 	return EU_RESULT_OK;
+}
+
+eu_result euapi_disassemble(europa* s) {
+	eu_value *procedure, *port;
+	eu_port* p;
+
+	_eucc_arity_improper(s, 1); /* check arity */
+	_eucc_argument(s, procedure, 0); /* get procedure argument */
+	_eucc_argument_improper(s, port, 1); /* get port (which is optional) */
+
+	if (port) { /* check if port was given */
+		_eucc_check_type(s, port, "port", EU_TYPE_PORT);
+	}
+	p = port ? _euvalue_to_port(port) : s->output_port;
+
+	return euvm_disassemble(s, p, procedure);
 }

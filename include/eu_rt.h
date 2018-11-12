@@ -170,4 +170,6 @@ eu_result euapi_apply(europa* s);
 eu_result euapi_map(europa* s);
 eu_result euapi_for_each(europa* s);
 
+eu_result euapi_disassemble(europa* s);
+
 #endif

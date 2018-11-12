@@ -95,6 +95,11 @@
 		}\
 	} while (0)
 
+#define _eucc_argument_improper(s, v, index) \
+	do {\
+		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
+	} while (0)
+
 #define _eucc_argument_type(s, v, index, type) \
 	do {\
 		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
@@ -114,7 +119,7 @@
 #define _eucc_valid_rib(s) \
 	if (!_euvalue_is_pair(&(s)->rib)) {\
 		_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL, \
-			"Argument rib is not a list."));\
+			"Argument rib is not a list. Did you provide any arguments?"));\
 		return EU_RESULT_ERROR;\
 	}
 
@@ -125,6 +130,10 @@
 			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL, \
 				"No arguments expected for procedure, but some were provided."));\
 			return EU_RESULT_ERROR;\
+		}\
+		if ((count) == 0 && !_euvalue_is_null(&((s)->rib))) {\
+			_eu_checkreturn(eu_set_error(s, EU_ERROR_NONE, NULL, \
+				"Procedure expected no arguments, but some were provided."));\
 		}\
 		_eucc_valid_rib(s)\
 		if ((__got = eulist_length(s, _euvalue_to_pair(&(s)->rib))) != (count)) {\
