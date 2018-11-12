@@ -55,10 +55,9 @@ eu_result euport_write_integer(europa* s, eu_port* port, eu_integer v) {
 	return EU_RESULT_OK;
 }
 
-eu_result euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger v) {
+eu_result euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger val) {
 	char d[NUMBUF_SIZE];
 	int pos, tv;
-	eu_uinteger val;
 
 	pos = 0;
 
@@ -247,6 +246,9 @@ eu_result write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
 
 	/* print vector elements */
 	for (i = 0; i < _euvector_length(vec); i++) {
+		if (i != 0) {
+			_eu_checkreturn(euport_write_char(s, port, ' '));
+		}
 		_eu_checkreturn(euport_write_simple(s, port, _euvector_ref(vec, i)));
 	}
 
