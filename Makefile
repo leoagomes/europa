@@ -14,7 +14,7 @@ CFLAGS=-I$(INCLUDE_DIR) -I$(LIB_INCLUDE) -fpic -pedantic
 
 OBJECTS=$(patsubst src/%.c,%.o,$(wildcard src/*.c))
 
-all: clean $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE)# $(BUILD_DIR)/$(EXECUTABLE)
+all: $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE)# $(BUILD_DIR)/$(EXECUTABLE)
 
 clean:
 	rm -rf $(BUILD_DIR)/$(SO_FILE) $(BUILD_DIR)/$(A_FILE) $(OBJECTS:%=$(BUILD_DIR)/%)
@@ -30,3 +30,14 @@ $(BUILD_DIR)/$(SO_FILE): $(OBJECTS:%=$(BUILD_DIR)/%)
 
 debug: CFLAGS+=-g
 debug: all
+
+repl:
+	(cd ./repl && make)
+
+tests:
+	(cd ./tests && make)
+
+test:
+	(cd ./tests && make run)
+
+.PHONY: all debug clean repl tests test

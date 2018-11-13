@@ -28,3 +28,8 @@ debug: all
 
 $(LIBRARY): # this is library
 	(cd .. && make debug)
+
+run: $(EXECUTABLE)
+	./$(EXECUTABLE)
+
+.PHONY: all clean debug run
