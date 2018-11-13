@@ -382,6 +382,13 @@ eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
 	return EU_RESULT_OK;
 }
 
+/**
+ * @brief Recovers the state from an error.
+ * 
+ * @param s The Europa state.
+ * @param[out] err Where to place the current error. Ignored if NULL.
+ * @return The result of the operation.
+ */
 eu_result eu_recover(europa* s, eu_error** err) {
 	if (err)
 		*err = s->err;

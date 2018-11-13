@@ -41,7 +41,7 @@ struct europa_gc {
 
 	eu_object* last_obj; /*!< the last object created by the garbage collector */
 
-	eu_object root_head;
+	eu_object root_head; /*!< the circular root set list's head */
 	eu_object objs_head; /*!< the circular object list's head */
 
 	eu_object* root_set; /*!< list of root objects */
