@@ -722,15 +722,29 @@ eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction 
 }
 
 eu_result _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
+	int i;
+
 	_eu_checkreturn(euport_write_string(s, port, "Prototype 0x"));
 	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, proto)));
 	_eu_checkreturn(euport_write_string(s, port, ":\nSource:\n"));
 	_eu_checkreturn(euport_write(s, port, &proto->source));
 	_eu_checkreturn(euport_write_string(s, port, "\nFormals: "));
 	_eu_checkreturn(euport_write(s, port, &proto->formals));
+
+	_eu_checkreturn(euport_write_string(s, port, "\nConstants:\n#("));
+
+	for (i = 0; i < proto->constantc; i++) {
+		if (i != 0) {
+			_eu_checkreturn(euport_write_char(s, port, ' '));
+		}
+
+		_eu_checkreturn(euport_write(s, port, &(proto->constants[i])));
+	}
+
+	_eu_checkreturn(euport_write_string(s, port, ")"));
+
 	_eu_checkreturn(euport_write_string(s, port, "\nCode:\n"));
 
-	int i;
 	for (i = 0; i < proto->code_length; i++) {
 		if (pc == i) {
 			_eu_checkreturn(euport_write_char(s, port, '*'));

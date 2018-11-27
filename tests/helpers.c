@@ -19,6 +19,7 @@
 #include "eu_string.h"
 #include "eu_error.h"
 #include "eu_rt.h"
+#include "eu_util.h"
 
 /** Realloc-like function to be used by the garbage collector.
  * 
@@ -41,6 +42,8 @@ europa* bootstrap_default_instance(void) {
 	 * 
 	 * TODO: maybe sometime use something provided by an auxilary library */
 	s = eu_new(rlike, NULL, NULL, &err);
+	eutil_register_standard_library(s);
+
 	return s;
 }
 
