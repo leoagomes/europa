@@ -2,13 +2,6 @@
 #define __AUX_H__
 
 #include "europa.h"
-#include "eu_rt.h"
-#include "eu_object.h"
-#include "eu_int.h"
-#include "eu_commons.h"
-#include "eu_number.h"
-#include "eu_string.h"
-#include "eu_symbol.h"
 
 #include "munit.h"
 

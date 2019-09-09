@@ -1,12 +1,12 @@
 /** Generic port `read` procedure implementation.
- * 
+ *
  * @file read.c
  * @author Leonardo G.
  */
 #include <ctype.h>
 #include <stdio.h>
 
-#include "europa.h"
+#include "eu.h"
 #include "eu_port.h"
 #include "eu_error.h"
 #include "eu_number.h"
@@ -21,18 +21,18 @@
 #include "utf8.h"
 
 /* This is where the first parser exists. Thread carefully!
- * 
+ *
  * This first iteration of the parser reads from ports a character at a time.
  * The goal is that each port implementation would have a parser of its own in
  * order to make optimizations.
- * 
+ *
  * This parser is written using only the concept of "port" instead of files or
  * memory buffers directly. This will result in a performance penalty. Even more
  * so because it uses the port's "public" API, so port will end up being
  * compared to NULL a thousand times, but the second I finish this parser, it
  * will also work for in memory strings so long as string-port implements the
  * interface correctly.
- * 
+ *
  */
 #define AUX_BUFFER_SIZE 1024
 #ifndef EOF
@@ -164,7 +164,7 @@ eu_result pskip_itspace(parser* p);
  * of using the auxilary buffer until it is full, then copying the data into the
  * heap, reallocating memory in chunks of a predetermined size whenever this
  * heap store is filled with string data.
- * 
+ *
  * To make this switch between p->buf and a heap allocated buffer transparent,
  * we use the following functions.
  */
@@ -203,7 +203,7 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 			if (cbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
-			/* copy the contents of the aux buffer into the newly allocated 
+			/* copy the contents of the aux buffer into the newly allocated
 			 * buffer */
 			memcpy(cbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
@@ -248,7 +248,7 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 			if (bbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
-			/* copy the contents of the aux buffer into the newly allocated 
+			/* copy the contents of the aux buffer into the newly allocated
 			 * buffer */
 			memcpy(bbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
@@ -279,12 +279,12 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 /* TODO: this code can be improved.
  * at the moment whenever a value is appended to the buffer it is copied twice
  * once to a temporary value and then to the buffer.
- * 
+ *
  * if instead of using the function to append a value to the buffer we append it
  * directly by passing next to the read function, we will save one copy.
  * to do that, we need to use the append_value function instead as a "check that
  * next is valid, if not do whatever you need and give me a valid next" helper.
- * 
+ *
  */
 eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 	size_t* remaining, eu_value* val) {
@@ -301,7 +301,7 @@ eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 			if (vbuf == NULL)
 				return EU_RESULT_BAD_ALLOC;
 
-			/* copy the contents of the aux buffer into the newly allocated 
+			/* copy the contents of the aux buffer into the newly allocated
 			 * buffer */
 			memcpy(vbuf, p->buf, AUX_BUFFER_SIZE);
 		} else {
@@ -429,7 +429,7 @@ eu_result ppeek(parser* p) {
 
 /* consumes the current character, making p->current = p->peek and populating
  * p->peek with the next peek character.
- * 
+ *
  * basically reads a character and peeks the other in a sequence */
 eu_result padvance(parser* p) {
 	int res;
@@ -527,13 +527,13 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 				}
 
 				/* at this point we either returned an error or consumed all "true"
-				 * characters. so we're already with p->current at the character just 
+				 * characters. so we're already with p->current at the character just
 				 * after the 'e' */
 			} else {
 				/* consume the 't' character */
 				padvance(p);
 			}
-			/* this code will only be reached if the input was either '#t' or 
+			/* this code will only be reached if the input was either '#t' or
 			 * '#true' so we set the value to the true boolean and that's it */
 			*out = _true;
 			return EU_RESULT_OK;
@@ -547,13 +547,13 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 				}
 
 				/* at this point we either returned an error or consumed all "false"
-				 * characters. so we're already with p->current at the character just 
+				 * characters. so we're already with p->current at the character just
 				 * after the 'e' */
 			} else {
 				/* consume the 't' character */
 				padvance(p);
 			}
-			/* this code will only be reached if the input was either '#f' or 
+			/* this code will only be reached if the input was either '#f' or
 			 * '#false' so we set the value to the true boolean and that's it */
 			*out = _false;
 			return EU_RESULT_OK;
@@ -566,8 +566,8 @@ eu_result pread_boolean(parser* p, eu_value* out) {
 
 #define UNEXPECTED_DIGIT_IN_RADIX_STR "Unexpected digit %c for radix '%c' in number literal."
 #define UNEXPECTED_CHAR_IN_NUMBER_STR "Unexpected character %c in number literal."
-/* reads a <number> 
- * 
+/* reads a <number>
+ *
  * <number> is defined in a bnf-like language:
  * <number> := <num 2> | <num 8> | <num 10> | <num 16>
  * <num R> := <prefix R> <real R>
@@ -579,15 +579,15 @@ eu_result pread_boolean(parser* p, eu_value* out) {
  * <decimal R> := <uinteger R>
  *              | . <digit R>+
  *              | <digit R>+ . <digit R>*
- * 
- * 
+ *
+ *
  * available radices are #b #o #d #x for binary (2), octal (8), decimal (10) and
  * hexadecimal (16) respectively. note that the decimal radix is optional.
  * digits go according to the bases, so valid binary digits are 0 and 1, valid
  * octal digits are 0-7, decimal 0-9 and hex 0-9 and A-F (case-insensitive)
- * 
+ *
  * TODO: add support for <suffix>
- * 
+ *
  * WARNING: this implementation currently ignores explicitely exact real numbers,
  * integer numbers are exact unless #i is explicitely set and real (non-integer)
  * numbers are numbers are always inexact.
@@ -666,12 +666,12 @@ eu_result pread_number(parser* p, eu_value* out) {
 
 			_checkreturn(res, padvance(p)); /* consume the dot */
 
-			/* place whatever was recognized as integer part so far into the 
+			/* place whatever was recognized as integer part so far into the
 			 * real part and reset the integer part */
 			rpart = (eu_real)ipart;
 			ipart = 0;
 
-			/* set divideby to one so it will behave properly when multiplied 
+			/* set divideby to one so it will behave properly when multiplied
 			 * by radix */
 			divideby = 1;
 
@@ -700,7 +700,7 @@ eu_result pread_number(parser* p, eu_value* out) {
 		ipart = (ipart * radix) + value;
 
 		/* if no '.' appeared, then divideby will be 0 and the following line
-		 * will result in divideby being zero still. 
+		 * will result in divideby being zero still.
 		 * if a '.' appeared, then divideby will be the value we need to divide
 		 * ipart by and sum to rpart to represent the final real number. */
 		divideby *= radix;
@@ -735,7 +735,7 @@ eu_result pread_number(parser* p, eu_value* out) {
 /* reads a character literal
  * <character>s are either '#\<any character>', '#\<character name>' or
  * '#\x<unicode hex value>'.
- * 
+ *
  * only R7RS-required character names are currently implemented.
  */
 eu_result pread_character(parser* p, eu_value* out) {
@@ -1424,7 +1424,7 @@ eu_result pread_list(parser* p, eu_value* out) {
 		has_datum = 1;
 
 		if (has_dot) {
-			/* only one last datum is allowed after a dot, so we need to 
+			/* only one last datum is allowed after a dot, so we need to
 			 * terminate the list here. */
 			/* we skip whitespaces in order to make sure that if this list is
 			 * valid, p->current after the end of the loop is a closing par */

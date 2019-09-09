@@ -1,5 +1,5 @@
 /** first reader testing module
- * 
+ *
  * @file read.c
  * @author Leonardo G.
  * @ingroup tests
@@ -11,15 +11,7 @@
 #include "suites.h"
 #include "helpers.h"
 
-#include "eu_number.h"
 #include "europa.h"
-#include "eu_port.h"
-#include "eu_symbol.h"
-#include "eu_pair.h"
-#include "eu_bytevector.h"
-#include "eu_vector.h"
-#include "ports/eu_mport.h"
-#include "ports/eu_fport.h"
 
 static void* read_setup(MunitParameter params[], void* user_data) {
 	europa* s;

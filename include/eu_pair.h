@@ -5,7 +5,7 @@
 #include "eu_int.h"
 #include "eu_object.h"
 
-#include "europa.h"
+#include "eu.h"
 
 typedef struct europa_pair eu_pair;
 

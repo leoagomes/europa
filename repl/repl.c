@@ -3,7 +3,7 @@
 #include <string.h>
 
 #include "linenoise.h"
-#include "eu.h"
+#include "europa.h"
 
 int main(int argc, char* argv) {
 	europa* s;

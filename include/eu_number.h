@@ -1,7 +1,7 @@
 #ifndef __EUROPA_NUMBER_H__
 #define __EUROPA_NUMBER_H__
 
-#include "europa.h"
+#include "eu.h"
 #include "eu_object.h"
 #include "eu_int.h"
 #include "eu_commons.h"
