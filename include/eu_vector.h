@@ -1,7 +1,7 @@
 #ifndef __EUROPA_VECTOR_H__
 #define __EUROPA_VECTOR_H__
 
-#include "europa.h"
+#include "eu.h"
 
 #include "eu_commons.h"
 #include "eu_int.h"

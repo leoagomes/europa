@@ -1,9 +1,9 @@
 /** Core state and environment structure routines.
- * 
+ *
  * @file europa.c
  * @author Leonardo G.
  */
-#include "europa.h"
+#include "eu.h"
 
 #include "eu_gc.h"
 #include "eu_object.h"
@@ -56,7 +56,7 @@ eu_result global_environment_init(europa* s, int pred_size) {
 } while (0)
 
 /** Bootstraps the internalized table.
- * 
+ *
  * @param s The Europa state.
  * @return The operation's result.
  */
@@ -91,7 +91,7 @@ eu_result euglobal_bootstrap_internalized(europa* s) {
 		*(vptr) = (val)
 
 /** Allocates and initializes a new europa state.
- * 
+ *
  * @param f The realloc-like function.
  * @param ud Userdata for the realloc function.
  * @param err Where to place an error code if any errors happen. Ignored if
@@ -181,7 +181,7 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err) {
 /**
  * @brief Sets the state error to an error with given flags, nested errors and
  * message.
- * 
+ *
  * @param s The Europa state.
  * @param flags The error flags.
  * @param nested Any nested error objects.
@@ -203,7 +203,7 @@ eu_result eu_set_error(europa* s, int flags, eu_error* nested, void* text) {
 /**
  * @brief Sets the state error to an error object with given flags, nested errors
  * and message in the printf format.
- * 
+ *
  * @param s The Europa state.
  * @param flags The error flags.
  * @param nested Any nested error objects.
@@ -232,7 +232,7 @@ eu_result eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len,
 
 /**
  * @brief Runs a string.
- * 
+ *
  * @param s The Europa state.
  * @param text The string to execute.
  * @param out Where to place the result.
@@ -258,7 +258,7 @@ eu_result eu_do_string(europa* s, void* text, eu_value* out) {
 
 /**
  * @brief Terminates a state.
- * 
+ *
  * @param s The target state.
  * @return The result of the operation.
  */
@@ -284,7 +284,7 @@ eu_result eu_terminate(europa* s) {
 
 	/* destroy everything in the GC */
 	res = eugc_destroy(s);
-	
+
 	/* release state and global */
 	(f)(ud, s, 0);
 	(f)(ud, gl, 0);
@@ -294,7 +294,7 @@ eu_result eu_terminate(europa* s) {
 
 /**
  * @brief Returns the hash of an Europa state.
- * 
+ *
  * @param s The target state.
  * @return The hash.
  */
@@ -304,7 +304,7 @@ eu_uinteger eustate_hash(europa* s) {
 
 /**
  * @brief Returns the hash of a global state.
- * 
+ *
  * @param gl The target global.
  * @return The hash.
  */
@@ -314,7 +314,7 @@ eu_uinteger euglobal_hash(eu_global* gl) {
 
 /**
  * @brief Marks references of an Europa State.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking function.
  * @param state The target state (to be marked).
@@ -360,7 +360,7 @@ eu_result eustate_mark(europa* s, eu_gcmark mark, europa* state) {
 
 /**
  * @brief Marks references of a global Europa State.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking function.
  * @param gl The target global state (to be marked).
@@ -384,7 +384,7 @@ eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
 
 /**
  * @brief Recovers the state from an error.
- * 
+ *
  * @param s The Europa state.
  * @param[out] err Where to place the current error. Ignored if NULL.
  * @return The result of the operation.

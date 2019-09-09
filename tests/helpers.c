@@ -1,5 +1,5 @@
 /** Auxilary functions for the testing environment.
- * 
+ *
  * @file helpers.c
  * @author Leonardo G.
  * @ingroup tests
@@ -8,21 +8,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "munit.h"
-
-#include "eu_number.h"
-#include "eu_character.h"
-#include "eu_symbol.h"
-#include "eu_pair.h"
-#include "eu_vector.h"
-#include "eu_bytevector.h"
-#include "eu_string.h"
-#include "eu_error.h"
-#include "eu_rt.h"
-#include "eu_util.h"
 
 /** Realloc-like function to be used by the garbage collector.
- * 
+ *
  * @todo Use a function provided by an auxilary library (to implement).
  */
 void* rlike(void* ud, void* ptr, size_t size) {
@@ -39,7 +27,7 @@ europa* bootstrap_default_instance(void) {
 
 	/* we need to allocate memory for the state, because it tries to leave
 	 * memory management to the GC
-	 * 
+	 *
 	 * TODO: maybe sometime use something provided by an auxilary library */
 	s = eu_new(rlike, NULL, NULL, &err);
 	eutil_register_standard_library(s);

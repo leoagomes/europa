@@ -7,7 +7,7 @@
 
 #include "eu_object.h"
 #include "eu_string.h"
-#include "europa.h"
+#include "eu.h"
 #include "eu_port.h"
 #include "eu_error.h"
 #include "eu_number.h"
@@ -260,7 +260,7 @@ eu_result write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
 
 /**
  * @brief Writes an object. This may not terminate if structure is circular.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param v The target value.
@@ -279,7 +279,7 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 		return write_symbol_literal(s, port, _eusymbol_text(_euvalue_to_symbol(v)));
 	case EU_TYPE_CHARACTER:
 		return write_char_literal(s, port, _euvalue_to_char(v));
-	case EU_TYPE_BYTEVECTOR: 
+	case EU_TYPE_BYTEVECTOR:
 		return write_bytevector(s, port, _euvalue_to_bvector(v));
 	case EU_TYPE_NUMBER:
 		return write_number(s, port, v);
@@ -291,7 +291,7 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 		return write_vector_simple(s, port, _euvalue_to_vector(v));
 		break;
 
-	case EU_TYPE_CLOSURE: 
+	case EU_TYPE_CLOSURE:
 		_eu_checkreturn(euport_write_string(s, port, "#<procedure 0x"));
 		_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, v->value.object)));
 		return euport_write_char(s, port, '>');
@@ -340,10 +340,10 @@ eu_result euport_write_simple(europa* s, eu_port* port, eu_value* v) {
 /**
  * @brief Writes a representation of an object to the target textual port. Effectively
  * the implementation of `write`.
- * 
+ *
  * @remarks Since write-shared is not yet implemented, this relies entirely on
  * write-simple, which means this may not terminate for circular structures.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param v The target value.
@@ -358,7 +358,7 @@ eu_result euport_write(europa* s, eu_port* port, eu_value* v) {
  * @brief Same as write, but must use datum labels for values that appear more than
  * once. WARNING: this is not properly implemented, and instead redirects the call to
  * `write-simple`. This is a TODO.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param v The target value.
@@ -372,15 +372,15 @@ eu_result euport_write_shared(europa* s, eu_port* port, eu_value* v, eu_table* m
 /**
  * @brief Writes a representation of the object to a textual port. This is
  * intended to be human-readable, not machine readable.
- * 
+ *
  * This internally relies on write, which, at the moment, uses write-simple;
- * this means this procedure is not guaranteed to terminate when passed 
+ * this means this procedure is not guaranteed to terminate when passed
  * circular structures. Fixing this is a TODO.
- * 
- * @param s 
- * @param port 
- * @param v 
- * @return eu_result 
+ *
+ * @param s
+ * @param port
+ * @param v
+ * @return eu_result
  */
 eu_result euport_display(europa* s, eu_port* port, eu_value* v) {
 	switch (_euvalue_type(v)) {
