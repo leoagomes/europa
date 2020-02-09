@@ -1,11 +1,11 @@
-#include "eu_rt.h"
+#include "europa/rt.h"
 
-#include "eu_error.h"
-#include "eu_symbol.h"
-#include "eu_number.h"
-#include "eu_util.h"
-#include "eu_port.h"
-#include "eu_ccont.h"
+#include "europa/error.h"
+#include "europa/symbol.h"
+#include "europa/number.h"
+#include "europa/util.h"
+#include "europa/port.h"
+#include "europa/ccont.h"
 
 #define OPCMASK 0xFF
 #define OPCSHIFT 24
@@ -22,7 +22,7 @@
  * @brief Prepares the state's environment for running a closure, by extending
  * the environment in which it was defined and setting the state's environment to
  * it.
- * 
+ *
  * @param s The Europa state.
  * @param cl The target closure.
  * @param args The argument list value.
@@ -108,7 +108,7 @@ eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	}
 
 	/* if cv isn't the null value, formals was either an improper list or a
-	 * symbol that should take the argument list. either way, the symbol at 
+	 * symbol that should take the argument list. either way, the symbol at
 	 * cf is the correct parameter symbol in the environment and cv is the
 	 * correct value for it */
 	if (!_euvalue_is_null(cf)) {
@@ -165,11 +165,11 @@ void set_closure(europa* s, eu_closure* cl) {
 
 /**
  * @brief Checks whether a value is inside the boundaries of the constant array.
- * 
+ *
  * @param s The Europa state.
  * @param val The value.
  * @param inst The instruction's name (for error reporting).
- * @return 
+ * @return
  */
 eu_result check_val_in_constant(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->constantc <= val) {
@@ -182,11 +182,11 @@ eu_result check_val_in_constant(europa* s, int val, const char* inst) {
 
 /**
  * @brief Checks whether a value is inside the boundaries of the subprotos array.
- * 
- * @param s 
- * @param val 
- * @param inst 
- * @return eu_result 
+ *
+ * @param s
+ * @param val
+ * @param inst
+ * @return eu_result
  */
 eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->subprotoc <= val) {
@@ -199,11 +199,11 @@ eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
 
 /**
  * @brief Checks whether an offset is inside the boundaries of a prototype's code.
- * 
- * @param s 
- * @param off 
- * @param inst 
- * @return eu_result 
+ *
+ * @param s
+ * @param off
+ * @param inst
+ * @return eu_result
  */
 eu_result check_off_in_code(europa* s, int off, const char* inst) {
 	if (s->pc + off > s->ccl->proto->code_length) {
@@ -216,11 +216,11 @@ eu_result check_off_in_code(europa* s, int off, const char* inst) {
 
 /**
  * @brief Prepares the state for running a closure.
- * 
- * @param s 
- * @param cl 
- * @param args 
- * @return eu_result 
+ *
+ * @param s
+ * @param cl
+ * @param args
+ * @return eu_result
  */
 eu_result prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
 	/* place the closure in the current continuation */
@@ -231,11 +231,11 @@ eu_result prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
 
 /**
  * @brief Prepares the state for running a continuation.
- * 
- * @param s 
- * @param cont 
- * @param args 
- * @return eu_result 
+ *
+ * @param s
+ * @param cont
+ * @param args
+ * @return eu_result
  */
 eu_result prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
 	/* we need to set the accumulator to the first argument */
@@ -297,11 +297,11 @@ eu_result solve_value_application(europa* s, eu_value* v) {
 }
 /**
  * @brief Starts a vm execution loop.
- * 
+ *
  * This will make the vm continue executing from its current state. In order to
  * start running code, whatever it is that calls this function should've
  * properly set the state already.
- * 
+ *
  * @param s The Europa state.
  * @return The result of the operation.
  */
@@ -320,7 +320,7 @@ eu_result euvm_execute(europa* s) {
 	 * because it makes no sense to try to run no code (s->ccl == NULL) or having
 	 * no environment (s->env == NULL), we use that as a condition for stopping
 	 * the fetch/decode/execute loop.
-	 * 
+	 *
 	 * this stopping condition effectvely makes it so that whenever running code
 	 * returns, but s->previous is NULL (meaning the top-level call returned),
 	 * we stop runnning the F/D/E loop and return OK, leaving the result of the
@@ -571,7 +571,7 @@ eu_result euvm_execute(europa* s) {
 
 /**
  * @brief Initializes necessary fields in an Europa state.
- * 
+ *
  * @param s The target state.
  * @return Whether the operation was successful.
  */
@@ -589,7 +589,7 @@ eu_result euvm_initialize_state(europa* s) {
 
 /**
  * @brief Executes a closure.
- * 
+ *
  * @param s The Europa state.
  * @param cl The target closure.
  * @param args The target arguments.
@@ -612,9 +612,9 @@ eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* ou
 
 /**
  * @brief Applies some arguments to a target value.
- * 
+ *
  * If not a closure or continuation, the value will be solved_for_application.
- * 
+ *
  * @param s The target state.
  * @param v The target value.
  * @param args Arguments for the application.
@@ -793,7 +793,7 @@ eu_result _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
 
 /**
  * @brief Disassembles a value, writing the output into port.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param v The target value.

@@ -1,16 +1,16 @@
 /** Garbage collection related functions.
- * 
+ *
  * @file gc.c
  * @author Leonardo G.
  */
-#include "eu_gc.h"
+#include "europa/gc.h"
 
-#include "eu_pair.h"
-#include "eu_symbol.h"
-#include "eu_table.h"
-#include "eu_vector.h"
-#include "eu_port.h"
-#include "eu_rt.h"
+#include "europa/pair.h"
+#include "europa/symbol.h"
+#include "europa/table.h"
+#include "europa/vector.h"
+#include "europa/port.h"
+#include "europa/rt.h"
 
 #include <stdio.h>
 
@@ -26,7 +26,7 @@ eu_result eugco_destroy(europa* s, eu_object* obj);
 /* function definitions */
 
 /** Initializes the GC structure.
- * 
+ *
  * @param gc A pointer to the garbage collection structure.
  * @param ud The userdata pointer to be passed to the realloc-like function.
  * @return Whether initializing the data was successful.
@@ -56,7 +56,7 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
 }
 
 /** Destroys the GC context, collecting all objects.
- * 
+ *
  * @param gc The GC structure.
  * @return The result of the operation.
  */
@@ -102,11 +102,11 @@ eu_result eugc_destroy(europa* s) {
 }
 
 /** Returns a new gc object of a given size.
- * 
+ *
  * Allocates an object of a given size and initializes the object's header.
- * 
+ *
  * @param gc The garbage collector structure.
- * @param type The type of the new 
+ * @param type The type of the new
  */
 eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 	eu_object* obj;
@@ -139,10 +139,10 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 }
 
 /** Performs a complete cycle of garbage collection. (Naive mark-and-sweep)
- * 
+ *
  * Calling this function stops the world and performs a complete garbage
  * collection cycle using a naive mark-and-sweep approach.
- * 
+ *
  * @param gc The garbage collector structure.
  * @param root The object from which to start marking.
  * @return A result pertaining to the garbage collection process.
@@ -170,10 +170,10 @@ eu_result eugc_naive_collect(europa* s) {
 }
 
 /** Performs a naive mark on all objects.
- * 
+ *
  * The naive mark corresponds to the mark part of a naive mark and sweep
  * algorithm.
- * 
+ *
  * @param gc the GC structure.
  * @param obj the object to mark.
  */
@@ -250,7 +250,7 @@ eu_result eugc_naive_mark(europa* s, eu_object* obj) {
 
 /**
  * @brief Performs the sweeping stage of a naive mark-and-sweep GC.
- * 
+ *
  * @param s The Europa state.
  * @return The result of the operation.
  */
@@ -357,7 +357,7 @@ eu_result eugco_destroy(europa* s, eu_object* obj) {
 
 /**
  * @brief Removes an object from its list.
- * 
+ *
  * @param s The Europa state.
  * @param obj The target object.
  * @return The result of the operation.
@@ -383,12 +383,12 @@ eu_result eugc_remove_object(europa* s, eu_object* obj) {
 
 /**
  * @brief Adds an object to the head's list.
- * 
+ *
  * This function does not remove the object from its list prior to adding it to
  * the target list, so it should be removed by the user. This function also
  * touches nothing except for the next and previous pointers for both objects,
  * meaning it won't change any of the passed objects' marks or types.
- * 
+ *
  * @param s The Europa state.
  * @param head The target list's head.
  * @param obj The target object.
@@ -406,11 +406,11 @@ eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
 
 /**
  * @brief Moves an object into the root set.
- * 
+ *
  * This will remove an object from its list and place it at the root set. If the
  * object is already in the root set, this operation will effectively move it
  * closer to the head. This will also set the object's color back to white.
- * 
+ *
  * @param s The Europa state.
  * @param obj The target object.
  * @return The result of the operation.
@@ -428,12 +428,12 @@ eu_result eugc_move_to_root(europa* s, eu_object* obj) {
 
 /**
  * @brief Moves an object from the root set into the object list.
- * 
+ *
  * This function removes the object from its list and moves it into the "normal"
  * object list (the list traversed during sweeping phase). If the object is
  * already in the object list, it will just be moved closer to the list's head.
  * This also turns the object back into white.
- * 
+ *
  * @param s The Europa state.
  * @param obj The target object.
  * @return The result of the operation.

@@ -1,6 +1,6 @@
-#include "eu_ccont.h"
+#include "europa/ccont.h"
 
-#include "eu_error.h"
+#include "europa/error.h"
 
 eu_result eucc_frame(europa* s) {
 	eu_continuation* cont;
@@ -33,7 +33,7 @@ eu_result eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text
 
 	/* create a closure for the cfunction */
 	cl = eucl_new(s, cf, NULL, env);
-	if (cl == NULL) 
+	if (cl == NULL)
 		return EU_RESULT_BAD_ALLOC;
 
 	/* set the value up */

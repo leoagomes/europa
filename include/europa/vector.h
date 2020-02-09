@@ -1,11 +1,11 @@
 #ifndef __EUROPA_VECTOR_H__
 #define __EUROPA_VECTOR_H__
 
-#include "eu.h"
+#include "europa/eu.h"
 
-#include "eu_commons.h"
-#include "eu_int.h"
-#include "eu_object.h"
+#include "europa/commons.h"
+#include "europa/int.h"
+#include "europa/object.h"
 
 /** Vector structure type definition. */
 typedef struct europa_vector eu_vector;

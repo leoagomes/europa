@@ -3,17 +3,17 @@
  * @file europa.c
  * @author Leonardo G.
  */
-#include "eu.h"
+#include "europa/eu.h"
 
-#include "eu_gc.h"
-#include "eu_object.h"
-#include "eu_table.h"
-#include "eu_symbol.h"
-#include "eu_number.h"
-#include "eu_error.h"
-#include "eu_rt.h"
-#include "eu_port.h"
-#include "ports/eu_mport.h"
+#include "europa/gc.h"
+#include "europa/object.h"
+#include "europa/table.h"
+#include "europa/symbol.h"
+#include "europa/number.h"
+#include "europa/error.h"
+#include "europa/rt.h"
+#include "europa/port.h"
+#include "europa/ports/memory.h"
 
 #include <stdarg.h>
 #include <stdio.h>

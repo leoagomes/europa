@@ -1,11 +1,11 @@
 #ifndef __EUROPA_PAIR_H__
 #define __EUROPA_PAIR_H__
 
-#include "eu_commons.h"
-#include "eu_int.h"
-#include "eu_object.h"
+#include "europa/commons.h"
+#include "europa/int.h"
+#include "europa/object.h"
 
-#include "eu.h"
+#include "europa/eu.h"
 
 typedef struct europa_pair eu_pair;
 

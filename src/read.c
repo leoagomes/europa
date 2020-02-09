@@ -6,17 +6,17 @@
 #include <ctype.h>
 #include <stdio.h>
 
-#include "eu.h"
-#include "eu_port.h"
-#include "eu_error.h"
-#include "eu_number.h"
-#include "eu_character.h"
-#include "eu_util.h"
-#include "eu_symbol.h"
-#include "eu_pair.h"
-#include "eu_bytevector.h"
-#include "eu_vector.h"
-#include "eu_table.h"
+#include "europa/eu.h"
+#include "europa/port.h"
+#include "europa/error.h"
+#include "europa/number.h"
+#include "europa/character.h"
+#include "europa/util.h"
+#include "europa/symbol.h"
+#include "europa/pair.h"
+#include "europa/bytevector.h"
+#include "europa/vector.h"
+#include "europa/table.h"
 
 #include "utf8.h"
 

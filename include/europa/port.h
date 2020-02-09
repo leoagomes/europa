@@ -1,13 +1,13 @@
 #ifndef __EUROPA_PORT_H__
 #define __EUROPA_PORT_H__
 
-#include "eu.h"
+#include "europa/eu.h"
 
-#include "eu_int.h"
-#include "eu_commons.h"
-#include "eu_object.h"
-#include "eu_string.h"
-#include "eu_bytevector.h"
+#include "europa/int.h"
+#include "europa/commons.h"
+#include "europa/object.h"
+#include "europa/string.h"
+#include "europa/bytevector.h"
 
 /* type definitions */
 typedef struct europa_port eu_port;

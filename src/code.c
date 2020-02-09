@@ -1,8 +1,8 @@
-#include "eu_rt.h"
+#include "europa/rt.h"
 
-#include "eu_symbol.h"
-#include "eu_error.h"
-#include "eu_util.h"
+#include "europa/symbol.h"
+#include "europa/error.h"
+#include "europa/util.h"
 
 
 #define opc_part(op) ((op & OPCMASK) << OPCSHIFT)
@@ -302,7 +302,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 				return EU_RESULT_ERROR;
 			}
 
-			/* TODO: if anything bad happens, check the code below (everything, 
+			/* TODO: if anything bad happens, check the code below (everything,
 			 * even after the else if */
 
 			/* create continuation instruction */
@@ -320,10 +320,10 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 			 *     (define counter 0)
 			 *     (define conti #f)
 			 *     (call/cc (lambda (c) (set! conti c)))
-			 * 
+			 *
 			 *     (display counter) (newline)
 			 *     (set! counter (+ counter 1))
-			 * 
+			 *
 			 *     (if (= counter 5)
 			 *         #t
 			 *         (conti))))
@@ -448,10 +448,10 @@ eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
 
 /**
  * @brief Compiles a value into a chunk.
- * 
+ *
  * Compiles a value into a chunk: a closure that when evaluated produces
  * whatever v evaluates to.
- * 
+ *
  * @param s The Europa state.
  * @param v The value to be compiled.
  * @param chunk Where to place the resulting chunk.

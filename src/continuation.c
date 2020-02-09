@@ -1,4 +1,4 @@
-#include "eu_rt.h"
+#include "europa/rt.h"
 
 eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
 	eu_value* rib, eu_value* rib_lastpos, eu_closure* cl, unsigned int pc) {
@@ -21,7 +21,7 @@ eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
 
 /**
  * @brief Marks continuation references.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking function.
  * @param cont The target continuation.
@@ -49,7 +49,7 @@ eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
 
 /**
  * @brief (Useless) Releases resources associated to the continuation.
- * 
+ *
  * @param s The Europa state.
  * @param cont The target continuation.
  * @return The result of the operation.
@@ -60,9 +60,9 @@ eu_result eucont_destroy(europa* s, eu_continuation* cont) {
 
 /**
  * @brief Hashes a continuation.
- * 
+ *
  * Currently the hash is based only on the continuation's heap address.
- * 
+ *
  * @param cont The target continuation.
  * @return The continuation's hash.
  */

@@ -3,11 +3,11 @@
 
 #include <string.h>
 
-#include "eu.h"
+#include "europa/eu.h"
 
-#include "eu_commons.h"
-#include "eu_int.h"
-#include "eu_object.h"
+#include "europa/commons.h"
+#include "europa/int.h"
+#include "europa/object.h"
 
 /* TODO: attempt something akin to Lua's internalized and small strings */
 /* also:

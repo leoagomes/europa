@@ -1,11 +1,11 @@
 #ifndef __EUROPA_TABLE_H__
 #define __EUROPA_TABLE_H__
 
-#include "eu.h"
-#include "eu_int.h"
-#include "eu_commons.h"
-#include "eu_object.h"
-#include "eu_gc.h"
+#include "europa/eu.h"
+#include "europa/int.h"
+#include "europa/commons.h"
+#include "europa/object.h"
+#include "europa/gc.h"
 
 typedef struct europa_table eu_table;
 typedef struct europa_table_node eu_tnode;

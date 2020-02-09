@@ -1,14 +1,14 @@
 /** File Port implementation.
- * 
+ *
  * @file fport.c
  * @author Leonardo G.
  */
-#include "ports/eu_fport.h"
+#include "europa/ports/file.h"
 
 #include "utf8.h"
-#include "eu_gc.h"
-#include "eu_number.h"
-#include "eu_error.h"
+#include "europa/gc.h"
+#include "europa/number.h"
+#include "europa/error.h"
 
 #define _protect_read(s, port) \
 	do { \
@@ -38,7 +38,7 @@
 	} while (0)
 
 /** Opens a new file port.
- * 
+ *
  * @param s The Europa state.
  * @param flags The input/output and binary/textual flags.
  * @param filename The name of the file to open.
@@ -68,7 +68,7 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
 
 /**
  * @brief Creates a File Port from a given stdlib FILE handle.
- * 
+ *
  * @param s The Europa state.
  * @param flags The file's flags.
  * @param file The file handle.
@@ -92,7 +92,7 @@ eu_fport* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
 }
 
 /** Marks any reachable objects for collection.
- * 
+ *
  * @param s The europa state.
  * @param mark The gc marking function.
  * @param port The target port.
@@ -104,10 +104,10 @@ eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
 }
 
 /** Frees all resources associated with the port.
- * 
+ *
  * Frees resources associated with the file port, closing the file in case it is
  * open.
- * 
+ *
  * @param s The europa state.
  * @param port The target port.
  * @return The result of destroying the object.
@@ -126,7 +126,7 @@ eu_result eufport_destroy(europa* s, eu_fport* port) {
 }
 
 /** Returns the hash for a file port.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @return The target port's hash.
@@ -185,10 +185,10 @@ static eu_result _read_utf8_codepoint(eu_fport* port, int* out) {
 }
 
 /** Reads a character from the file port.
- * 
+ *
  * This function tries to read a UTF-8 codepoint from the port. If what is read
  * is not a valid codepoint.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param[out] ch Where to place the read character.
@@ -206,9 +206,9 @@ eu_result eufport_read_char(europa* s, eu_fport* port, int* out) {
 }
 
 /** Reads, but does not consume, a character from the file port.
- * 
+ *
  * The read character is expected to be in UTF-8 format.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param[out] out Where to place the peeked character.
@@ -282,11 +282,11 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
 
 #define MIN_CHUNK 64
 /** Reads a line from the port.
- * 
+ *
  * This functions sets out to either a string containing the characters up to
  * a newline or an EOF or, in case the first character read is the EOF, it
  * returns the EOF object.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param line Where to place the resulting string.
@@ -363,7 +363,7 @@ eu_result eufport_char_ready(europa* s, eu_fport* port, int* ready) {
 }
 
 /** Reads a string of at most k characters from the port.
- * 
+ *
  * @param s The Europa state.
  * @param port The target port.
  * @param k The maximum number of characters to read.

@@ -1,10 +1,10 @@
 /** Function prototype routines.
- * 
+ *
  * @file prototype.c
  * @author Leonardo G.
  */
-#include "eu_rt.h"
-#include "eu_number.h"
+#include "europa/rt.h"
+#include "europa/number.h"
 
 /** how much to grow the code buffer */
 #define CODE_GROWTH_RATE 5
@@ -43,7 +43,7 @@ eu_result resize_code(europa* s, eu_proto* proto, int size) {
 		sizeof(eu_instruction) * size);
 
 	/* check for errors */
-	if (proto->code == NULL && size > 0) 
+	if (proto->code == NULL && size > 0)
 		return EU_RESULT_BAD_ALLOC;
 
 	return EU_RESULT_OK;
@@ -53,7 +53,7 @@ eu_result resize_code(europa* s, eu_proto* proto, int size) {
 
 /**
  * @brief Creates a new prototype structure.
- * 
+ *
  * @param s The Europa state.
  * @param formals The formal parameters to the function.
  * @param constants_size The initial size for the constant array.
@@ -102,7 +102,7 @@ eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
 
 /**
  * @brief Marks a prototype's references.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking function.
  * @param p The target prototype.
@@ -132,9 +132,9 @@ eu_result euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
 
 /**
  * @brief Frees the associated to this prototype.
- * 
+ *
  * Frees any non-gc'd resources this prototype uses, namely its code.
- * 
+ *
  * @param s The Europa state.
  * @param p The target prototype.
  * @return The result of the operation.
@@ -158,10 +158,10 @@ eu_result euproto_destroy(europa* s, eu_proto* p) {
 
 /**
  * @brief Hashes the prototype.
- * 
+ *
  * Currently the hashing function is based solely on the prototype's memory
  * address.
- * 
+ *
  * @param p The target prototype.
  * @return Its hash.
  */
@@ -172,7 +172,7 @@ eu_integer euproto_hash(eu_proto* p) {
 
 /**
  * @brief Appends an instruction to the prototype's code.
- * 
+ *
  * @param s The Europa state.
  * @param proto The target prototype.
  * @param inst The instruction to append.
@@ -195,10 +195,10 @@ eu_integer euproto_append_instruction(europa* s, eu_proto* proto, eu_instruction
 
 /**
  * @brief Adds a constant to the buffer, returning its index.
- * 
+ *
  * If the given value is found to be in the constant list already, then its
  * index is returned, but nothing is added (the list won't grow in size).
- * 
+ *
  * @param s The Europa state.
  * @param proto The target prototype.
  * @param constant The constant value.
@@ -240,7 +240,7 @@ eu_integer euproto_add_constant(europa* s, eu_proto* proto, eu_value* constant,
 
 /**
  * @brief Adds a subprototype to the subprotos array. (Growing it if necessary.)
- * 
+ *
  * @param s The Europa State.
  * @param proto The target prototype.
  * @param subproto The target sub-prototype.
@@ -256,7 +256,7 @@ eu_integer euproto_add_subproto(europa* s, eu_proto* proto, eu_proto* subproto,
 		_eu_checkreturn(resize_subprotos(s, proto, proto->subprotos_size +
 			SUBPROTOS_GROWTH_RATE));
 	}
-	
+
 	/* put the subprototype in the array */
 	proto->subprotos[proto->subprotoc - 1] = subproto;
 

@@ -1,20 +1,20 @@
 /** General object and value type procedures.
- * 
+ *
  * @file object.c
  * @author Leonardo G.
  */
-#include "eu_object.h"
+#include "europa/object.h"
 
-#include "eu_number.h"
-#include "eu_bytevector.h"
-#include "eu_string.h"
-#include "eu_symbol.h"
-#include "eu_pair.h"
-#include "eu_table.h"
-#include "eu_port.h"
-#include "eu_error.h"
-#include "eu_vector.h"
-#include "eu_character.h"
+#include "europa/number.h"
+#include "europa/bytevector.h"
+#include "europa/string.h"
+#include "europa/symbol.h"
+#include "europa/pair.h"
+#include "europa/table.h"
+#include "europa/port.h"
+#include "europa/error.h"
+#include "europa/vector.h"
+#include "europa/character.h"
 
 /* global "singleton" declarations */
 eu_value _null = EU_VALUE_NULL;
@@ -29,7 +29,7 @@ const char* eu_type_names[] = {
 };
 
 /** Checks whether a value is of a given type.
- * 
+ *
  * @param value The value structure pointer.
  * @param type The type to check.
  * @return A boolean representing if the value is of the type.
@@ -41,7 +41,7 @@ eu_bool euvalue_is_type(eu_value* value, eu_byte type) {
 }
 
 /** Checks whether the a given value is null.
- * 
+ *
  * @param value The value structure pointer.
  * @return A boolean representing if the value is null.
  */
@@ -54,7 +54,7 @@ eu_bool euvalue_is_null(eu_value* value) {
 }
 
 /** Checks whether the given object is null.
- * 
+ *
  * @param object The object.
  * @return A boolean representing if the object is null.
  */
@@ -63,7 +63,7 @@ eu_bool euobj_is_null(eu_object* obj) {
 }
 
 /** Checks if the object is of a given type.
- * 
+ *
  * @param obj The object.
  * @return A boolean representing whether the object is of the type.
  */
@@ -74,7 +74,7 @@ eu_bool euobj_is_type(eu_object* obj, eu_byte type) {
 }
 
 /** Hashes a value.
- * 
+ *
  * @param v The value to hash.
  * @return The hash.
  */
@@ -105,7 +105,7 @@ eu_uinteger euvalue_hash(eu_value* v) {
 }
 
 /** Checks whether two values are `eqv?`.
- * 
+ *
  * @param a The first value.
  * @param b The second value.
  * @param out Where to place the result.
@@ -154,7 +154,7 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 }
 
 /** Checks whether two values are `eq?`.
- * 
+ *
  * @param a The first value.
  * @param b The second value.
  * @param out Where to place the result.
@@ -203,7 +203,7 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 }
 
 /** Checks whether two values are `equal?`.
- * 
+ *
  * @param a The first value.
  * @param b The second value.
  * @param out Where to place the result.
