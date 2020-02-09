@@ -3,7 +3,7 @@
  * @file europa.c
  * @author Leonardo G.
  */
-#include "europa/eu.h"
+#include "europa/europa.h"
 
 #include "europa/gc.h"
 #include "europa/object.h"

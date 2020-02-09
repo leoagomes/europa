@@ -1,7 +1,7 @@
 #ifndef __EUROPA_RUNTIME_H__
 #define __EUROPA_RUNTIME_H__
 
-#include "europa/eu.h"
+#include "europa/europa.h"
 #include "europa/object.h"
 #include "europa/gc.h"
 #include "europa/table.h"

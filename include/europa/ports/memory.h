@@ -1,7 +1,7 @@
 #ifndef __EUROPA_MEMORY_PORT_H__
 #define __EUROPA_MEMORY_PORT_H__
 
-#include "europa/eu.h"
+#include "europa/europa.h"
 #include "europa/commons.h"
 #include "europa/object.h"
 #include "europa/port.h"

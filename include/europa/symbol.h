@@ -5,7 +5,7 @@
 #include "europa/int.h"
 #include "europa/object.h"
 
-#include "europa/eu.h"
+#include "europa/europa.h"
 
 /** type definition for the symbol type */
 typedef struct europa_symbol eu_symbol;

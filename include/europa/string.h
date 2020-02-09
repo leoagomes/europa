@@ -3,7 +3,7 @@
 
 #include <string.h>
 
-#include "europa/eu.h"
+#include "europa/europa.h"
 
 #include "europa/commons.h"
 #include "europa/int.h"
