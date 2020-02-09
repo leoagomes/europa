@@ -1,10 +1,10 @@
 #ifndef __EUROPA_FILE_PORT_H__
 #define __EUROPA_FILE_PORT_H__
 
-#include "eu.h"
-#include "eu_commons.h"
-#include "eu_object.h"
-#include "eu_port.h"
+#include "europa/eu.h"
+#include "europa/commons.h"
+#include "europa/object.h"
+#include "europa/port.h"
 
 #include <stdio.h>
 

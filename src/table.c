@@ -1,19 +1,19 @@
 /** Table structure operations.
- * 
+ *
  * @file table.c
  * @author Leonardo G.
  */
-#include "eu_table.h"
-#include "eu_object.h"
-#include "eu_number.h"
-#include "eu_string.h"
-#include "eu_symbol.h"
+#include "europa/table.h"
+#include "europa/object.h"
+#include "europa/number.h"
+#include "europa/string.h"
+#include "europa/symbol.h"
 
 #include <stdint.h>
 #include <string.h>
 
 /* This code is heavily inspired in Lua's `ltable.c` table code.
- * 
+ *
  * The only code that is derived from Lua code is the adjust_length function
  * which comes from Lua's `luaO_ceillog2` and the twoto macro, Lua's code is
  * released under an MIT-like License. I am not entirely sure where that leaves
@@ -21,7 +21,7 @@
  * already, you should definitely check out Lua at http://www.lua.org. It is an
  * inspiration for this project and is straight out an amazing language that's
  * most definitely elegant and performs really well.
- * 
+ *
  * If anyone from the Lua team sees this and does not agree with the way licensing/
  * credit is handled, please do contact me.
  */
@@ -54,7 +54,7 @@ int ceil_log2(unsigned int length) {
 }
 
 /** Creates a new `nodes` array with a minimum specified length.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param length The new minimum length.
@@ -154,7 +154,7 @@ eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
 }
 
 /** Finds a free position in the table.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @return The node. NULL if length is 0 or no free positions.
@@ -171,7 +171,7 @@ eu_tnode* eutnode_free_position(europa* s, eu_table* t) {
 }
 
 /** Creates a new table capable of holding `length` elements.
- * 
+ *
  * @param s The Europa state.
  * @param length The amount of objects the table initially should be able to
  * hold.
@@ -204,7 +204,7 @@ eu_table* eutable_new(europa* s, size_t length) {
 }
 
 /** Calculates a hash for the target table.
- * 
+ *
  * @param t The target table.
  * @return The hash.
  */
@@ -217,7 +217,7 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i) {
 }
 
 /** Releases resources used by the table.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @return The result of the operation. (Always OK)
@@ -232,7 +232,7 @@ eu_result eutable_destroy(europa* s, eu_table* t) {
 }
 
 /** Marks objects inside the table.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking procedure.
  * @param t The target table.
@@ -273,7 +273,7 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
 }
 
 /** Gets a pointer to the value associated to a given key.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param key The desired key.
@@ -335,10 +335,10 @@ eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 }
 
 /** Gets a pointer associated to the value of the string key.
- * 
+ *
  * This function treats a C string as an eu_string in hashing and collision
  * resolution.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param str The string key.
@@ -394,10 +394,10 @@ eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
 }
 
 /** Gets a pointer to the value associated to a symbol with a given text.
- * 
+ *
  * Like `eutable_get_cstr`, this function treats the given symbol text as a
  * symbol object and searches for a matching key.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param sym_text The string representing the target symbol's text.
@@ -454,7 +454,7 @@ eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
 }
 
 /** Adds a key to the table and returns a pointer to the associated value.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param key The key to be inserted.
@@ -521,7 +521,7 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 			 * the added node */
 			node->next = fnode - _eutable_nodes(t);
 
-			/* all that's left to do now is set the fnode's key to `key` and 
+			/* all that's left to do now is set the fnode's key to `key` and
 			 * return a pointer to its `value` field */
 		}
 	} else { /* main position is empty */
@@ -544,7 +544,7 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 	 *    In which case, the colliding node already points to `fnode` and `fnode`
 	 *    has the correct `next` value (the same as the colliding node had prior
 	 *    to this key's insertion).
-	 * 
+	 *
 	 * In any of the cases above, the only thing left to do is properly set `fnode`'s
 	 * `key` and return the address of it's `value` field.
 	 */
@@ -562,7 +562,7 @@ eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	eu_value** val);
 
 /** Gets a value from a table, recursing into index if necessary.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param key The key value.
@@ -581,7 +581,7 @@ eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 }
 
 /** Gets a string value from a table, recursing into index if necessary.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param str The C string.
@@ -601,7 +601,7 @@ eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
 }
 
 /** Gets a symbol value from a table, recursing into index if necessary.
- * 
+ *
  * @param s The Europa state.
  * @param t The target table.
  * @param str The C string with the symbol's text.

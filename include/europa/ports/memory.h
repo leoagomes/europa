@@ -1,11 +1,11 @@
 #ifndef __EUROPA_MEMORY_PORT_H__
 #define __EUROPA_MEMORY_PORT_H__
 
-#include "eu.h"
-#include "eu_commons.h"
-#include "eu_object.h"
-#include "eu_port.h"
-#include "eu_bytevector.h"
+#include "europa/eu.h"
+#include "europa/commons.h"
+#include "europa/object.h"
+#include "europa/port.h"
+#include "europa/bytevector.h"
 
 #include <stdio.h>
 

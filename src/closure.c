@@ -1,24 +1,24 @@
 /** Closure structure routines.
- * 
+ *
  * @file closure.c
  * @author Leonardo G.
  */
-#include "eu_rt.h"
+#include "europa/rt.h"
 
-#include "eu_util.h"
+#include "europa/util.h"
 
 /**
  * @brief Creates a new closure.
- * 
+ *
  * If the closure is an Europa one, it also intializes the closure's environment,
  * creating slots for each formal parameter and setting its "up environment"
  * to the passed argument, the creation environment.
- * 
+ *
  * @param s The Europa state.
  * @param cf The C function to close. (Only if C function.)
  * @param proto The europa function prototype.
  * @param env The environment where the closure was created.
- * @return eu_closure* 
+ * @return eu_closure*
  */
 eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
 	eu_closure* cl;
@@ -75,7 +75,7 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
 }
 
 /** Marks a closure.
- * 
+ *
  * @param s The Europa state.
  * @param mark The marking function.
  * @param cl The target closure.
@@ -98,7 +98,7 @@ eu_result eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
 
 
 /** Returns a closure's hash.
- * 
+ *
  * @param cl The target closure.
  * @return Its hash.
  */
@@ -107,7 +107,7 @@ eu_integer eucl_hash(eu_closure* cl) {
 }
 
 /** Destroys a closure.
- * 
+ *
  * @param s The Europa state.
  * @param cl The target closure.
  * @return The result of the operation.

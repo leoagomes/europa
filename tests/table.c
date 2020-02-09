@@ -2,10 +2,10 @@
 #include "helpers.h"
 
 #include "europa.h"
-#include "eu_table.h"
-#include "eu_symbol.h"
-#include "eu_string.h"
-#include "eu_number.h"
+#include "europa/table.h"
+#include "europa/symbol.h"
+#include "europa/string.h"
+#include "europa/number.h"
 
 static void* table_setup(MunitParameter params[], void* user_data) {
 	europa* s;

@@ -1,17 +1,17 @@
 /** Numeric types operations and routines.
- * 
+ *
  * @file number.c
  * @author Leonardo G.
  */
-#include "eu_number.h"
+#include "europa/number.h"
 
-#include "eu_error.h"
-#include "eu_ccont.h"
+#include "europa/error.h"
+#include "europa/ccont.h"
 
 /* == **number** functions == */
 
 /** Calculates a hash for a given number.
- * 
+ *
  * @param v The number.
  * @return The hash.
  */
@@ -25,7 +25,7 @@ eu_uinteger eunum_hash(eu_value* v) {
 }
 
 /** Determines whether two numeric values are `eqv?`.
- * 
+ *
  * @param a The first value.
  * @param b The second value.
  * @param c Where to place the result.
@@ -165,7 +165,7 @@ eu_result eunum_negate(europa* s, eu_value* a, eu_value* out) {
 /* == **boolean** functions == */
 
 /** Calculates a hash for a boolean.
- * 
+ *
  * @param v The boolean value.
  * @return The hash.
  */
@@ -174,7 +174,7 @@ eu_uinteger eubool_hash(eu_value* v) {
 }
 
 /** Determines whether two boolean values are `eqv?`.
- * 
+ *
  * @param a The first value.
  * @param b The second value.
  * @param c Where to place the result.
@@ -651,7 +651,7 @@ eu_result euapi_M(europa* s) {
 
 	/* check arity for at least one value */
 	_eucc_arity_improper(s, 1);
-	
+
 	/* first argument */
 	current = _eucc_arguments(s);
 
@@ -692,7 +692,7 @@ eu_result euapi_D(europa* s) {
 
 	/* check arity for at least one value */
 	_eucc_arity_improper(s, 1);
-	
+
 	/* first argument */
 	current = _eucc_arguments(s);
 

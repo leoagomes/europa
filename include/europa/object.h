@@ -7,8 +7,8 @@
 #ifndef __EUROPA_OBJECT_H__
 #define __EUROPA_OBJECT_H__
 
-#include "eu_commons.h"
-#include "eu_int.h"
+#include "europa/commons.h"
+#include "europa/int.h"
 
 /* type definitions */
 typedef struct europa_gcobj eu_object;

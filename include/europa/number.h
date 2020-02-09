@@ -1,10 +1,10 @@
 #ifndef __EUROPA_NUMBER_H__
 #define __EUROPA_NUMBER_H__
 
-#include "eu.h"
-#include "eu_object.h"
-#include "eu_int.h"
-#include "eu_commons.h"
+#include "europa/eu.h"
+#include "europa/object.h"
+#include "europa/int.h"
+#include "europa/commons.h"
 
 #define EU_NUMBER_REAL EU_TYPEFLAG_EXTRA
 

@@ -1,10 +1,10 @@
 #ifndef __EUROPA_CHARACTER_H__
 #define __EUROPA_CHARACTER_H__
 
-#include "eu.h"
-#include "eu_commons.h"
-#include "eu_int.h"
-#include "eu_object.h"
+#include "europa/eu.h"
+#include "europa/commons.h"
+#include "europa/int.h"
+#include "europa/object.h"
 
 /* helper macros */
 #define _eu_makechar(vptr, c) \

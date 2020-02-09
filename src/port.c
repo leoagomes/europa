@@ -1,17 +1,17 @@
 /** Port type operations.
- * 
+ *
  * @file port.c
  * @author Leonardo G.
  */
-#include "eu_port.h"
+#include "europa/port.h"
 
-#include "eu_ccont.h"
-#include "eu_number.h"
-#include "eu_character.h"
-#include "eu_bytevector.h"
+#include "europa/ccont.h"
+#include "europa/number.h"
+#include "europa/character.h"
+#include "europa/bytevector.h"
 
-#include "ports/eu_fport.h"
-#include "ports/eu_mport.h"
+#include "europa/ports/file.h"
+#include "europa/ports/memory.h"
 
 eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
 	switch (port->type) {

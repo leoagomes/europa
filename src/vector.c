@@ -1,14 +1,14 @@
 /** Vector type operations.
- * 
+ *
  * @file vector.c
  * @author Leonardo G.
  */
-#include "eu_vector.h"
+#include "europa/vector.h"
 
 #include <string.h>
 
 /* Vectors:
- * 
+ *
  * Like symbols and strings, vectors store their "content" along the same memory
  * block their metadata (like their length) are stored. This makes it hard to
  * resize a vector, so vectors are not resizable, their elements, though, can
@@ -16,7 +16,7 @@
  */
 
 /** Creates a new vector object.
- * 
+ *
  * @param s The Europa state.
  * @param length The number of values the vector can house.
  */
@@ -26,7 +26,7 @@ eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
 	if(s == NULL || length < 0)
 		return NULL;
 
-	vec = _euobj_to_vector(eugc_new_object(s, 
+	vec = _euobj_to_vector(eugc_new_object(s,
 		EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE,
 		sizeof(eu_vector) + (sizeof(eu_value) * (length - 1))));
 	if (vec == NULL)
@@ -42,7 +42,7 @@ eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
 }
 
 /** Returns the length of the vector.
- * 
+ *
  * @param vec The target vector object.
  * @return The length of the given vector.
  */
@@ -53,7 +53,7 @@ eu_integer euvector_length(eu_vector* vec) {
 }
 
 /** Returns the continuous memory buffer that holds the values.
- * 
+ *
  * @param vec The vector object.
  * @return The address of where values are stored.
  */
@@ -64,7 +64,7 @@ eu_value* euvector_values(eu_vector* vec) {
 }
 
 /** Marks all applicable objects in the vector as reachable for the GC.
- * 
+ *
  * @param gc The garbage collector.
  * @param mark The gc marking function.
  * @param vec The target vector object.
@@ -93,7 +93,7 @@ eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
 }
 
 /** Calculates a hash for the vector.
- * 
+ *
  * @param vec The target vector.
  * @return The hash.
  */

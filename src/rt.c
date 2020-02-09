@@ -1,10 +1,10 @@
 /* beware the runtime code */
-#include "eu_rt.h"
+#include "europa/rt.h"
 
 #include <setjmp.h>
 
-#include "eu_ccont.h"
-#include "eu_number.h"
+#include "europa/ccont.h"
+#include "europa/number.h"
 
 struct europa_jmplist {
 	struct europa_jmplist* previous;
@@ -282,11 +282,11 @@ eu_result euapi_for_each(europa* s) {
 	 * loop, so we need to create a frame for the current function activation
 	 * record in order to tell the VM to resume this function after proc has
 	 * returned.
-	 * 
+	 *
 	 * In case this is the last iteration, meaning at least one of the passed
 	 * lists has been entirely consumed, we can treat the call to proc as a
 	 * tail call, where we don't need to create a new frame for the call.
-	 * 
+	 *
 	 * The "stopping" condition for this function is actually reaching the end
 	 * of at least one list, because that will not insert a frame and the VM
 	 * will never call back our function. While none of the lists are over, a

@@ -3,9 +3,9 @@
 
 #include <stddef.h>
 
-#include "eu_commons.h"
-#include "eu_int.h"
-#include "eu_object.h"
+#include "europa/commons.h"
+#include "europa/int.h"
+#include "europa/object.h"
 
 /** The realloc-like function provided to the garbage collector. */
 typedef void* (*eu_realloc)(void*, void*, size_t);

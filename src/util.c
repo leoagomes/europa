@@ -1,17 +1,17 @@
 /** Utility functions.
- * 
+ *
  * @file util.c
  * @author Leonardo G.
  */
-#include "eu_util.h"
+#include "europa/util.h"
 
-#include "eu_pair.h"
-#include "eu_number.h"
-#include "eu_symbol.h"
-#include "eu_string.h"
-#include "eu_port.h"
-#include "ports/eu_fport.h"
-#include "eu_rt.h"
+#include "europa/pair.h"
+#include "europa/number.h"
+#include "europa/symbol.h"
+#include "europa/string.h"
+#include "europa/port.h"
+#include "europa/ports/file.h"
+#include "europa/rt.h"
 
 #include <string.h>
 #include <stdlib.h>
@@ -72,7 +72,7 @@ int unicodetoutf8(int c) {
  * the list:
  * list_length(s, (a b c)) = 3
  * list_length(s, (a b . c)) = 2
- * 
+ *
  * the number of elements may be considered (return + improper)
  * */
 int eutil_list_length(europa* s, eu_value* v, int* improper) {
@@ -107,7 +107,7 @@ int eutil_list_length(europa* s, eu_value* v, int* improper) {
 
 /**
  * @brief A realloc-like function, based on stdlib's realloc.
- * 
+ *
  * @param ud User data.
  * @param ptr The pointer to realloc.
  * @param size The target memory size.
@@ -123,9 +123,9 @@ void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size) {
 
 /**
  * @brief Registers standard library procedures.
- * 
- * @param s 
- * @return eu_result 
+ *
+ * @param s
+ * @return eu_result
  */
 eu_result eutil_register_standard_library(europa* s) {
 

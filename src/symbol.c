@@ -1,39 +1,39 @@
 /** Symbol implementation file.
- * 
+ *
  * @file symbol.c
  * @author Leonardo G.
  */
-#include "eu_symbol.h"
+#include "europa/symbol.h"
 
 #include <string.h>
 
-#include "eu_util.h"
-#include "eu_number.h"
+#include "europa/util.h"
+#include "europa/number.h"
 #include "utf8.h"
-#include "eu_ccont.h"
+#include "europa/ccont.h"
 
 /*
  * Symbols:
- * 
+ *
  * The symbol internal structure is effectively
  * struct symbol {
  *   // common header
  *   gcobj* _next;
  *   byte _type;
  *   byte _mark;
- * 
+ *
  *   // structure data
  *   integer hash;
  *   byte _text;
  * }
- * 
+ *
  * symbols are immutable, so we can keep its text in the symbol structure space
  * itself (and contribute less to memory fragmentation). the _text byte serves
  * as the address of the text's start.
  */
 
 /** Creates a new symbol with a given text.
- * 
+ *
  * @param s the Europa state.
  * @param text the symbol's text.
  * @return The created symbol.
@@ -72,10 +72,10 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
 }
 
 /** Returns the address of the utf-8 text buffer.
- * 
+ *
  * @param sym The symbol structure.
  * @return The managed utf-8 string.
- * 
+ *
  * @remarks The buffer will be managed by the GC and it will not outlive the
  * object, so if you need a lasting copy of it, make it yourself.
  */
@@ -86,7 +86,7 @@ void* eusymbol_text(eu_symbol* sym) {
 }
 
 /** Returns the object's hash.
- * 
+ *
  * @param sym The symbol object.
  * @return The obejct's hash.
  */
@@ -97,7 +97,7 @@ eu_uinteger eusymbol_hash(eu_symbol* sym) {
 }
 
 /** Hashes a string as if it were a symbol.
- * 
+ *
  * @param str The string representing the symbol.
  * @return The resulting hash.
  */
@@ -108,7 +108,7 @@ eu_integer eusymbol_hash_cstr(const char* str){
 }
 
 /** Checks whether two symbols are `eqv?`.
- * 
+ *
  * @param a The first symbol.
  * @param b The other symbol.
  * @param out Where to place the boolean result.
@@ -136,7 +136,7 @@ eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
 }
 
 /** Checks whether a symbol's text matches a given C string.
- * 
+ *
  * @param vsym The value symbol.
  * @param cstr The C string.
  * @return Whether the two match.

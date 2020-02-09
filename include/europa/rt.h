@@ -1,14 +1,14 @@
 #ifndef __EUROPA_RUNTIME_H__
 #define __EUROPA_RUNTIME_H__
 
-#include "eu.h"
-#include "eu_object.h"
-#include "eu_gc.h"
-#include "eu_table.h"
-#include "eu_pair.h"
-#include "eu_int.h"
-#include "eu_commons.h"
-#include "eu_port.h"
+#include "europa/eu.h"
+#include "europa/object.h"
+#include "europa/gc.h"
+#include "europa/table.h"
+#include "europa/pair.h"
+#include "europa/int.h"
+#include "europa/commons.h"
+#include "europa/port.h"
 
 /* type definitions */
 typedef eu_result (*eu_pfunc)(europa* s, void* ud);

@@ -18,12 +18,12 @@
 #ifndef __EUROPA_C_CONT_H__
 #define __EUROPA_C_CONT_H__
 
-#include "eu.h"
-#include "eu_int.h"
-#include "eu_rt.h"
-#include "eu_commons.h"
-#include "eu_object.h"
-#include "eu_error.h"
+#include "europa/eu.h"
+#include "europa/int.h"
+#include "europa/rt.h"
+#include "europa/commons.h"
+#include "europa/object.h"
+#include "europa/error.h"
 
 /*
  * I decided to try fixing the continuation problem by "flattening" the C stack.

@@ -1,13 +1,13 @@
 /** Memory Port implementation.
- * 
+ *
  * @file mport.c
  * @author Leonardo G.
  */
-#include "ports/eu_mport.h"
-#include "eu_number.h"
+#include "europa/ports/memory.h"
+#include "europa/number.h"
 #include "utf8.h"
-#include "eu_error.h"
-#include "eu_bytevector.h"
+#include "europa/error.h"
+#include "europa/bytevector.h"
 
 #include <string.h>
 

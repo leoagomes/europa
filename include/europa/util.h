@@ -1,10 +1,10 @@
 #ifndef __EUROPA_UTILS_H__
 #define __EUROPA_UTILS_H__
 
-#include "eu.h"
-#include "eu_object.h"
-#include "eu_commons.h"
-#include "eu_int.h"
+#include "europa/eu.h"
+#include "europa/object.h"
+#include "europa/commons.h"
+#include "europa/int.h"
 
 /* honestly, this is where things that don't have a home yet go */
 

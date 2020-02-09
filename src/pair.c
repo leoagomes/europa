@@ -3,16 +3,16 @@
  * @brief Pair (cons cell) related operations.
  * @author Leonardo G.
  */
-#include "eu_pair.h"
+#include "europa/pair.h"
 
-#include "eu_gc.h"
-#include "eu_error.h"
-#include "eu_ccont.h"
-#include "eu_rt.h"
-#include "eu_number.h"
+#include "europa/gc.h"
+#include "europa/error.h"
+#include "europa/ccont.h"
+#include "europa/rt.h"
+#include "europa/number.h"
 
 /** Creates a new (garbage collected) pair.
- * 
+ *
  * @param s the Europa state.
  * @param head the pointer to a value structure which will be copied to the
  * pair's head (car).
@@ -35,7 +35,7 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
 }
 
 /** Calls the garbage collector's mark function on the pair's fields.
- * 
+ *
  * @param gc the garbage collector structure.
  * @param pair the pair to process.
  * @result the result of running the procedure.
@@ -62,7 +62,7 @@ eu_result eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
 }
 
 /** Gets a hash code for a pair object.
- * 
+ *
  * @param s the europa state.
  * @param pair the target pair.
  * @return the hash of the pair.
@@ -183,7 +183,7 @@ eu_result eulist_copy(europa* s, eu_value* list, eu_value* out) {
 
 /**
  * @brief Registers pair procedures in the global environment.
- * 
+ *
  * @param s The Europa state.
  * @return The result of the operation.
  */

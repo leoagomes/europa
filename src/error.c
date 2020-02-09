@@ -1,9 +1,9 @@
 /** Error type implementation.
- * 
+ *
  * @file error.c
  * @author Leonardo G.
  */
-#include "eu_error.h"
+#include "europa/error.h"
 
 #include <string.h>
 
