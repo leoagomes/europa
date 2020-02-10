@@ -2,7 +2,7 @@
 #define __EUROPA_MEMORY_PORT_H__
 
 #include "europa/europa.h"
-#include "europa/commons.h"
+#include "europa/common.h"
 #include "europa/object.h"
 #include "europa/port.h"
 #include "europa/bytevector.h"

@@ -7,7 +7,7 @@
 #ifndef __EUROPA_OBJECT_H__
 #define __EUROPA_OBJECT_H__
 
-#include "europa/commons.h"
+#include "europa/common.h"
 #include "europa/int.h"
 
 /* type definitions */

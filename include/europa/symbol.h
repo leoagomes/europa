@@ -1,7 +1,7 @@
 #ifndef __EUROPA_SYMBOL_H__
 #define __EUROPA_SYMBOL_H__
 
-#include "europa/commons.h"
+#include "europa/common.h"
 #include "europa/int.h"
 #include "europa/object.h"
 

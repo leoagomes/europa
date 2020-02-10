@@ -2,7 +2,7 @@
 #define __EUROPA_CHARACTER_H__
 
 #include "europa/europa.h"
-#include "europa/commons.h"
+#include "europa/common.h"
 #include "europa/int.h"
 #include "europa/object.h"
 
