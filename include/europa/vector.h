@@ -12,7 +12,7 @@ typedef struct europa_vector eu_vector;
 
 /** Vector object structure. */
 struct europa_vector {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_integer length; /*!< the length of the vector. */
 	eu_value _value; /*!< the first value for the vector. */

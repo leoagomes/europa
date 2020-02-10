@@ -20,7 +20,7 @@
  *   // common header
  *   gcobj* _next;
  *   byte _type;
- *   byte _mark;
+ *   byte _color;
  *
  *   // structure data
  *   integer hash;

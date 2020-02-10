@@ -7,11 +7,12 @@
 #ifndef __EUROPA_OBJECT_H__
 #define __EUROPA_OBJECT_H__
 
+#include "europa/gc/header.h"
 #include "europa/common.h"
 #include "europa/int.h"
 
 /* type definitions */
-typedef struct europa_gcobj eu_object;
+typedef struct europa_object eu_object;
 typedef struct europa_value eu_value;
 
 /* internal value representation. */
@@ -74,17 +75,12 @@ struct europa_value {
 };
 
 /* garbage collected objects */
-
-/** common fields to all garbage collected objects. */
-#define EU_OBJ_COMMON_HEADER \
-	eu_object* _next; /*!< next object in object chain */\
-	eu_object* _previous; /*!< previous object in chain */\
-	eu_byte _type; /*!< the type of the object */\
-	eu_byte _mark
+#define EU_OBJECT_HEADER \
+	EU_OBJECT_GC_HEADER
 
 /** Garbage Collected object abstraction. */
-struct europa_gcobj {
-	EU_OBJ_COMMON_HEADER;
+struct europa_object {
+	EU_OBJECT_HEADER
 };
 
 /* Global object singletons declarations */

@@ -19,7 +19,7 @@ typedef unsigned int eu_instruction;
 
 /** Function prototype. */
 struct europa_proto {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_value formals; /*!< formal parameters */
 
@@ -40,7 +40,7 @@ struct europa_proto {
 
 /** Closure structure. */
 struct europa_closure {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 	eu_byte own_env; /*!< whether the closure should have its own environment */
 
 	eu_table* env; /*!< closure creation environment */
@@ -51,7 +51,7 @@ struct europa_closure {
 
 /** Continuation structure. */
 struct europa_continuation {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_continuation* previous; /*!< previous call frame */
 

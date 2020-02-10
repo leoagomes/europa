@@ -22,7 +22,7 @@ typedef int (*eu_cfunc)(europa* s);
 
 typedef struct europa_table eu_table;
 struct europa_global {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 	eu_gc gc; /*!< global state GC */
 	eu_cfunc panic; /*!< global panic function */
 	europa* main; /*!< the main state */
@@ -33,7 +33,7 @@ struct europa_global {
 struct europa_jmplist;
 
 struct europa {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 	eu_byte level; /*!< current continuation level */
 	eu_byte status; /*!< current execution status */
 

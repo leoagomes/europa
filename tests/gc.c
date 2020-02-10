@@ -1,5 +1,5 @@
 /** GC module testing file.
- * 
+ *
  * @file gc.c
  * @author Leonardo G.
  * @ingroup tests
@@ -15,21 +15,21 @@
 
 /* This file holds tests for the garbage collection facilities of the language.
  * List of tests:
- * 
+ *
  * - [x] object creation (eugc_new_object)
- * 
+ *
  * - [ ] naive mark (eugc_naive_mark)
  * - [x] naive sweep (eugc_naive_sweep)
  * - [ ] naive collect (eugc_naive_collect)
  *
  * The tests also test mark and destroy functions for primitive types:
- * 
+ *
  * - [ ] pair
  * - [ ] symbol
  */
 
 /** Sets up an Europa state with a correctly intialized GC.
- * 
+ *
  * @returns An Europa state with a gc that works properly.
  */
 static void* gc_setup(MunitParameter params[], void* user_data) {
@@ -41,7 +41,7 @@ static void* gc_setup(MunitParameter params[], void* user_data) {
 }
 
 /** Properly tears down a gc test.
- * 
+ *
  * At the moment this only destroys the europa state originally provided.
  */
 void gc_teardown(void* fixture) {
@@ -56,7 +56,7 @@ void gc_teardown(void* fixture) {
 }
 
 /** Tests whether the GC can allocate memory for an object.
- * 
+ *
  * It creates a new managed block and tries to write something to it and read
  * from it.
  */
@@ -75,8 +75,8 @@ MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	/* make sure something was allocated */
 	munit_assert_ptr_not_null(obj);
 
-	obj->_mark = 10;
-	munit_assert(obj->_mark == 10);
+	obj->_color = 10;
+	munit_assert(obj->_color == 10);
 
 	return MUNIT_OK;
 }
@@ -98,7 +98,7 @@ int object_in_list(europa* s, eu_object* obj) {
 }
 
 /** Tests whether the naive sweep algorithm correctly releases objects.
- * 
+ *
  * The test creates 4 objects, marks 2, does a naive sweep and verifies
  * that the only lasting objects were the marked ones.
  */
@@ -129,8 +129,8 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	munit_assert_ptr_not_null(obj[3]);
 
 	/* mark first and third objects */
-	obj[0]->_mark = EUGC_COLOR_BLACK;
-	obj[2]->_mark = EUGC_COLOR_BLACK;
+	obj[0]->_color = EUGC_COLOR_BLACK;
+	obj[2]->_color = EUGC_COLOR_BLACK;
 
 	/* make sure all objects are in the object list */
 	for (int i = 0; i < 4; i++) {

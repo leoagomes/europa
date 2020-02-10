@@ -14,7 +14,7 @@ typedef struct europa_port eu_port;
 
 /* things that are common to all ports */
 #define EU_PORT_COMMON_HEADER \
-	EU_OBJ_COMMON_HEADER; \
+	EU_OBJECT_HEADER \
 	eu_byte flags; \
 	eu_byte type
 

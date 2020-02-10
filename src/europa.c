@@ -21,7 +21,7 @@
 eu_result global_basic_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
 	/* pretend this is a normal GC object */
 	g->_previous = g->_next = cast(eu_object*, g);
-	g->_mark = EUGC_COLOR_WHITE;
+	g->_color = EUGC_COLOR_WHITE;
 	g->_type = EU_TYPE_GLOBAL | EU_TYPEFLAG_COLLECTABLE;
 
 	/* initialize the garbage collector */

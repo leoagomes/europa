@@ -29,7 +29,7 @@ struct europa_table_node {
 #define twoto(x) (1 << (x))
 
 struct europa_table {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 	eu_byte lsize; /*!< log2 of the table's size */
 	int count; /*!< the number of elements in the table */
 	struct europa_table_node *nodes, *last_free;

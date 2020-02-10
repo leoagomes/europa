@@ -9,7 +9,7 @@
 typedef struct europa_bytevector eu_bvector;
 
 struct europa_bytevector {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_integer length; /*!< The vector's length. */
 	eu_byte _data; /*!< first byte of the vector's data.*/

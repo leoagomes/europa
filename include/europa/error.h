@@ -17,7 +17,7 @@ typedef struct europa_error eu_error;
 
 /** Error type structure */
 struct europa_error {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_error* nested; /*!< possibly nested error. */
 

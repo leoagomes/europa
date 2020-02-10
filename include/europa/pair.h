@@ -10,7 +10,7 @@
 typedef struct europa_pair eu_pair;
 
 struct europa_pair {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 	eu_value head; /*!< The first/head/car value. */
 	eu_value tail; /*!< The second/tail/cdr value. */
 };

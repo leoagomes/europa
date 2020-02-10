@@ -18,7 +18,7 @@ typedef struct europa_string eu_string;
 
 /** String type structure. */
 struct europa_string {
-	EU_OBJ_COMMON_HEADER;
+	EU_OBJECT_HEADER
 
 	eu_integer size; /*!< the string's length. */
 	eu_integer hash; /*!< the string hash. */

@@ -15,10 +15,10 @@
 #include <stdio.h>
 
 /* helper macros */
-#define eugco_mark(obj) ((obj)->_mark)
-#define eugco_markwhite(obj) ((obj)->_mark = EUGC_COLOR_WHITE)
-#define eugco_markgrey(obj) ((obj)->_mark = EUGC_COLOR_GREY)
-#define eugco_markblack(obj) ((obj)->_mark = EUGC_COLOR_BLACK)
+#define eugco_mark(obj) ((obj)->_color)
+#define eugco_markwhite(obj) ((obj)->_color = EUGC_COLOR_WHITE)
+#define eugco_markgrey(obj) ((obj)->_color = EUGC_COLOR_GREY)
+#define eugco_markblack(obj) ((obj)->_color = EUGC_COLOR_BLACK)
 
 /* forward function declarations */
 eu_result eugco_destroy(europa* s, eu_object* obj);
@@ -43,12 +43,12 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
 	gc->last_obj = NULL;
 
 	/* set up object list head */
-	gc->objs_head._mark = EUGC_DO_NOT_TOUCH;
+	gc->objs_head._color = EUGC_DO_NOT_TOUCH;
 	gc->objs_head._next = &(gc->objs_head);
 	gc->objs_head._previous = &(gc->objs_head);
 
 	/* set up root set head */
-	gc->root_head._mark = EUGC_DO_NOT_TOUCH;
+	gc->root_head._color = EUGC_DO_NOT_TOUCH;
 	gc->root_head._next = &(gc->root_head);
 	gc->root_head._previous = &(gc->root_head);
 
@@ -266,7 +266,7 @@ eu_result eugc_naive_sweep(europa* s) {
 	current = gc->objs_head._next;
 
 	while (current != &(gc->objs_head)) { /* run until we've reached the head again */
-		switch (current->_mark) {
+		switch (current->_color) {
 		/* remove objects that couldn't be reached during the mark stage */
 		case EUGC_COLOR_WHITE:
 			aux = current->_next; /* save the next object */
