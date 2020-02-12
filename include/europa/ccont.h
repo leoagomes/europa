@@ -170,8 +170,8 @@
 	} while (0)
 
 
-eu_result eucc_frame(europa* s);
-eu_result eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text, eu_cfunc cf);
+int eucc_frame(europa* s);
+int eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text, eu_cfunc cf);
 
 
 

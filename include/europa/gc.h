@@ -16,7 +16,7 @@ typedef struct europa_gc eu_gc;
 typedef struct europa europa;
 
 /** The function an object should call to mark its references. */
-typedef eu_result (*eu_gcmark)(europa* s, eu_object* obj);
+typedef int (*eu_gcmark)(europa* s, eu_object* obj);
 
 /** Possible object colors during garbage collection. */
 enum eugc_color {
@@ -55,20 +55,20 @@ struct europa_gc {
 #define _eugc_root_head(gc) (&((gc)->root_head))
 
 /* function declarations */
-eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
-eu_result eugc_destroy(europa* s);
+int eugc_init(eu_gc* gc, void* ud, eu_realloc rlc);
+int eugc_destroy(europa* s);
 
 eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 
-eu_result eugc_move_to_root(europa* s, eu_object* obj);
-eu_result eugc_move_off_root(europa* s, eu_object* obj);
+int eugc_move_to_root(europa* s, eu_object* obj);
+int eugc_move_off_root(europa* s, eu_object* obj);
 
-eu_result eugc_remove_object(europa* s, eu_object* obj);
-eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj);
+int eugc_remove_object(europa* s, eu_object* obj);
+int eugc_add_object(europa* s, eu_object* head, eu_object* obj);
 
 /* naive mark and sweep */
-eu_result eugc_naive_collect(europa* s);
-eu_result eugc_naive_mark(europa* s, eu_object* root);
-eu_result eugc_naive_sweep(europa* s);
+int eugc_naive_collect(europa* s);
+int eugc_naive_mark(europa* s, eu_object* root);
+int eugc_naive_sweep(europa* s);
 
 #endif /* __EUROPA_GC_H__ */

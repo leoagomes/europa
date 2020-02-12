@@ -154,9 +154,9 @@ eu_bool euobj_is_null(eu_object* obj);
 eu_bool euobj_is_type(eu_object* obj, eu_byte type);
 
 eu_uinteger euvalue_hash(eu_value* v);
-eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out);
-eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out);
-eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out);
+int euvalue_eqv(eu_value* a, eu_value* b, eu_value* out);
+int euvalue_eq(eu_value* a, eu_value* b, eu_value* out);
+int euvalue_equal(eu_value* a, eu_value* b, eu_value* out);
 
 /* language side api */
 

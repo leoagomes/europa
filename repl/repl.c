@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv) {
 	europa* s;
-	eu_result res;
+	int res;
 
 	/* create an Europa instance */
 	s = eu_new(eutil_stdlib_realloclike, NULL, NULL, &res);

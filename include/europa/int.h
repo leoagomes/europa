@@ -20,7 +20,6 @@ typedef double eu_real;
 #define EU_TRUE 0x01 /*!< boolean true value */
 #define EU_FALSE 0x00 /*!< boolean false value */
 
-typedef int eu_result; /*!< c function result type */
 enum {
 	EU_RESULT_OK = 0,
 	EU_RESULT_ERROR,

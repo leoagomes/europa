@@ -155,8 +155,8 @@ struct parser {
 #define punqspl(p) testmake(p, unqspl)
 
 /* some needed prototypes */
-eu_result pread_datum(parser* p, eu_value* out);
-eu_result pskip_itspace(parser* p);
+int pread_datum(parser* p, eu_value* out);
+int pskip_itspace(parser* p);
 
 
 /* Because strings and identifiers can be arbitrarily long, the auxilary buffer
@@ -168,7 +168,7 @@ eu_result pskip_itspace(parser* p);
  * To make this switch between p->buf and a heap allocated buffer transparent,
  * we use the following functions.
  */
-eu_result gbuf_init(parser* p, void** buf, void** next, size_t* size) {
+int gbuf_init(parser* p, void** buf, void** next, size_t* size) {
 	/* set all variables to the auxilary buffer initially. */
 	*buf = p->buf;
 	*next = *buf;
@@ -185,7 +185,7 @@ eu_result gbuf_init(parser* p, void** buf, void** next, size_t* size) {
  */
 #define GBUF_GROWTH_RATE 128
 
-eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
+int gbuf_append(parser* p, void** buf, void** next, size_t* size,
 	size_t* remaining, int c) {
 	char *cbuf, *cnext;
 
@@ -233,7 +233,7 @@ eu_result gbuf_append(parser* p, void** buf, void** next, size_t* size,
 	return EU_RESULT_OK;
 }
 
-eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
+int gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
 	size_t* remaining, eu_byte c) {
 	eu_byte *bbuf, *bnext;
 
@@ -286,7 +286,7 @@ eu_result gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
  * next is valid, if not do whatever you need and give me a valid next" helper.
  *
  */
-eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
+int gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 	size_t* remaining, eu_value* val) {
 	eu_value *vbuf, *vnext;
 
@@ -329,7 +329,7 @@ eu_result gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 	return EU_RESULT_OK;
 }
 
-eu_result gbuf_terminate(parser* p, void** buf) {
+int gbuf_terminate(parser* p, void** buf) {
 	if (p->buf != *buf) {
 		_eugc_free(_eu_gc(p->s), *buf);
 	}
@@ -338,7 +338,7 @@ eu_result gbuf_terminate(parser* p, void** buf) {
 }
 
 /* initializes a parser structure */
-eu_result parser_init(parser* p, europa* s, eu_port* port) {
+int parser_init(parser* p, europa* s, eu_port* port) {
 	int res;
 	p->s = s;
 	p->port = port;
@@ -413,7 +413,7 @@ eu_string* pmake_string(parser* p, void* text) {
 }
 
 /* consumes a character from the parser port */
-eu_result pconsume(parser* p) {
+int pconsume(parser* p) {
 	p->col++;
 	if (islineending(p->current)) {
 		p->line++;
@@ -423,7 +423,7 @@ eu_result pconsume(parser* p) {
 }
 
 /* peeks a character from the parser port, placing it into p->peek */
-eu_result ppeek(parser* p) {
+int ppeek(parser* p) {
 	return euport_peek_char(p->s, p->port, &(p->peek));
 }
 
@@ -431,7 +431,7 @@ eu_result ppeek(parser* p) {
  * p->peek with the next peek character.
  *
  * basically reads a character and peeks the other in a sequence */
-eu_result padvance(parser* p) {
+int padvance(parser* p) {
 	int res;
 	if ((res = pconsume(p)))
 		return res;
@@ -440,7 +440,7 @@ eu_result padvance(parser* p) {
 
 /* asserts that the current character (p->current) matches a given character,
  * returning an error in case it does not match. */
-eu_result pmatch(parser* p, int c) {
+int pmatch(parser* p, int c) {
 	if (p->current != c) {
 		seterrorf(p, "Expected character '%c' but got %x ('%c').",
 			c, p->current, (char)p->current);
@@ -451,7 +451,7 @@ eu_result pmatch(parser* p, int c) {
 
 /* asserts that the current character (p->current) matches a given character,
  * ignoring case, returning an error if they do not match. */
-eu_result pcasematch(parser* p, int c) {
+int pcasematch(parser* p, int c) {
 	if (tolower(p->current) != tolower(c)) {
 		seterrorf(p, "Expected (case-insensitive) '%c' but got %x ('%c').",
 			c, p->current, (char)p->current);
@@ -462,10 +462,10 @@ eu_result pcasematch(parser* p, int c) {
 
 /* applies the match procedure over all characters in a string, advancing the
  * port along with the string. */
-eu_result pmatchstring(parser* p, void* str) {
+int pmatchstring(parser* p, void* str) {
 	void* next;
 	int cp;
-	eu_result res;
+	int res;
 
 	next = utf8codepoint(str, &cp);
 	while (cp && next) {
@@ -486,10 +486,10 @@ eu_result pmatchstring(parser* p, void* str) {
 
 /* applies the casematch procedure over all characters in a string, just like
  * matchstring. */
-eu_result pcasematchstring(parser* p, void* str) {
+int pcasematchstring(parser* p, void* str) {
 	void* next;
 	int cp;
-	eu_result res;
+	int res;
 
 	next = utf8codepoint(str, &cp);
 	while (cp && next) {
@@ -510,8 +510,8 @@ eu_result pcasematchstring(parser* p, void* str) {
 
 /* reads a <boolean> in either #t or #true (or #f and #false) formats, returning
  * an error if the sequence does not form a valid boolean. */
-eu_result pread_boolean(parser* p, eu_value* out) {
-	eu_result res;
+int pread_boolean(parser* p, eu_value* out) {
+	int res;
 
 	_checkreturn(res, pmatch(p, CHASH));
 	_checkreturn(res, padvance(p));
@@ -592,8 +592,8 @@ eu_result pread_boolean(parser* p, eu_value* out) {
  * integer numbers are exact unless #i is explicitely set and real (non-integer)
  * numbers are numbers are always inexact.
  */
-eu_result pread_number(parser* p, eu_value* out) {
-	eu_result res;
+int pread_number(parser* p, eu_value* out) {
+	int res;
 	int exactness = 'a', radix = 'd', sign = 1, value = 0, divideby = 0, aux;
 	eu_integer ipart = 0;
 	eu_real rpart = 0.0;
@@ -738,8 +738,8 @@ eu_result pread_number(parser* p, eu_value* out) {
  *
  * only R7RS-required character names are currently implemented.
  */
-eu_result pread_character(parser* p, eu_value* out) {
-	eu_result res;
+int pread_character(parser* p, eu_value* out) {
+	int res;
 	int c, v, pos;
 	char buf[CHAR_BUF_SIZE];
 	void *next;
@@ -819,8 +819,8 @@ eu_result pread_character(parser* p, eu_value* out) {
 	}
 }
 
-eu_result pread_bytevector(parser* p, eu_value* out) {
-	eu_result res;
+int pread_bytevector(parser* p, eu_value* out) {
+	int res;
 	eu_integer vsize;
 	eu_value temp;
 	void *buf, *next;
@@ -884,8 +884,8 @@ eu_result pread_bytevector(parser* p, eu_value* out) {
 /*
  * This reads a vector.
  */
-eu_result pread_vector(parser* p, eu_value* out) {
-	eu_result res;
+int pread_vector(parser* p, eu_value* out) {
+	int res;
 	eu_value temp;
 	eu_vector* vec;
 	eu_integer count = 0;
@@ -957,8 +957,8 @@ eu_result pread_vector(parser* p, eu_value* out) {
 
 /* reads a token that begins with a '#', those can be booleans (#t), numbers
  * (#e#x1F), characters, vectors (#(a b c)), bytevectors (#u8(a b c)) */
-eu_result pread_hash(parser* p, eu_value* out) {
-	eu_result res;
+int pread_hash(parser* p, eu_value* out) {
+	int res;
 
 	/* match the hash character */
 	_checkreturn(res, pmatch(p, CHASH));
@@ -979,8 +979,8 @@ eu_result pread_hash(parser* p, eu_value* out) {
 }
 
 /* skips a single-line comment */
-eu_result pskip_linecomment(parser* p) {
-	eu_result res;
+int pskip_linecomment(parser* p) {
+	int res;
 
 	if ((res = pmatch(p, CSCOLON)))
 		return res;
@@ -1000,8 +1000,8 @@ eu_result pskip_linecomment(parser* p) {
 }
 
 /* skips a nested comment */
-eu_result pskip_nestedcomment(parser* p) {
-	eu_result res;
+int pskip_nestedcomment(parser* p) {
+	int res;
 	int nestedcount = 0;
 
 	_checkreturn(res, pmatch(p, CHASH)); /* make sure we're at a # */
@@ -1050,8 +1050,8 @@ eu_result pskip_nestedcomment(parser* p) {
 }
 
 /* skips datum comment */
-eu_result pskip_datumcomment(parser* p) {
-	eu_result res;
+int pskip_datumcomment(parser* p) {
+	int res;
 	eu_value out;
 
 	_checkreturn(res, pmatch(p, CHASH));
@@ -1070,8 +1070,8 @@ eu_result pskip_datumcomment(parser* p) {
 }
 
 /* skips intertoken space */
-eu_result pskip_itspace(parser* p) {
-	eu_result res;
+int pskip_itspace(parser* p) {
+	int res;
 
 	while (isitspace(p->current)) {
 		if (iswhitespace(p->current) || p->current == '\r' ||
@@ -1105,9 +1105,9 @@ eu_result pskip_itspace(parser* p) {
 
 /* reads the inline (in-string?) escaped hex character value, something akin to
  * \xABC */
-eu_result pread_escaped_hex_char(parser* p, int* out) {
+int pread_escaped_hex_char(parser* p, int* out) {
 	int c = 0, v;
-	eu_result res;
+	int res;
 
 	/* consume the x */
 	_checkreturn(res, padvance(p));
@@ -1141,8 +1141,8 @@ eu_result pread_escaped_hex_char(parser* p, int* out) {
 }
 
 /* skips an (inlined/instring) escaped whitespace-newline-whitespace sequence */
-eu_result pskip_escaped_whitespace(parser* p) {
-	eu_result res;
+int pskip_escaped_whitespace(parser* p) {
+	int res;
 
 	/* skip whitespace */
 	while (iswhitespace(p->current)) {
@@ -1170,8 +1170,8 @@ eu_result pskip_escaped_whitespace(parser* p) {
 }
 
 /* reads an inline (in-string) escaped character */
-eu_result pread_escaped_char(parser* p, int* out) {
-	eu_result res;
+int pread_escaped_char(parser* p, int* out) {
+	int res;
 	int c, v;
 
 	/* consume the \ */
@@ -1204,8 +1204,8 @@ eu_result pread_escaped_char(parser* p, int* out) {
 }
 
 /* reads a string literal from the port */
-eu_result pread_string(parser* p, eu_value* out) {
-	eu_result res;
+int pread_string(parser* p, eu_value* out) {
+	int res;
 	int c, v, should_advance;
 	void *buf, *next;
 	size_t size, remaining;
@@ -1267,8 +1267,8 @@ eu_result pread_string(parser* p, eu_value* out) {
 /* reads a
  * <symbol> := <vertical line> <symbol element>* <vertical line>
  */
-eu_result pread_vline_symbol(parser* p, eu_value* out) {
-	eu_result res;
+int pread_vline_symbol(parser* p, eu_value* out) {
+	int res;
 	void *next, *buf;
 	size_t size, remaining;
 	eu_symbol* sym;
@@ -1307,8 +1307,8 @@ eu_result pread_vline_symbol(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result pread_insub_symbol(parser* p, eu_value* out) {
-	eu_result res;
+int pread_insub_symbol(parser* p, eu_value* out) {
+	int res;
 	void *next, *buf;
 	size_t size, remaining;
 	eu_symbol* sym;
@@ -1340,7 +1340,7 @@ eu_result pread_insub_symbol(parser* p, eu_value* out) {
 }
 
 /* reads a <symbol> */
-eu_result pread_symbol(parser* p, eu_value* out) {
+int pread_symbol(parser* p, eu_value* out) {
 
 	if (isvline(p->current)) { /* vertical line symbols */
 		return pread_vline_symbol(p, out);
@@ -1363,8 +1363,8 @@ eu_result pread_symbol(parser* p, eu_value* out) {
  * <list> := ( <datum>* )
  *         | ( <datum>+ . <datum> )
  */
-eu_result pread_list(parser* p, eu_value* out) {
-	eu_result res;
+int pread_list(parser* p, eu_value* out) {
+	int res;
 	int has_datum = 0;
 	int has_dot = 0;
 	eu_pair *first_pair, *pair, *nextpair;
@@ -1480,8 +1480,8 @@ eu_result pread_list(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result pread_abbreviation(parser* p, eu_value* out) {
-	eu_result res;
+int pread_abbreviation(parser* p, eu_value* out) {
+	int res;
 	eu_symbol* sym;
 	eu_pair* pair;
 	eu_value* slot;
@@ -1535,8 +1535,8 @@ eu_result pread_abbreviation(parser* p, eu_value* out) {
 }
 
 /* this reads a <datum> */
-eu_result pread_datum(parser* p, eu_value* out) {
-	eu_result res;
+int pread_datum(parser* p, eu_value* out) {
+	int res;
 
 	/* check and skip inter token spaces (aka <atmosphere>) */
 	if (isitspace(p->current)) {
@@ -1564,9 +1564,9 @@ eu_result pread_datum(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result euport_read(europa* s, eu_port* port, eu_value* out) {
+int euport_read(europa* s, eu_port* port, eu_value* out) {
 	parser p;
-	eu_result res;
+	int res;
 
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;

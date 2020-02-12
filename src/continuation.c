@@ -27,7 +27,7 @@ eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
  * @param cont The target continuation.
  * @return The result of the operation.
  */
-eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
+int eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
 	/* mark linked continuations */
 	if (cont->previous) {
 		_eu_checkreturn(mark(s, _eucont_to_obj(cont->previous)));
@@ -54,7 +54,7 @@ eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
  * @param cont The target continuation.
  * @return The result of the operation.
  */
-eu_result eucont_destroy(europa* s, eu_continuation* cont) {
+int eucont_destroy(europa* s, eu_continuation* cont) {
 	return EU_RESULT_OK;
 }
 

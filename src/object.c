@@ -111,7 +111,7 @@ eu_uinteger euvalue_hash(eu_value* v) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -160,7 +160,7 @@ eu_result euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -209,7 +209,7 @@ eu_result euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-eu_result euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 

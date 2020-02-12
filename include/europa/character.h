@@ -16,6 +16,6 @@
 #define _euvalue_to_char(v) ((v)->value.character)
 
 eu_uinteger euchar_hash(eu_value* v);
-eu_result euchar_eqv(eu_value* a, eu_value* b, eu_value* out);
+int euchar_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 #endif

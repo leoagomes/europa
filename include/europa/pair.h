@@ -48,8 +48,8 @@ struct europa_pair {
 /* cell related functions */
 eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail);
 
-eu_result eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair);
-eu_result eupair_destroy(europa* s, eu_pair* pair);
+int eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair);
+int eupair_destroy(europa* s, eu_pair* pair);
 
 eu_uinteger eupair_hash(eu_pair* pair);
 
@@ -58,27 +58,27 @@ int eulist_is_list(europa* s, eu_value* list);
 eu_value* eulist_ref(europa* s, eu_pair* list, int k);
 eu_value* eulist_tail(europa* s, eu_pair* list, int k);
 int eulist_length(europa* s, eu_pair* list);
-eu_result eulist_copy(europa* s, eu_value* list, eu_value* out);
+int eulist_copy(europa* s, eu_value* list, eu_value* out);
 
 /* the language API */
-eu_result euapi_pairQ(europa* s);
-eu_result euapi_cons(europa* s);
-eu_result euapi_car(europa* s);
-eu_result euapi_cdr(europa* s);
-eu_result euapi_set_carB(europa* s);
-eu_result euapi_set_cdrB(europa* s);
-eu_result euapi_nullQ(europa* s);
-eu_result euapi_list(europa* s);
-eu_result euapi_make_list(europa* s);
-eu_result euapi_list(europa* s);
-eu_result euapi_length(europa* s);
-eu_result euapi_append(europa* s);
-eu_result euapi_reverse(europa* s);
-eu_result euapi_list_tail(europa* s);
-eu_result euapi_list_ref(europa* s);
-eu_result euapi_list_setB(europa* s);
-eu_result euapi_list_copy(europa* s);
+int euapi_pairQ(europa* s);
+int euapi_cons(europa* s);
+int euapi_car(europa* s);
+int euapi_cdr(europa* s);
+int euapi_set_carB(europa* s);
+int euapi_set_cdrB(europa* s);
+int euapi_nullQ(europa* s);
+int euapi_list(europa* s);
+int euapi_make_list(europa* s);
+int euapi_list(europa* s);
+int euapi_length(europa* s);
+int euapi_append(europa* s);
+int euapi_reverse(europa* s);
+int euapi_list_tail(europa* s);
+int euapi_list_ref(europa* s);
+int euapi_list_setB(europa* s);
+int euapi_list_copy(europa* s);
 
-eu_result euapi_register_pair(europa* s);
+int euapi_register_pair(europa* s);
 
 #endif /* __EUROPA_PAIR_H__ */

@@ -23,7 +23,7 @@ void* rlike(void* ud, void* ptr, size_t size) {
 
 europa* bootstrap_default_instance(void) {
 	europa* s;
-	eu_result err;
+	int err;
 
 	/* we need to allocate memory for the state, because it tries to leave
 	 * memory management to the GC

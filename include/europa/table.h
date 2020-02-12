@@ -61,24 +61,24 @@ struct europa_table {
 /* function declarations */
 
 eu_table* eutable_new(europa* s, size_t count);
-eu_result eutable_destroy(europa* s, eu_table* t);
-eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t);
+int eutable_destroy(europa* s, eu_table* t);
+int eutable_mark(europa* s, eu_gcmark mark, eu_table* t);
 eu_uinteger eutable_hash(eu_table* t);
 eu_table* eutable_set_index(eu_table* t, eu_table* i);
 
-eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key,
+int eutable_create_key(europa* s, eu_table* t, eu_value* key,
 	eu_value** val);
-eu_result eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val);
-eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val);
-eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
+int eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val);
+int eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val);
+int eutable_get_string(europa* s, eu_table* t, const char* str,
 	eu_value** val);
-eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
+int eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
 	eu_value** val);
 
-eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
-eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
+int eutable_rget_string(europa* s, eu_table* t, const char* str,
 	eu_value** val);
-eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	eu_value** val);
 
 #endif

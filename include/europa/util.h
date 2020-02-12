@@ -17,7 +17,7 @@ int eutil_list_length(europa* s, eu_value* v, int* improper);
 
 void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size);
 
-eu_result eutil_register_standard_library(europa* s);
-eu_result eutil_set_standard_ports(europa* s);
+int eutil_register_standard_library(europa* s);
+int eutil_set_standard_ports(europa* s);
 
 #endif /* __EUROPA_UTILS_H__ */

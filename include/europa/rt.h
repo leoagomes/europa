@@ -11,7 +11,7 @@
 #include "europa/port.h"
 
 /* type definitions */
-typedef eu_result (*eu_pfunc)(europa* s, void* ud);
+typedef int (*eu_pfunc)(europa* s, void* ud);
 typedef struct europa_closure eu_closure;
 typedef struct europa_continuation eu_continuation;
 typedef struct europa_proto eu_proto;
@@ -107,8 +107,8 @@ enum {
 
 eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
 	eu_value* source, int subprotos_size, int code_size);
-eu_result euproto_mark(europa* s, eu_gcmark mark, eu_proto* p);
-eu_result euproto_destroy(europa* s, eu_proto* p);
+int euproto_mark(europa* s, eu_gcmark mark, eu_proto* p);
+int euproto_destroy(europa* s, eu_proto* p);
 eu_integer euproto_hash(eu_proto* p);
 eu_integer euproto_append_instruction(europa* s, eu_proto* proto,
 	eu_instruction inst);
@@ -128,8 +128,8 @@ eu_integer euproto_add_subproto(europa* s, eu_proto* proto, eu_proto* subproto,
 
 eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env);
 
-eu_result eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl);
-eu_result eucl_destroy(europa* s, eu_closure* cl);
+int eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl);
+int eucl_destroy(europa* s, eu_closure* cl);
 eu_integer eucl_hash(eu_closure* cl);
 
 /* continuation structure macros and functions */
@@ -145,31 +145,31 @@ eu_continuation* eucont_new(europa* s, eu_continuation* previous,
 	eu_table* env, eu_value* rib, eu_value* rib_lastpos, eu_closure* cl,
 	unsigned int pc);
 
-eu_result eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cl);
-eu_result eucont_destroy(europa* s, eu_continuation* cl);
+int eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cl);
+int eucont_destroy(europa* s, eu_continuation* cl);
 eu_integer eucont_hash(eu_continuation* cl);
 
 /* code generation related macros and functions */
-eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk);
+int eucode_compile(europa* s, eu_value* v, eu_value* chunk);
 
 /* virtual machine related functions and macros */
-eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
+int euvm_doclosure(europa* s, eu_closure* cl, eu_value* arguments,
 	eu_value* out);
-eu_result euvm_initialize_state(europa* s);
-eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out);
-eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v);
+int euvm_initialize_state(europa* s);
+int euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out);
+int euvm_disassemble(europa* s, eu_port* port, eu_value* v);
 
 /* run time macros and functions */
-eu_result eurt_evaluate(europa* s, eu_value* value,  eu_value* out);
+int eurt_evaluate(europa* s, eu_value* value,  eu_value* out);
 
 /* library */
-eu_result euapi_register_controls(europa* s);
+int euapi_register_controls(europa* s);
 
-eu_result euapi_procedureQ(europa* s);
-eu_result euapi_apply(europa* s);
-eu_result euapi_map(europa* s);
-eu_result euapi_for_each(europa* s);
+int euapi_procedureQ(europa* s);
+int euapi_apply(europa* s);
+int euapi_map(europa* s);
+int euapi_for_each(europa* s);
 
-eu_result euapi_disassemble(europa* s);
+int euapi_disassemble(europa* s);
 
 #endif

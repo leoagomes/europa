@@ -28,7 +28,7 @@
  * @param args The argument list value.
  * @return The result of the operation.
  */
-eu_result prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
+int prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	eu_proto* proto;
 	eu_value *tv, *cv, *cf;
 	eu_table* new_env;
@@ -171,7 +171,7 @@ void set_closure(europa* s, eu_closure* cl) {
  * @param inst The instruction's name (for error reporting).
  * @return
  */
-eu_result check_val_in_constant(europa* s, int val, const char* inst) {
+int check_val_in_constant(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->constantc <= val) {
 		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid constant index at %s instruction.", inst));
@@ -186,9 +186,9 @@ eu_result check_val_in_constant(europa* s, int val, const char* inst) {
  * @param s
  * @param val
  * @param inst
- * @return eu_result
+ * @return int
  */
-eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
+int check_val_in_subprotos(europa* s, int val, const char* inst) {
 	if (s->ccl->proto->subprotoc <= val) {
 		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid subproto index at %s instruction.", inst));
@@ -203,9 +203,9 @@ eu_result check_val_in_subprotos(europa* s, int val, const char* inst) {
  * @param s
  * @param off
  * @param inst
- * @return eu_result
+ * @return int
  */
-eu_result check_off_in_code(europa* s, int off, const char* inst) {
+int check_off_in_code(europa* s, int off, const char* inst) {
 	if (s->pc + off > s->ccl->proto->code_length) {
 		_eu_checkreturn(eu_set_error_nf(s, EU_ERROR_NONE, NULL, 1024,
 			"Invalid jumping offset for %s instruction.", inst));
@@ -220,9 +220,9 @@ eu_result check_off_in_code(europa* s, int off, const char* inst) {
  * @param s
  * @param cl
  * @param args
- * @return eu_result
+ * @return int
  */
-eu_result prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
+int prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
 	/* place the closure in the current continuation */
 	_eu_checkreturn(prepare_environment(s, cl, args));
 	set_closure(s, cl);
@@ -235,9 +235,9 @@ eu_result prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
  * @param s
  * @param cont
  * @param args
- * @return eu_result
+ * @return int
  */
-eu_result prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
+int prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
 	/* we need to set the accumulator to the first argument */
 	if (!_euvalue_is_pair(args)) {
 		s->acc = s->rib;
@@ -251,7 +251,7 @@ eu_result prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* a
 	return EU_RESULT_OK;
 }
 
-eu_result solve_value_application(europa* s, eu_value* v) {
+int solve_value_application(europa* s, eu_value* v) {
 	eu_value *tv;
 	eu_pair* pair;
 
@@ -305,8 +305,8 @@ eu_result solve_value_application(europa* s, eu_value* v) {
  * @param s The Europa state.
  * @return The result of the operation.
  */
-eu_result euvm_execute(europa* s) {
-	eu_result res;
+int euvm_execute(europa* s) {
+	int res;
 	eu_instruction ir;
 	eu_value* tv;
 	eu_proto* proto, *p;
@@ -575,7 +575,7 @@ eu_result euvm_execute(europa* s) {
  * @param s The target state.
  * @return Whether the operation was successful.
  */
-eu_result euvm_initialize_state(europa* s) {
+int euvm_initialize_state(europa* s) {
 	s->acc = _null;
 	s->env = _eu_global_env(s);
 	s->ccl = NULL;
@@ -596,7 +596,7 @@ eu_result euvm_initialize_state(europa* s) {
  * @param out Where to place the returned value.
  * @return The result of the operation.
  */
-eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* out) {
+int euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* out) {
 	/* place the closure in the current continuation */
 	_eu_checkreturn(prepare_environment(s, cl, args));
 	set_closure(s, cl);
@@ -621,7 +621,7 @@ eu_result euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* ou
  * @param out Where to place the resulting value.
  * @return The result of the operation.
  */
-eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
+int euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 	int running = 0;
 
 	/* check if anything is being executed already */
@@ -668,7 +668,7 @@ eu_result euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) {
+int _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) {
 	static const char* opc_names[] = {
 		"nop", "refer", "const", "close", "test", "jump", "assign", "argument",
 		"conti", "apply", "return", "frame", "define", "halt"
@@ -721,7 +721,7 @@ eu_result _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction 
 	return EU_RESULT_OK;
 }
 
-eu_result _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
+int _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
 	int i;
 
 	_eu_checkreturn(euport_write_string(s, port, "Prototype 0x"));
@@ -763,7 +763,7 @@ eu_result _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
 	return euport_write_string(s, port, "]\n");
 }
 
-static eu_result _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc) {
+static int _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc) {
 	_eu_checkreturn(euport_write_string(s, port, "Closure 0x"));
 	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, cl)));
 	_eu_checkreturn(euport_write_string(s, port, ":\n"));
@@ -780,7 +780,7 @@ static eu_result _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc
 	return _disas_proto(s, port, cl->proto, pc);
 }
 
-eu_result _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
+int _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
 	_eu_checkreturn(euport_write_string(s, port, "Continuation 0x"));
 	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_integer, cont)));
 	_eu_checkreturn(euport_write_string(s, port, ":\nPC: "));
@@ -799,7 +799,7 @@ eu_result _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
  * @param v The target value.
  * @return The result of the operation.
  */
-eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
+int euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
 
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_CLOSURE:
@@ -818,7 +818,7 @@ eu_result euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_disassemble(europa* s) {
+int euapi_disassemble(europa* s) {
 	eu_value *procedure, *port;
 	eu_port* p;
 

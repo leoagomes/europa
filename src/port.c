@@ -13,7 +13,7 @@
 #include "europa/ports/file.h"
 #include "europa/ports/memory.h"
 
-eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
+int euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_mark(s, mark, _euport_to_fport(port));
@@ -27,7 +27,7 @@ eu_result euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-eu_result euport_destroy(europa* s, eu_port* port) {
+int euport_destroy(europa* s, eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_destroy(s, _euport_to_fport(port));
@@ -58,7 +58,7 @@ eu_uinteger euport_hash(eu_port* port) {
 /* internal functions */
 
 #define STATE_PORT_OUT_SWITCH(restype, func) \
-eu_result euport_ ## func (europa* s, eu_port* port, restype out) {\
+int euport_ ## func (europa* s, eu_port* port, restype out) {\
 	if (!s || !port)\
 		return EU_RESULT_NULL_ARGUMENT;\
 	switch(port->type) {\
@@ -83,7 +83,7 @@ STATE_PORT_OUT_SWITCH(eu_value*, read_u8)
 STATE_PORT_OUT_SWITCH(eu_value*, peek_u8)
 STATE_PORT_OUT_SWITCH(int*, u8_ready)
 
-eu_result euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
+int euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -106,7 +106,7 @@ STATE_PORT_OUT_SWITCH(eu_byte, write_u8)
 STATE_PORT_OUT_SWITCH(eu_bvector*, write_bytevector)
 STATE_PORT_OUT_SWITCH(void*, write_string)
 
-eu_result euport_flush(europa* s, eu_port* port) {
+int euport_flush(europa* s, eu_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_flush(s, _euport_to_fport(port));
@@ -121,7 +121,7 @@ eu_result euport_flush(europa* s, eu_port* port) {
 }
 
 
-eu_result euapi_register_port(europa* s) {
+int euapi_register_port(europa* s) {
 	eu_table* env;
 
 	env = s->env;
@@ -152,7 +152,7 @@ eu_result euapi_register_port(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_eof_objectQ(europa* s) {
+int euapi_eof_objectQ(europa* s) {
 	eu_value* obj;
 
 	_eucc_arity_proper(s, 1);
@@ -162,12 +162,12 @@ eu_result euapi_eof_objectQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_eof_object(europa* s) {
+int euapi_eof_object(europa* s) {
 	_eu_makeeof(_eucc_return(s));
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_port_read(europa* s) {
+int euapi_port_read(europa* s) {
 	eu_port* p;
 	eu_value *port;
 
@@ -187,7 +187,7 @@ eu_result euapi_port_read(europa* s) {
 	return euport_read(s, p, _eucc_return(s));
 }
 
-eu_result euapi_port_read_char(europa* s) {
+int euapi_port_read_char(europa* s) {
 	eu_port* p;
 	eu_value *port;
 	int c;
@@ -211,7 +211,7 @@ eu_result euapi_port_read_char(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_port_peek_char(europa* s) {
+int euapi_port_peek_char(europa* s) {
 	eu_port* p;
 	eu_value *port;
 	int c;
@@ -234,7 +234,7 @@ eu_result euapi_port_peek_char(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_port_read_line(europa* s) {
+int euapi_port_read_line(europa* s) {
 	eu_port* p;
 	eu_value *port;
 
@@ -254,7 +254,7 @@ eu_result euapi_port_read_line(europa* s) {
 	return euport_read_line(s, p, _eucc_return(s));
 }
 
-eu_result euapi_port_char_ready(europa* s) {
+int euapi_port_char_ready(europa* s) {
 	eu_port* p;
 	eu_value *port;
 	int ready;
@@ -277,7 +277,7 @@ eu_result euapi_port_char_ready(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_port_read_string(europa* s) {
+int euapi_port_read_string(europa* s) {
 	eu_port* p;
 	eu_value *k, *port;
 
@@ -300,7 +300,7 @@ eu_result euapi_port_read_string(europa* s) {
 	return euport_read_string(s, p, _eunum_to_int(k), _eucc_return(s));
 }
 
-eu_result euapi_port_read_u8(europa* s) {
+int euapi_port_read_u8(europa* s) {
 	eu_port* p;
 	eu_value *k, *port;
 
@@ -323,7 +323,7 @@ eu_result euapi_port_read_u8(europa* s) {
 	return euport_read_u8(s, p, _eucc_return(s));
 }
 
-eu_result euapi_port_peek_u8(europa* s) {
+int euapi_port_peek_u8(europa* s) {
 	eu_port* p;
 	eu_value *k, *port;
 
@@ -343,7 +343,7 @@ eu_result euapi_port_peek_u8(europa* s) {
 	return euport_peek_u8(s, p, _eucc_return(s));
 }
 
-eu_result euapi_port_u8_ready(europa* s) {
+int euapi_port_u8_ready(europa* s) {
 	eu_port* p;
 	eu_value *port;
 	int ready;
@@ -366,7 +366,7 @@ eu_result euapi_port_u8_ready(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_port_write(europa* s) {
+int euapi_port_write(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -390,7 +390,7 @@ eu_result euapi_port_write(europa* s) {
 	return euport_write(s, p, obj);
 }
 
-eu_result euapi_port_write_shared(europa* s) {
+int euapi_port_write_shared(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -414,7 +414,7 @@ eu_result euapi_port_write_shared(europa* s) {
 	return euport_write_shared(s, p, obj, NULL);
 }
 
-eu_result euapi_port_write_string(europa* s) {
+int euapi_port_write_string(europa* s) {
 	eu_port* p;
 	eu_value *string, *port;
 
@@ -438,7 +438,7 @@ eu_result euapi_port_write_string(europa* s) {
 	return euport_write_string(s, p, _eustring_text(_euvalue_to_string(string)));
 }
 
-eu_result euapi_port_write_simple(europa* s) {
+int euapi_port_write_simple(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -462,7 +462,7 @@ eu_result euapi_port_write_simple(europa* s) {
 	return euport_write_simple(s, p, obj);
 }
 
-eu_result euapi_port_display(europa* s) {
+int euapi_port_display(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -486,7 +486,7 @@ eu_result euapi_port_display(europa* s) {
 	return euport_display(s, p, obj);
 }
 
-eu_result euapi_port_newline(europa* s) {
+int euapi_port_newline(europa* s) {
 	eu_port* p;
 	eu_value *port;
 
@@ -507,7 +507,7 @@ eu_result euapi_port_newline(europa* s) {
 	return euport_newline(s, p, _eucc_return(s));
 }
 
-eu_result euapi_port_write_char(europa* s) {
+int euapi_port_write_char(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -531,7 +531,7 @@ eu_result euapi_port_write_char(europa* s) {
 	return euport_write_char(s, p, _euvalue_to_char(obj));
 }
 
-eu_result euapi_port_write_u8(europa* s) {
+int euapi_port_write_u8(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -555,7 +555,7 @@ eu_result euapi_port_write_u8(europa* s) {
 	return euport_write_u8(s, p, _eunum_to_int(obj));
 }
 
-eu_result euapi_port_write_bytevector(europa* s) {
+int euapi_port_write_bytevector(europa* s) {
 	eu_port* p;
 	eu_value *obj, *port;
 
@@ -579,7 +579,7 @@ eu_result euapi_port_write_bytevector(europa* s) {
 	return euport_write_bytevector(s, p, _euvalue_to_bvector(obj));
 }
 
-eu_result euapi_port_flush(europa* s) {
+int euapi_port_flush(europa* s) {
 	eu_port* p;
 	eu_value *port;
 

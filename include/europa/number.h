@@ -36,19 +36,19 @@
 	(_eunum_r(v) == (eu_real)0))
 
 eu_uinteger eunum_hash(eu_value* v);
-eu_result eunum_eqv(eu_value* a, eu_value* b, eu_value* out);
+int eunum_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 int eunum_equal(europa* s, eu_value* a, eu_value* b);
 int eunum_greater(europa* s, eu_value* a, eu_value* b);
 int eunum_lesser(europa* s, eu_value* a, eu_value* b);
 
-eu_result eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out);
-eu_result eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out);
-eu_result eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out);
-eu_result eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out);
+int eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out);
+int eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out);
+int eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out);
+int eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out);
 
-eu_result eunum_invert(europa* s, eu_value* a, eu_value* out);
-eu_result eunum_negate(europa* s, eu_value* a, eu_value* out);
+int eunum_invert(europa* s, eu_value* a, eu_value* out);
+int eunum_negate(europa* s, eu_value* a, eu_value* out);
 
 /* boolean functions */
 
@@ -63,49 +63,49 @@ eu_result eunum_negate(europa* s, eu_value* a, eu_value* out);
 #define _eubool_is_true(v) ((v)->value.boolean)
 
 eu_uinteger eubool_hash(eu_value* v);
-eu_result eubool_eqv(eu_value* a, eu_value* b, eu_value* out);
+int eubool_eqv(eu_value* a, eu_value* b, eu_value* out);
 
 /* library functions */
 
-eu_result euapi_register_number(europa* s);
+int euapi_register_number(europa* s);
 
-eu_result euapi_numberQ(europa* s);
-eu_result euapi_complexQ(europa* s);
-eu_result euapi_realQ(europa* s);
-eu_result euapi_rationalQ(europa* s);
-eu_result euapi_integerQ(europa* s);
+int euapi_numberQ(europa* s);
+int euapi_complexQ(europa* s);
+int euapi_realQ(europa* s);
+int euapi_rationalQ(europa* s);
+int euapi_integerQ(europa* s);
 
-eu_result euapi_exactQ(europa* s);
-eu_result euapi_inexactQ(europa *s);
+int euapi_exactQ(europa* s);
+int euapi_inexactQ(europa *s);
 
-eu_result euapi_finiteQ(europa* s);
-eu_result euapi_infiniteQ(europa* s);
+int euapi_finiteQ(europa* s);
+int euapi_infiniteQ(europa* s);
 
-eu_result euapi_E(europa* s);
-eu_result euapi_L(europa* s);
-eu_result euapi_G(europa* s);
-eu_result euapi_LE(europa* s);
-eu_result euapi_GE(europa* s);
+int euapi_E(europa* s);
+int euapi_L(europa* s);
+int euapi_G(europa* s);
+int euapi_LE(europa* s);
+int euapi_GE(europa* s);
 
-eu_result euapi_zeroQ(europa* s);
-eu_result euapi_positiveQ(europa* s);
-eu_result euapi_negativeQ(europa* s);
-eu_result euapi_oddQ(europa* s);
-eu_result euapi_evenQ(europa* s);
+int euapi_zeroQ(europa* s);
+int euapi_positiveQ(europa* s);
+int euapi_negativeQ(europa* s);
+int euapi_oddQ(europa* s);
+int euapi_evenQ(europa* s);
 
-eu_result euapi_min(europa* s);
-eu_result euapi_max(europa* s);
+int euapi_min(europa* s);
+int euapi_max(europa* s);
 
-eu_result euapi_P(europa* s);
-eu_result euapi_S(europa* s);
-eu_result euapi_M(europa* s);
-eu_result euapi_D(europa* s);
+int euapi_P(europa* s);
+int euapi_S(europa* s);
+int euapi_M(europa* s);
+int euapi_D(europa* s);
 
-eu_result euapi_abs(europa* s);
+int euapi_abs(europa* s);
 
 /* boolean */
-eu_result euapi_not(europa* s);
-eu_result euapi_booleanQ(europa* s);
-eu_result euapi_booleanEQ(europa* s);
+int euapi_not(europa* s);
+int euapi_booleanQ(europa* s);
+int euapi_booleanEQ(europa* s);
 
 #endif

@@ -2,7 +2,7 @@
 
 #include "europa/error.h"
 
-eu_result eucc_frame(europa* s) {
+int eucc_frame(europa* s) {
 	eu_continuation* cont;
 
 	/* create the continuation */
@@ -22,7 +22,7 @@ eu_result eucc_frame(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text,
+int eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text,
 	eu_cfunc cf) {
 	eu_closure* cl;
 	eu_value* tv, closure;

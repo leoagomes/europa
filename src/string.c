@@ -135,7 +135,7 @@ eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr) {
  * @param b The second string value.
  * @return The result of the operation.
  */
-eu_result eustring_equal(eu_value* a, eu_value* b, eu_value* out) {
+int eustring_equal(eu_value* a, eu_value* b, eu_value* out) {
 	/* check for bad arguments */
 	if (!a || !b || !out)
 		return EU_RESULT_NULL_ARGUMENT;

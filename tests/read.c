@@ -29,7 +29,7 @@ static void read_teardown(void* fixture) {
 
 MunitResult test_read_booleans(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
-	eu_result res;
+	int res;
 	eu_value out;
 
 	eu_mport* port;

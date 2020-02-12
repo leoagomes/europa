@@ -70,8 +70,8 @@ eu_value* euvector_values(eu_vector* vec) {
  * @param vec The target vector object.
  * @return The result of the marking process.
  */
-eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
-	eu_result res;
+int euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
+	int res;
 	eu_integer i;
 	eu_value* values;
 	eu_object* obj;

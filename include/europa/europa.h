@@ -71,24 +71,24 @@ struct europa {
 
 #define _eu_reset_err(s) (_eu_err(s) = NULL)
 
-europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, eu_result* err);
-eu_result eu_terminate(europa* s);
+europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, int* err);
+int eu_terminate(europa* s);
 
-eu_result eu_set_error(europa* s, int flags, eu_error* nested, void* error_text);
-eu_result eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
+int eu_set_error(europa* s, int flags, eu_error* nested, void* error_text);
+int eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len, const char* fmt, ...);
 
-eu_result eu_do_string(europa* s, void* text, eu_value* out);
+int eu_do_string(europa* s, void* text, eu_value* out);
 
 /* TODO: add a define to keep stdio out */
-eu_result eu_do_file(europa* s, const char* filename, eu_value* out);
+int eu_do_file(europa* s, const char* filename, eu_value* out);
 
-eu_result eu_recover(europa* s, eu_error** err);
+int eu_recover(europa* s, eu_error** err);
 
 
 eu_uinteger eustate_hash(europa* vec);
-eu_result eustate_mark(europa* s, eu_gcmark mark, europa* state);
+int eustate_mark(europa* s, eu_gcmark mark, europa* state);
 
 eu_uinteger euglobal_hash(eu_global* gl);
-eu_result euglobal_mark(europa* s, eu_gcmark mark, eu_global* state);
+int euglobal_mark(europa* s, eu_gcmark mark, eu_global* state);
 
 #endif /* __EUROPA_H__ */

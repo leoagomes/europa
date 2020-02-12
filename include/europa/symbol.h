@@ -43,15 +43,15 @@ eu_symbol* eusymbol_new(europa* s, void* text);
 void* eusymbol_text(eu_symbol* sym);
 eu_uinteger eusymbol_hash(eu_symbol* sym);
 eu_integer eusymbol_hash_cstr(const char* str);
-eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
+int eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
 eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* str);
 
 /* library functions */
-eu_result euapi_register_symbol(europa* s);
+int euapi_register_symbol(europa* s);
 
-eu_result euapi_symbolQ(europa* s);
-eu_result euapi_symbolEQ(europa* s);
-eu_result euapi_symbol_to_string(europa* s);
-eu_result euapi_string_to_symbol(europa* s);
+int euapi_symbolQ(europa* s);
+int euapi_symbolEQ(europa* s);
+int euapi_symbol_to_string(europa* s);
+int euapi_string_to_symbol(europa* s);
 
 #endif /* __EUROPA_SYMBOL_H__ */

@@ -114,7 +114,7 @@ eu_integer eusymbol_hash_cstr(const char* str){
  * @param out Where to place the boolean result.
  * @returns The result of executing the operation.
  */
-eu_result eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	eu_symbol *sa, *sb;
 	int v;
 
@@ -152,7 +152,7 @@ eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* cstr) {
  * @{
  */
 
-eu_result euapi_register_symbol(europa* s) {
+int euapi_register_symbol(europa* s) {
 	eu_table* env;
 
 	env = s->env;
@@ -164,7 +164,7 @@ eu_result euapi_register_symbol(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_symbolQ(europa* s) {
+int euapi_symbolQ(europa* s) {
 	eu_value* object;
 
 	_eucc_arity_proper(s, 1); /* check arity */
@@ -174,7 +174,7 @@ eu_result euapi_symbolQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_symbolEQ(europa* s) {
+int euapi_symbolEQ(europa* s) {
 	eu_value *current, *previous, *cv, *pv;
 
 	_eucc_arity_improper(s, 2); /* check arity */
@@ -201,7 +201,7 @@ eu_result euapi_symbolEQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_symbol_to_string(europa* s) {
+int euapi_symbol_to_string(europa* s) {
 	eu_value* symbol;
 	eu_string* str;
 
@@ -217,7 +217,7 @@ eu_result euapi_symbol_to_string(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_string_to_symbol(europa* s) {
+int euapi_string_to_symbol(europa* s) {
 	eu_value* string;
 	eu_symbol* sym;
 

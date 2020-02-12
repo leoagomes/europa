@@ -21,7 +21,7 @@
 #define eugco_markblack(obj) ((obj)->_color = EUGC_COLOR_BLACK)
 
 /* forward function declarations */
-eu_result eugco_destroy(europa* s, eu_object* obj);
+int eugco_destroy(europa* s, eu_object* obj);
 
 /* function definitions */
 
@@ -31,7 +31,7 @@ eu_result eugco_destroy(europa* s, eu_object* obj);
  * @param ud The userdata pointer to be passed to the realloc-like function.
  * @return Whether initializing the data was successful.
  */
-eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
+int eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -60,7 +60,7 @@ eu_result eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
  * @param gc The GC structure.
  * @return The result of the operation.
  */
-eu_result eugc_destroy(europa* s) {
+int eugc_destroy(europa* s) {
 	eu_object* currentobj;
 	eu_object* tmp;
 	eu_gc* gc = _eu_gc(s);
@@ -147,8 +147,8 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
  * @param root The object from which to start marking.
  * @return A result pertaining to the garbage collection process.
  */
-eu_result eugc_naive_collect(europa* s) {
-	eu_result res;
+int eugc_naive_collect(europa* s) {
+	int res;
 	eu_object* obj;
 	eu_gc* gc = _eu_gc(s);
 
@@ -177,7 +177,7 @@ eu_result eugc_naive_collect(europa* s) {
  * @param gc the GC structure.
  * @param obj the object to mark.
  */
-eu_result eugc_naive_mark(europa* s, eu_object* obj) {
+int eugc_naive_mark(europa* s, eu_object* obj) {
 	eu_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
@@ -254,9 +254,9 @@ eu_result eugc_naive_mark(europa* s, eu_object* obj) {
  * @param s The Europa state.
  * @return The result of the operation.
  */
-eu_result eugc_naive_sweep(europa* s) {
+int eugc_naive_sweep(europa* s) {
 	eu_object *current, *aux;
-	eu_result res;
+	int res;
 	eu_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
@@ -313,8 +313,8 @@ eu_result eugc_naive_sweep(europa* s) {
 		return res;\
 	}
 
-eu_result eugco_destroy(europa* s, eu_object* obj) {
-	eu_result res;
+int eugco_destroy(europa* s, eu_object* obj) {
+	int res;
 	eu_gc* gc = _eu_gc(s);
 
 	switch (_euobj_type(obj)) {
@@ -362,7 +362,7 @@ eu_result eugco_destroy(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-eu_result eugc_remove_object(europa* s, eu_object* obj) {
+int eugc_remove_object(europa* s, eu_object* obj) {
 	/* prevent the user from breaking the list */
 	if (obj == &(_eu_gc(s)->objs_head))
 		return EU_RESULT_BAD_ARGUMENT;
@@ -394,7 +394,7 @@ eu_result eugc_remove_object(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
+int eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
 	/* add object to object list */
 	obj->_next = head->_next;
 	obj->_previous = head;
@@ -415,7 +415,7 @@ eu_result eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-eu_result eugc_move_to_root(europa* s, eu_object* obj) {
+int eugc_move_to_root(europa* s, eu_object* obj) {
 	/* remove object from previous list */
 	_eu_checkreturn(eugc_remove_object(s, obj));
 	/* add object to root list */
@@ -438,7 +438,7 @@ eu_result eugc_move_to_root(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-eu_result eugc_move_off_root(europa* s, eu_object* obj) {
+int eugc_move_off_root(europa* s, eu_object* obj) {
 	/* remove object from previous list */
 	_eu_checkreturn(eugc_remove_object(s, obj));
 	/* add it to the object list */

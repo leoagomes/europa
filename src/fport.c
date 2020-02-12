@@ -98,7 +98,7 @@ eu_fport* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
  * @param port The target port.
  * @return The result of the marking operation.
  */
-eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
+int eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
 	/* this object holds no GC structures */
 	return EU_RESULT_OK;
 }
@@ -112,7 +112,7 @@ eu_result eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
  * @param port The target port.
  * @return The result of destroying the object.
  */
-eu_result eufport_destroy(europa* s, eu_fport* port) {
+int eufport_destroy(europa* s, eu_fport* port) {
 	if (!s || !port)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -143,7 +143,7 @@ eu_uinteger eufport_hash(eu_fport* port) {
 /* this function reads a utf8 codepoint from a port
  * it does no verifications on parameters or the file
  */
-static eu_result _read_utf8_codepoint(eu_fport* port, int* out) {
+static int _read_utf8_codepoint(eu_fport* port, int* out) {
 	int current_char, first_char, out_char;
 	FILE* file = port->file;
 
@@ -194,7 +194,7 @@ static eu_result _read_utf8_codepoint(eu_fport* port, int* out) {
  * @param[out] ch Where to place the read character.
  * @return The operation's result.
  */
-eu_result eufport_read_char(europa* s, eu_fport* port, int* out) {
+int eufport_read_char(europa* s, eu_fport* port, int* out) {
 	/* validate arguments */
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -214,7 +214,7 @@ eu_result eufport_read_char(europa* s, eu_fport* port, int* out) {
  * @param[out] out Where to place the peeked character.
  * @return The peeked character.
  */
-eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
+int eufport_peek_char(europa* s, eu_fport* port, int* out) {
 	int current_char, first_char, out_char;
 	FILE* file;
 
@@ -255,7 +255,7 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
 	 * next character and "unget" them in reverse order, so we're using a stack
 	 * to store intermediate characters. */
 	int stack[4], sp = 0;
-	eu_result res = EU_RESULT_OK;
+	int res = EU_RESULT_OK;
 
 	stack[sp++] = first_char;
 	out_char = first_char;
@@ -292,7 +292,7 @@ eu_result eufport_peek_char(europa* s, eu_fport* port, int* out) {
  * @param line Where to place the resulting string.
  * @return The result of the operation.
  */
-eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	size_t size = 0;
 	FILE* file;
 	char *buf, current, next;
@@ -356,7 +356,7 @@ eu_result eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_char_ready(europa* s, eu_fport* port, int* ready) {
+int eufport_char_ready(europa* s, eu_fport* port, int* ready) {
 	/* TODO: find out how to do this cross-platform */
 	*ready = EU_TRUE;
 	return EU_RESULT_OK;
@@ -370,11 +370,11 @@ eu_result eufport_char_ready(europa* s, eu_fport* port, int* ready) {
  * @param[out] out Where to place the result.
  * @return The result of the operation.
  */
-eu_result eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
+int eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	FILE* file;
 	eu_string* str;
 	void* cp;
-	eu_result res;
+	int res;
 	int i, c, remaining;
 
 	/* check arguments */
@@ -417,7 +417,7 @@ eu_result eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
 	eu_byte byte;
 
 	if (!s || !port || !out)
@@ -437,7 +437,7 @@ eu_result eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
+int eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
 	eu_byte byte;
 
 	if (!s || !port || !out)
@@ -458,13 +458,13 @@ eu_result eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_u8_ready(europa* s, eu_fport* port, int* out) {
+int eufport_u8_ready(europa* s, eu_fport* port, int* out) {
 	/* TODO: implement in a cross-platform manner */
 	*out = EU_FALSE;
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read(europa* s, eu_fport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -480,11 +480,11 @@ eu_result eufport_read(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_newline(europa* s, eu_fport* port, eu_value* v) {
+int eufport_newline(europa* s, eu_fport* port, eu_value* v) {
 	return eufport_write_char(s, port, '\n');
 }
 
-eu_result eufport_write_char(europa* s, eu_fport* port, int v) {
+int eufport_write_char(europa* s, eu_fport* port, int v) {
 
 	_protect_file(s, port);
 	_protect_write(s, port);
@@ -493,7 +493,7 @@ eu_result eufport_write_char(europa* s, eu_fport* port, int v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
+int eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
 
 	_protect_file(s, port);
 	_protect_write(s, port);
@@ -502,7 +502,7 @@ eu_result eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
+int eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
 	int i;
 
 	_protect_file(s, port);
@@ -514,7 +514,7 @@ eu_result eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_write_string(europa* s, eu_fport* port, void* v) {
+int eufport_write_string(europa* s, eu_fport* port, void* v) {
 	eu_byte* b;
 	void* next;
 	int c;
@@ -535,7 +535,7 @@ eu_result eufport_write_string(europa* s, eu_fport* port, void* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eufport_flush(europa* s, eu_fport* port) {
+int eufport_flush(europa* s, eu_fport* port) {
 	_protect_file(s, port);
 	_protect_write(s, port);
 

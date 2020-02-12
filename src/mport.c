@@ -39,11 +39,11 @@ eu_mport* eumport_from_str(europa* s, eu_byte flags, void* str) {
 	return port;
 }
 
-eu_result eumport_mark(europa* s, eu_gcmark mark, eu_mport* port) {
+int eumport_mark(europa* s, eu_gcmark mark, eu_mport* port) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_destroy(europa* s, eu_mport* port) {
+int eumport_destroy(europa* s, eu_mport* port) {
 	if (!s || !port)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -69,7 +69,7 @@ eu_uinteger eumport_hash(eu_mport* port) {
 		}\
 	} while (0)
 
-eu_result eumport_read_char(europa* s, eu_mport* port, int* out) {
+int eumport_read_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -85,7 +85,7 @@ eu_result eumport_read_char(europa* s, eu_mport* port, int* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_peek_char(europa* s, eu_mport* port, int* out) {
+int eumport_peek_char(europa* s, eu_mport* port, int* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -100,14 +100,14 @@ eu_result eumport_peek_char(europa* s, eu_mport* port, int* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_read_line(europa* s, eu_mport* port, eu_value* out) {
+int eumport_read_line(europa* s, eu_mport* port, eu_value* out) {
 	int cp = 0, peek = 0;
 	void* next = NULL;
 	void* pnext = NULL;
 	size_t linesize = 0;
 	unsigned int nulpos = 0;
 	eu_string* str;
-	eu_result res;
+	int res;
 
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -161,7 +161,7 @@ eu_result eumport_read_line(europa* s, eu_mport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_char_ready(europa* s, eu_mport* port, int* ready) {
+int eumport_char_ready(europa* s, eu_mport* port, int* ready) {
 	if (!s || !port || !ready)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -177,10 +177,10 @@ eu_result eumport_char_ready(europa* s, eu_mport* port, int* ready) {
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-eu_result eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out) {
+int eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out) {
 	eu_byte* next;
 	eu_string* str;
-	eu_result res;
+	int res;
 	size_t size;
 	int i, cp;
 
@@ -225,7 +225,7 @@ eu_result eumport_read_string(europa* s, eu_mport* port, int k, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_read_u8(europa* s, eu_mport* port, eu_value* out) {
+int eumport_read_u8(europa* s, eu_mport* port, eu_value* out) {
 	eu_byte* next;
 
 	if (!s || !port || !out)
@@ -246,7 +246,7 @@ eu_result eumport_read_u8(europa* s, eu_mport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_peek_u8(europa* s, eu_mport* port, eu_value* out) {
+int eumport_peek_u8(europa* s, eu_mport* port, eu_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -261,7 +261,7 @@ eu_result eumport_peek_u8(europa* s, eu_mport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_u8_ready(europa* s, eu_mport* port, int* ready) {
+int eumport_u8_ready(europa* s, eu_mport* port, int* ready) {
 	if (!s || !port || !ready)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -284,12 +284,12 @@ eu_result eumport_u8_ready(europa* s, eu_mport* port, int* ready) {
 		}\
 	} while (0)
 
-eu_result eumport_newline(europa* s, eu_mport* port, eu_value* v) {
+int eumport_newline(europa* s, eu_mport* port, eu_value* v) {
 	/* TODO: add a define for \r */
 	return eumport_write_char(s, port, '\n');
 }
 
-eu_result eumport_write_char(europa* s, eu_mport* port, int c) {
+int eumport_write_char(europa* s, eu_mport* port, int c) {
 	ptrdiff_t pos;
 
 	if (!s || !port)
@@ -320,7 +320,7 @@ eu_result eumport_write_char(europa* s, eu_mport* port, int c) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v) {
+int eumport_write_u8(europa* s, eu_mport* port, eu_byte v) {
 	ptrdiff_t pos;
 
 	if (!s || !port)
@@ -346,7 +346,7 @@ eu_result eumport_write_u8(europa* s, eu_mport* port, eu_byte v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
+int eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
 	ptrdiff_t pos;
 	size_t size;
 
@@ -371,11 +371,11 @@ eu_result eumport_write_bytevector(europa* s, eu_mport* port, eu_bvector* v) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_flush(europa* s, eu_mport* port) {
+int eumport_flush(europa* s, eu_mport* port) {
 	return EU_RESULT_OK;
 }
 
-eu_result eumport_write_string(europa* s, eu_mport* port, void* str) {
+int eumport_write_string(europa* s, eu_mport* port, void* str) {
 	ptrdiff_t pos;
 	size_t size;
 

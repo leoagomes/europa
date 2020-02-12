@@ -47,6 +47,6 @@ eu_integer euvector_length(eu_vector* vec);
 eu_value* euvector_values(eu_vector* vec);
 eu_uinteger euvector_hash(eu_vector* vec);
 
-eu_result euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec);
+int euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec);
 
 #endif /* __EUROPA_VECTOR_H__ */

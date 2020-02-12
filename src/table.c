@@ -60,7 +60,7 @@ int ceil_log2(unsigned int length) {
  * @param length The new minimum length.
  * @return The result of the operation.
  */
-static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
+static int set_nodes_length(europa* s, eu_table* t, size_t length) {
 	size_t size;
 	eu_tnode* node;
 
@@ -96,7 +96,7 @@ static eu_result set_nodes_length(europa* s, eu_table* t, size_t length) {
 	return EU_RESULT_OK;
 }
 
-eu_result eutable_resize(europa* s, eu_table* t, size_t new_length) {
+int eutable_resize(europa* s, eu_table* t, size_t new_length) {
 	size_t old_llen, old_len, new_llen;
 	eu_tnode* old_nodes;
 	eu_value* v;
@@ -222,7 +222,7 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i) {
  * @param t The target table.
  * @return The result of the operation. (Always OK)
  */
-eu_result eutable_destroy(europa* s, eu_table* t) {
+int eutable_destroy(europa* s, eu_table* t) {
 	/* manually free the node array if applicable */
 	if (t->nodes != &_dummy) {
 		_eugc_free(_eu_gc(s), t->nodes);
@@ -238,7 +238,7 @@ eu_result eutable_destroy(europa* s, eu_table* t) {
  * @param t The target table.
  * @return The result of the operation.
  */
-eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
+int eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
 	int i;
 	size_t len;
 	eu_value* v;
@@ -281,7 +281,7 @@ eu_result eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
  * @return A pointer to the associated value. NULL if key is not found in the
  * table.
  */
-eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 	eu_uinteger vhash;
 	int pos;
 	eu_tnode* node;
@@ -345,7 +345,7 @@ eu_result eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
  * @param val Where to place the value pointer.
  * @return Whether the operation was succesfull.
  */
-eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
+int eutable_get_string(europa* s, eu_table* t, const char* str,
 	eu_value** val) {
 	eu_uinteger vhash;
 	int pos;
@@ -404,7 +404,7 @@ eu_result eutable_get_string(europa* s, eu_table* t, const char* str,
  * @param val Where to place the resulting value pointer.
  * @return Whether the operation was successful.
  */
-eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
+int eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
 	eu_value** val) {
 	eu_uinteger vhash;
 	int pos;
@@ -461,7 +461,7 @@ eu_result eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
  * @param val Where to place the value pointer.
  * @return Whether the operation was successful.
  */
-eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 	eu_uinteger vhash;
 	int pos, i;
 	eu_tnode *node, *cnode, *fnode;
@@ -555,10 +555,10 @@ eu_result eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** v
 	return EU_RESULT_OK; /* everything went fine */
 }
 
-eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
-eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
+int eutable_rget_string(europa* s, eu_table* t, const char* str,
 	eu_value** val);
-eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	eu_value** val);
 
 /** Gets a value from a table, recursing into index if necessary.
@@ -569,7 +569,7 @@ eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 	/* try getting the key in current table */
 	_eu_checkreturn(eutable_get(s, t, key, val));
 
@@ -588,7 +588,7 @@ eu_result eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
+int eutable_rget_string(europa* s, eu_table* t, const char* str,
 	eu_value** val) {
 	/* try getting the string */
 	_eu_checkreturn(eutable_get_string(s, t, str, val));
@@ -608,7 +608,7 @@ eu_result eutable_rget_string(europa* s, eu_table* t, const char* str,
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
+int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	eu_value** val) {
 	/* try getting the string */
 	_eu_checkreturn(eutable_get_string(s, t, str, val));
@@ -620,7 +620,7 @@ eu_result eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	return EU_RESULT_OK;
 }
 
-eu_result eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val) {
+int eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val) {
 	eu_value key, *v;
 	eu_symbol* keysym;
 

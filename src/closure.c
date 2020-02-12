@@ -81,7 +81,7 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
  * @param cl The target closure.
  * @return The result of the operation.
  */
-eu_result eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
+int eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
 	if (!s || !mark || !cl)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -112,6 +112,6 @@ eu_integer eucl_hash(eu_closure* cl) {
  * @param cl The target closure.
  * @return The result of the operation.
  */
-eu_result eucl_destroy(europa* s, eu_closure* cl) {
+int eucl_destroy(europa* s, eu_closure* cl) {
 	return EU_RESULT_OK;
 }

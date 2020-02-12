@@ -125,9 +125,9 @@ void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size) {
  * @brief Registers standard library procedures.
  *
  * @param s
- * @return eu_result
+ * @return int
  */
-eu_result eutil_register_standard_library(europa* s) {
+int eutil_register_standard_library(europa* s) {
 
 	/* set the correct environment */
 	s->env = _eu_global_env(s);
@@ -146,7 +146,7 @@ eu_result eutil_register_standard_library(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result eutil_set_standard_ports(europa* s) {
+int eutil_set_standard_ports(europa* s) {
 	eu_fport* port;
 
 	/* input port */

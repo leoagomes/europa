@@ -9,10 +9,10 @@
 struct europa_jmplist {
 	struct europa_jmplist* previous;
 	jmp_buf buf;
-	eu_result res;
+	int res;
 };
 
-eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud) {
+int eurt_runcprotected(europa* s, eu_pfunc f, void* ud) {
 	struct europa_jmplist jmp;
 
 	/* jump buffer list setup */
@@ -31,7 +31,7 @@ eu_result eurt_runcprotected(europa* s, eu_pfunc f, void* ud) {
 	return jmp.res;
 }
 
-eu_result eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
+int eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
 	eu_value chunk;
 
 	/* compile the value */
@@ -44,7 +44,7 @@ eu_result eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
 }
 
 
-eu_result euapi_register_controls(europa* s) {
+int euapi_register_controls(europa* s) {
 	eu_table* env;
 
 	env = s->env;
@@ -58,7 +58,7 @@ eu_result euapi_register_controls(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_procedureQ(europa* s) {
+int euapi_procedureQ(europa* s) {
 	eu_value* obj;
 
 	_eucc_arity_proper(s, 1);
@@ -69,7 +69,7 @@ eu_result euapi_procedureQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_apply(europa* s) {
+int euapi_apply(europa* s) {
 	eu_value *proc, *current;
 	eu_value args, *slot;
 	eu_pair* pair;
@@ -116,7 +116,7 @@ eu_result euapi_apply(europa* s) {
 	return euvm_apply(s, proc, &args, _eucc_return(s));
 }
 
-eu_result euapi_map(europa* s) {
+int euapi_map(europa* s) {
 	eu_table* env;
 	eu_value *proc, *current;
 	eu_value args, *slot, *list, *rslot;
@@ -231,7 +231,7 @@ eu_result euapi_map(europa* s) {
 	return EU_RESULT_CONTINUE;
 }
 
-eu_result euapi_for_each(europa* s) {
+int euapi_for_each(europa* s) {
 	eu_table* env;
 	eu_value *proc, *current;
 	eu_value args, *slot, *list, *rslot;

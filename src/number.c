@@ -31,7 +31,7 @@ eu_uinteger eunum_hash(eu_value* v) {
  * @param c Where to place the result.
  * @return Whether the operation was successful.
  */
-eu_result eunum_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int eunum_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	int v;
 
 	/* a and b exact: a == b is #t */
@@ -75,7 +75,7 @@ int eunum_lesser(europa* s, eu_value* a, eu_value* b) {
 	return _eunum_to_real(a) < _eunum_to_real(b);
 }
 
-eu_result eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -88,7 +88,7 @@ eu_result eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -101,7 +101,7 @@ eu_result eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -114,7 +114,7 @@ eu_result eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -127,7 +127,7 @@ eu_result eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eunum_invert(europa* s, eu_value* a, eu_value* out) {
+int eunum_invert(europa* s, eu_value* a, eu_value* out) {
 	if (!_euvalue_is_number(a))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -149,7 +149,7 @@ eu_result eunum_invert(europa* s, eu_value* a, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-eu_result eunum_negate(europa* s, eu_value* a, eu_value* out) {
+int eunum_negate(europa* s, eu_value* a, eu_value* out) {
 	if (!_euvalue_is_number(a))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -180,7 +180,7 @@ eu_uinteger eubool_hash(eu_value* v) {
  * @param c Where to place the result.
  * @return Whether the operation was successful.
  */
-eu_result eubool_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int eubool_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	int av, bv;
 	av = _euvalue_to_bool(a);
 	bv = _euvalue_to_bool(b);
@@ -195,7 +195,7 @@ eu_result eubool_eqv(eu_value* a, eu_value* b, eu_value* out) {
  * @{
  */
 
-eu_result euapi_register_number(europa* s) {
+int euapi_register_number(europa* s) {
 	eu_table* env;
 
 	env = s->env;
@@ -233,7 +233,7 @@ eu_result euapi_register_number(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_numberQ(europa* s) {
+int euapi_numberQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -243,7 +243,7 @@ eu_result euapi_numberQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_complexQ(europa* s) {
+int euapi_complexQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -253,7 +253,7 @@ eu_result euapi_complexQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_realQ(europa* s) {
+int euapi_realQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -263,7 +263,7 @@ eu_result euapi_realQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_rationalQ(europa* s) {
+int euapi_rationalQ(europa* s) {
 	eu_value* value;
 
 	/* TODO: determine whether number is rational? */
@@ -275,7 +275,7 @@ eu_result euapi_rationalQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_integerQ(europa* s) {
+int euapi_integerQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -286,7 +286,7 @@ eu_result euapi_integerQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_exactQ(europa* s) {
+int euapi_exactQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -297,7 +297,7 @@ eu_result euapi_exactQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_inexactQ(europa *s) {
+int euapi_inexactQ(europa *s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -308,7 +308,7 @@ eu_result euapi_inexactQ(europa *s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_E(europa* s) {
+int euapi_E(europa* s) {
 	eu_value *previous, *current;
 	eu_value *pv, *cv;
 
@@ -339,7 +339,7 @@ eu_result euapi_E(europa* s) {
 }
 
 
-eu_result euapi_L(europa* s) {
+int euapi_L(europa* s) {
 	eu_value *previous, *current;
 	eu_value *pv, *cv;
 
@@ -370,7 +370,7 @@ eu_result euapi_L(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_G(europa* s) {
+int euapi_G(europa* s) {
 	eu_value *previous, *current;
 	eu_value *pv, *cv;
 
@@ -401,7 +401,7 @@ eu_result euapi_G(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_LE(europa* s) {
+int euapi_LE(europa* s) {
 	eu_value *previous, *current;
 	eu_value *pv, *cv;
 
@@ -432,7 +432,7 @@ eu_result euapi_LE(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_GE(europa* s) {
+int euapi_GE(europa* s) {
 	eu_value *previous, *current;
 	eu_value *pv, *cv;
 
@@ -463,7 +463,7 @@ eu_result euapi_GE(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_zeroQ(europa* s) {
+int euapi_zeroQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -474,7 +474,7 @@ eu_result euapi_zeroQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_positiveQ(europa* s) {
+int euapi_positiveQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -485,7 +485,7 @@ eu_result euapi_positiveQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_negativeQ(europa* s) {
+int euapi_negativeQ(europa* s) {
 	eu_value* value;
 
 	_eucc_arity_proper(s, 1);
@@ -496,7 +496,7 @@ eu_result euapi_negativeQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_oddQ(europa* s) {
+int euapi_oddQ(europa* s) {
 	eu_value* value;
 	eu_integer i;
 	eu_real r;
@@ -518,7 +518,7 @@ eu_result euapi_oddQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_evenQ(europa* s) {
+int euapi_evenQ(europa* s) {
 	eu_value* value;
 	eu_integer i;
 	eu_real r;
@@ -540,7 +540,7 @@ eu_result euapi_evenQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_min(europa* s) {
+int euapi_min(europa* s) {
 	eu_value *current, *min;
 
 	/* check arity */
@@ -566,7 +566,7 @@ eu_result euapi_min(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_max(europa* s) {
+int euapi_max(europa* s) {
 	eu_value *current, *max;
 
 	/* check arity */
@@ -598,7 +598,7 @@ eu_result euapi_max(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_P(europa* s) {
+int euapi_P(europa* s) {
 	eu_value *current;
 
 	/* setup inital result as zero */
@@ -622,7 +622,7 @@ eu_result euapi_P(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_S(europa* s) {
+int euapi_S(europa* s) {
 	eu_value *current;
 
 	/* setup inital result as one */
@@ -646,7 +646,7 @@ eu_result euapi_S(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_M(europa* s) {
+int euapi_M(europa* s) {
 	eu_value *current;
 
 	/* check arity for at least one value */
@@ -687,7 +687,7 @@ eu_result euapi_M(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_D(europa* s) {
+int euapi_D(europa* s) {
 	eu_value *current;
 
 	/* check arity for at least one value */
@@ -729,7 +729,7 @@ eu_result euapi_D(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_abs(europa* s) {
+int euapi_abs(europa* s) {
 	eu_value* val;
 
 	_eucc_arity_proper(s, 1); /* check arity */
@@ -745,7 +745,7 @@ eu_result euapi_abs(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_not(europa* s) {
+int euapi_not(europa* s) {
 	eu_value* obj;
 
 	_eucc_arity_proper(s, 1);
@@ -760,7 +760,7 @@ eu_result euapi_not(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_booleanQ(europa* s) {
+int euapi_booleanQ(europa* s) {
 	eu_value* obj;
 
 	_eucc_arity_improper(s, 1);
@@ -773,7 +773,7 @@ eu_result euapi_booleanQ(europa* s) {
 
 #define zerooneify(b) ((b) ? 1 : 0)
 
-eu_result euapi_booleanEQ(europa* s) {
+int euapi_booleanEQ(europa* s) {
 	eu_value *current, *cv, *bool1;
 	int fbv, cbv;
 

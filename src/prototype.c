@@ -13,7 +13,7 @@
 /** how much to grow the subprotos array */
 #define SUBPROTOS_GROWTH_RATE 2
 
-eu_result resize_constants(europa* s, eu_proto* proto, int size) {
+int resize_constants(europa* s, eu_proto* proto, int size) {
 	proto->constants_size = size; /* new size */
 	proto->constants = _eugc_realloc(_eu_gc(s), proto->constants,
 		sizeof(eu_value) * size);
@@ -25,7 +25,7 @@ eu_result resize_constants(europa* s, eu_proto* proto, int size) {
 	return EU_RESULT_OK;
 }
 
-eu_result resize_subprotos(europa* s, eu_proto* proto, int size) {
+int resize_subprotos(europa* s, eu_proto* proto, int size) {
 	proto->subprotos_size = size;
 	proto->subprotos = _eugc_realloc(_eu_gc(s), proto->subprotos,
 		sizeof(eu_proto) * size);
@@ -37,7 +37,7 @@ eu_result resize_subprotos(europa* s, eu_proto* proto, int size) {
 	return EU_RESULT_OK;
 }
 
-eu_result resize_code(europa* s, eu_proto* proto, int size) {
+int resize_code(europa* s, eu_proto* proto, int size) {
 	proto->code_size = size;
 	proto->code = _eugc_realloc(_eu_gc(s), proto->code,
 		sizeof(eu_instruction) * size);
@@ -108,7 +108,7 @@ eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
  * @param p The target prototype.
  * @return The result of the operation.
  */
-eu_result euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
+int euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
 	int i;
 
 	/* mark formals list/symbol */
@@ -139,7 +139,7 @@ eu_result euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
  * @param p The target prototype.
  * @return The result of the operation.
  */
-eu_result euproto_destroy(europa* s, eu_proto* p) {
+int euproto_destroy(europa* s, eu_proto* p) {
 	/* only the code buffer is not garbage collected, so free it */
 	if (p->code) {
 		_eugc_free(_eu_gc(s), p->code);

@@ -23,9 +23,9 @@
 #define IFRAME(return_to) (opc_part(EU_OP_FRAME) | offset_part(return_to))
 #define IDEFINE(k) (opc_part(EU_OP_DEFINE) | val_part(k))
 
-eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail);
+int compile(europa* s, eu_proto* proto, eu_value* v, int is_tail);
 
-eu_result check_formals(europa* s, eu_value* formals) {
+int check_formals(europa* s, eu_value* formals) {
 	eu_value* v;
 
 	/* invalid type for formals part */
@@ -61,7 +61,7 @@ eu_result check_formals(europa* s, eu_value* formals) {
 	return EU_RESULT_ERROR;
 }
 
-eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
+int compile_application(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
 	eu_value *head, *tail;
 	int length, improper, index, aux;
 	eu_proto* subproto;
@@ -419,7 +419,7 @@ eu_result compile_application(europa* s, eu_proto* proto, eu_value* v, int is_ta
 	return EU_RESULT_OK;
 }
 
-eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
+int compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
 	int index;
 
 	switch (_euvalue_type(v)) {
@@ -457,7 +457,7 @@ eu_result compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
  * @param chunk Where to place the resulting chunk.
  * @return The result of the operation.
  */
-eu_result eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
+int eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
 	eu_proto* top;
 	eu_closure* cl;
 	eu_value argssym;

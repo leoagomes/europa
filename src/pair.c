@@ -40,8 +40,8 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
  * @param pair the pair to process.
  * @result the result of running the procedure.
  */
-eu_result eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
-	eu_result res;
+int eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
+	int res;
 
 	if (s == NULL || pair == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -141,7 +141,7 @@ int eulist_is_list(europa* s, eu_value* obj) {
 	return EU_FALSE;
 }
 
-eu_result eulist_copy(europa* s, eu_value* list, eu_value* out) {
+int eulist_copy(europa* s, eu_value* list, eu_value* out) {
 	eu_pair* pair;
 
 	if (!s || !list || !out)
@@ -187,7 +187,7 @@ eu_result eulist_copy(europa* s, eu_value* list, eu_value* out) {
  * @param s The Europa state.
  * @return The result of the operation.
  */
-eu_result euapi_register_pair(europa* s) {
+int euapi_register_pair(europa* s) {
 	eu_table* env;
 
 	env = s->env;
@@ -205,7 +205,7 @@ eu_result euapi_register_pair(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_pairQ(europa* s) {
+int euapi_pairQ(europa* s) {
 	eu_value* obj;
 
 	/* check procedure arity */
@@ -218,7 +218,7 @@ eu_result euapi_pairQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_cons(europa* s) {
+int euapi_cons(europa* s) {
 	eu_value *a, *b;
 	eu_pair* p;
 
@@ -238,7 +238,7 @@ eu_result euapi_cons(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_car(europa* s) {
+int euapi_car(europa* s) {
 	eu_value *list;
 	eu_pair* p;
 
@@ -252,7 +252,7 @@ eu_result euapi_car(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_cdr(europa* s) {
+int euapi_cdr(europa* s) {
 	eu_value *list;
 	eu_pair* p;
 
@@ -266,7 +266,7 @@ eu_result euapi_cdr(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_set_carB(europa* s) {
+int euapi_set_carB(europa* s) {
 	eu_value *pair, *value;
 	eu_pair* p;
 
@@ -282,7 +282,7 @@ eu_result euapi_set_carB(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_set_cdrB(europa* s) {
+int euapi_set_cdrB(europa* s) {
 	eu_value *pair, *value;
 	eu_pair* p;
 
@@ -298,7 +298,7 @@ eu_result euapi_set_cdrB(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_nullQ(europa* s) {
+int euapi_nullQ(europa* s) {
 	eu_value* obj;
 
 	/* check procedure arity */
@@ -311,7 +311,7 @@ eu_result euapi_nullQ(europa* s) {
 	return EU_RESULT_OK;
 }
 
-eu_result euapi_list(europa* s) {
+int euapi_list(europa* s) {
 	*_eucc_return(s) = s->rib;
 	return EU_RESULT_OK;
 }

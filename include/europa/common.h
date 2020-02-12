@@ -8,7 +8,7 @@
 #define cast(t,p) ((t)(p))
 
 #define _eu_checkreturn(exp) do {\
-		eu_result res;\
+		int res;\
 		if ((res = (exp)))\
 			return res;\
 	} while (0)

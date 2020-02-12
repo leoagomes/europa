@@ -131,12 +131,12 @@ MunitResult test_eval_ifs(MunitParameter params[], void* fixture) {
  * C functions that don't call into Europa code or that can't have their
  * continuations captured need no tagging.
  */
-eu_result simple_test_cl(europa* s) {
+int simple_test_cl(europa* s) {
 	_eu_makeint(_eu_acc(s), 1234);
 	return EU_RESULT_OK;
 }
 
-eu_result cl_that_calls(europa* s) {
+int cl_that_calls(europa* s) {
 	eu_value v;
 
 	_eucc_dispatcher(s,
