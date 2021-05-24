@@ -1,4 +1,6 @@
-#ifndef __EUROPA_ALL_H__
-#define __EUROPA_ALL_H__
+#ifndef __EUROPA__
+#define __EUROPA__
+
+
 
 #endif

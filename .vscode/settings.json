@@ -12,5 +12,6 @@
         "eu_number.h": "c",
         "europa.h": "c",
         "eu_port.h": "c"
-    }
+    },
+    "files.insertFinalNewline": true
 }
