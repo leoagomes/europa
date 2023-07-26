@@ -33,7 +33,7 @@ enum eugc_color {
 int eugc_init(struct europa_gc* gc, void* ud, europa_realloc rlc);
 int eugc_destroy(europa* s);
 
-struct europa_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
+void* eugc_new_object(europa* s, eu_byte type, unsigned long long size);
 
 int eugc_move_to_root(europa* s, struct europa_object* obj);
 int eugc_move_off_root(europa* s, struct europa_object* obj);

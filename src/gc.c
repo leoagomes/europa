@@ -108,7 +108,7 @@ int eugc_destroy(europa* s) {
  * @param gc The garbage collector structure.
  * @param type The type of the new
  */
-struct europa_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
+void* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 	struct europa_object* obj;
 	struct europa_gc* gc = _eu_gc(s);
 

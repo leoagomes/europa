@@ -8,10 +8,10 @@
 
 #include "europa/types.h"
 
-#define _eubvector_to_obj(v) cast(struct europa_object*, v)
-#define _euobj_to_bvector(o) cast(struct europa_bytevector*, o)
+#define _eubvector_to_obj(v) euobj_as(v, object)
+#define _euobj_to_bvector(o) euobj_as(o, bytevector)
 
-#define _euvalue_to_bvector(v) _euobj_to_bvector((v)->value.object)
+#define _euvalue_to_bvector(v) euvalue_get(v, bytevector)
 
 #define _eu_makebvector(vptr, v) do {\
 		struct europa_bytevector* __bvector__ = (v);\

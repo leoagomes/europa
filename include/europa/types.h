@@ -306,5 +306,6 @@ struct europa_mport {
 
 /* helper macros */
 #define euvalue_get(v, t) ((v)->value.t)
+#define euobj_as(o, t) cast(struct europa_##t*, o)
 
 #endif
