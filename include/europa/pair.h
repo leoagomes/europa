@@ -7,15 +7,9 @@
 
 #include "europa/europa.h"
 
-typedef struct europa_pair eu_pair;
+#include "europa/types.h"
 
-struct europa_pair {
-	EU_OBJECT_HEADER
-	eu_value head; /*!< The first/head/car value. */
-	eu_value tail; /*!< The second/tail/cdr value. */
-};
-
-/* eu_object* and eu_value type checks */
+/* struct europa_object* and eu_value type checks */
 /** check if object is a pair */
 #define _euobj_is_pair(o) _euobj_is_type(o, EU_TYPE_PAIR)
 /** check if value is a pair */
@@ -23,13 +17,13 @@ struct europa_pair {
 
 /* type conversions to/from gcobj* */
 /** converts a gcobj* to a pair* */
-#define _euobj_to_pair(obj) cast(eu_pair*, (obj))
+#define _euobj_to_pair(obj) cast(struct europa_pair*, (obj))
 /** converts a pair* to a gcobj* */
-#define _eupair_to_obj(p) cast(eu_object*, (p))
+#define _eupair_to_obj(p) cast(struct europa_object*, (p))
 
 /* type conversions to/from eu_value */
 /** gets a pair* from a value* */
-#define _euvalue_to_pair(v) cast(eu_pair*, (v)->value.object)
+#define _euvalue_to_pair(v) cast(struct europa_pair*, (v)->value.object)
 /** returns a value initialization for a cell */
 #define _eupair_to_value(p) { \
 	.type = (p == NULL ? EU_TYPE_NULL : EU_TYPE_PAIR), \
@@ -39,26 +33,26 @@ struct europa_pair {
 #define _eupair_tail(p) (&(p->tail))
 
 #define _eu_makepair(vptr, p) do {\
-		eu_pair* __PAIR__ = (p); \
+		struct europa_pair* __PAIR__ = (p); \
 		(vptr)->type = (__PAIR__ == NULL) ? EU_TYPE_NULL : EU_TYPE_PAIR | \
 			EU_TYPEFLAG_COLLECTABLE; \
 		(vptr)->value.object = _eupair_to_obj(__PAIR__); \
 	} while (0)
 
 /* cell related functions */
-eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail);
+struct europa_pair* eupair_new(europa* s, struct europa_value* head, struct europa_value* tail);
 
-int eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair);
-int eupair_destroy(europa* s, eu_pair* pair);
+int eupair_mark(europa* s, europa_gc_mark mark, struct europa_pair* pair);
+int eupair_destroy(europa* s, struct europa_pair* pair);
 
-eu_uinteger eupair_hash(eu_pair* pair);
+eu_uinteger eupair_hash(struct europa_pair* pair);
 
 /* list operating procedures */
-int eulist_is_list(europa* s, eu_value* list);
-eu_value* eulist_ref(europa* s, eu_pair* list, int k);
-eu_value* eulist_tail(europa* s, eu_pair* list, int k);
-int eulist_length(europa* s, eu_pair* list);
-int eulist_copy(europa* s, eu_value* list, eu_value* out);
+int eulist_is_list(europa* s, struct europa_value* list);
+struct europa_value* eulist_ref(europa* s, struct europa_pair* list, int k);
+struct europa_value* eulist_tail(europa* s, struct europa_pair* list, int k);
+int eulist_length(europa* s, struct europa_pair* list);
+int eulist_copy(europa* s, struct europa_value* list, struct europa_value* out);
 
 /* the language API */
 int euapi_pairQ(europa* s);

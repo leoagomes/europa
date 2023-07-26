@@ -44,7 +44,7 @@
  * @param filename The name of the file to open.
  * @return The resulting open port or NULL in case of errors.
  */
-eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
+struct europa_file_port* eufport_open(europa* s, eu_byte flags, const char* filename) {
 	FILE* file;
 
 	/* generate a fopen mode string based on the input flags */
@@ -74,12 +74,12 @@ eu_fport* eufport_open(europa* s, eu_byte flags, const char* filename) {
  * @param file The file handle.
  * @return A new File Port.
  */
-eu_fport* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
-	eu_fport* port;
+struct europa_file_port* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
+	struct europa_file_port* port;
 
 	/* allocate a GC port */
 	port = _euobj_to_fport(eugc_new_object(s, EU_TYPE_PORT | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_fport)));
+		sizeof(struct europa_file_port)));
 	if (port == NULL)
 		return NULL;
 
@@ -98,7 +98,7 @@ eu_fport* eufport_from_file(europa* s, eu_byte flags, FILE* file) {
  * @param port The target port.
  * @return The result of the marking operation.
  */
-int eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
+int eufport_mark(europa* s, europa_gc_mark mark, struct europa_file_port* port) {
 	/* this object holds no GC structures */
 	return EU_RESULT_OK;
 }
@@ -112,7 +112,7 @@ int eufport_mark(europa* s, eu_gcmark mark, eu_fport* port) {
  * @param port The target port.
  * @return The result of destroying the object.
  */
-int eufport_destroy(europa* s, eu_fport* port) {
+int eufport_destroy(europa* s, struct europa_file_port* port) {
 	if (!s || !port)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -131,7 +131,7 @@ int eufport_destroy(europa* s, eu_fport* port) {
  * @param port The target port.
  * @return The target port's hash.
  */
-eu_uinteger eufport_hash(eu_fport* port) {
+eu_uinteger eufport_hash(struct europa_file_port* port) {
 	if (port->file)
 		return cast(eu_integer, port->file);
 	return cast(eu_integer, port);
@@ -143,7 +143,7 @@ eu_uinteger eufport_hash(eu_fport* port) {
 /* this function reads a utf8 codepoint from a port
  * it does no verifications on parameters or the file
  */
-static int _read_utf8_codepoint(eu_fport* port, int* out) {
+static int _read_utf8_codepoint(struct europa_file_port* port, int* out) {
 	int current_char, first_char, out_char;
 	FILE* file = port->file;
 
@@ -194,7 +194,7 @@ static int _read_utf8_codepoint(eu_fport* port, int* out) {
  * @param[out] ch Where to place the read character.
  * @return The operation's result.
  */
-int eufport_read_char(europa* s, eu_fport* port, int* out) {
+int eufport_read_char(europa* s, struct europa_file_port* port, int* out) {
 	/* validate arguments */
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -214,7 +214,7 @@ int eufport_read_char(europa* s, eu_fport* port, int* out) {
  * @param[out] out Where to place the peeked character.
  * @return The peeked character.
  */
-int eufport_peek_char(europa* s, eu_fport* port, int* out) {
+int eufport_peek_char(europa* s, struct europa_file_port* port, int* out) {
 	int current_char, first_char, out_char;
 	FILE* file;
 
@@ -292,7 +292,7 @@ int eufport_peek_char(europa* s, eu_fport* port, int* out) {
  * @param line Where to place the resulting string.
  * @return The result of the operation.
  */
-int eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read_line(europa* s, struct europa_file_port* port, struct europa_value* out) {
 	size_t size = 0;
 	FILE* file;
 	char *buf, current, next;
@@ -356,7 +356,7 @@ int eufport_read_line(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eufport_char_ready(europa* s, eu_fport* port, int* ready) {
+int eufport_char_ready(europa* s, struct europa_file_port* port, int* ready) {
 	/* TODO: find out how to do this cross-platform */
 	*ready = EU_TRUE;
 	return EU_RESULT_OK;
@@ -370,9 +370,9 @@ int eufport_char_ready(europa* s, eu_fport* port, int* ready) {
  * @param[out] out Where to place the result.
  * @return The result of the operation.
  */
-int eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
+int eufport_read_string(europa* s, struct europa_file_port* port, int k, struct europa_value* out) {
 	FILE* file;
-	eu_string* str;
+	struct europa_string* str;
 	void* cp;
 	int res;
 	int i, c, remaining;
@@ -396,7 +396,7 @@ int eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	 * NUL byte. */
 	remaining = k * 4 + 1;
 	str = _euobj_to_string(eugc_new_object(s, EU_TYPE_STRING |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_string) + (remaining)));
+		EU_TYPEFLAG_COLLECTABLE, sizeof(struct europa_string) + (remaining)));
 	if (!str)
 		return EU_RESULT_BAD_ALLOC;
 
@@ -417,7 +417,7 @@ int eufport_read_string(europa* s, eu_fport* port, int k, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read_u8(europa* s, struct europa_file_port* port, struct europa_value* out) {
 	eu_byte byte;
 
 	if (!s || !port || !out)
@@ -437,7 +437,7 @@ int eufport_read_u8(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
+int eufport_peek_u8(europa* s, struct europa_file_port* port, struct europa_value* out) {
 	eu_byte byte;
 
 	if (!s || !port || !out)
@@ -458,13 +458,13 @@ int eufport_peek_u8(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eufport_u8_ready(europa* s, eu_fport* port, int* out) {
+int eufport_u8_ready(europa* s, struct europa_file_port* port, int* out) {
 	/* TODO: implement in a cross-platform manner */
 	*out = EU_FALSE;
 	return EU_RESULT_OK;
 }
 
-int eufport_read(europa* s, eu_fport* port, eu_value* out) {
+int eufport_read(europa* s, struct europa_file_port* port, struct europa_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -480,11 +480,11 @@ int eufport_read(europa* s, eu_fport* port, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eufport_newline(europa* s, eu_fport* port, eu_value* v) {
+int eufport_newline(europa* s, struct europa_file_port* port, struct europa_value* v) {
 	return eufport_write_char(s, port, '\n');
 }
 
-int eufport_write_char(europa* s, eu_fport* port, int v) {
+int eufport_write_char(europa* s, struct europa_file_port* port, int v) {
 
 	_protect_file(s, port);
 	_protect_write(s, port);
@@ -493,7 +493,7 @@ int eufport_write_char(europa* s, eu_fport* port, int v) {
 	return EU_RESULT_OK;
 }
 
-int eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
+int eufport_write_u8(europa* s, struct europa_file_port* port, eu_byte v) {
 
 	_protect_file(s, port);
 	_protect_write(s, port);
@@ -502,7 +502,7 @@ int eufport_write_u8(europa* s, eu_fport* port, eu_byte v) {
 	return EU_RESULT_OK;
 }
 
-int eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
+int eufport_write_bytevector(europa* s, struct europa_file_port* port, struct europa_bytevector* v) {
 	int i;
 
 	_protect_file(s, port);
@@ -514,7 +514,7 @@ int eufport_write_bytevector(europa* s, eu_fport* port, eu_bvector* v) {
 	return EU_RESULT_OK;
 }
 
-int eufport_write_string(europa* s, eu_fport* port, void* v) {
+int eufport_write_string(europa* s, struct europa_file_port* port, void* v) {
 	eu_byte* b;
 	void* next;
 	int c;
@@ -535,7 +535,7 @@ int eufport_write_string(europa* s, eu_fport* port, void* v) {
 	return EU_RESULT_OK;
 }
 
-int eufport_flush(europa* s, eu_fport* port) {
+int eufport_flush(europa* s, struct europa_file_port* port) {
 	_protect_file(s, port);
 	_protect_write(s, port);
 

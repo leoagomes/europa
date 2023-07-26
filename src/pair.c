@@ -20,11 +20,11 @@
  * pair's tail (cdr).
  * @return the newly allocated pair.
  */
-eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
-	eu_pair* pair;
+struct europa_pair* eupair_new(europa* s, struct europa_value* head, struct europa_value* tail) {
+	struct europa_pair* pair;
 
-	pair = cast(eu_pair*,eugc_new_object(s, EU_TYPE_PAIR |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_pair)));
+	pair = cast(struct europa_pair*,eugc_new_object(s, EU_TYPE_PAIR |
+		EU_TYPEFLAG_COLLECTABLE, sizeof(struct europa_pair)));
 	if (pair == NULL)
 		return NULL;
 
@@ -40,7 +40,7 @@ eu_pair* eupair_new(europa* s, eu_value* head, eu_value* tail) {
  * @param pair the pair to process.
  * @result the result of running the procedure.
  */
-int eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
+int eupair_mark(europa* s, europa_gc_mark mark, struct europa_pair* pair) {
 	int res;
 
 	if (s == NULL || pair == NULL)
@@ -67,13 +67,13 @@ int eupair_mark(europa* s, eu_gcmark mark, eu_pair* pair) {
  * @param pair the target pair.
  * @return the hash of the pair.
  */
-eu_uinteger eupair_hash(eu_pair* pair) {
+eu_uinteger eupair_hash(struct europa_pair* pair) {
 	/* TODO: change behavior when using a moving gc */
 	return cast(eu_integer, pair);
 }
 
-eu_value* eulist_tail(europa* s, eu_pair* list, int k) {
-	eu_value *v, lv;
+struct europa_value* eulist_tail(europa* s, struct europa_pair* list, int k) {
+	struct europa_value *v, lv;
 	int i;
 
 	_eu_makepair(&lv, list);
@@ -91,8 +91,8 @@ eu_value* eulist_tail(europa* s, eu_pair* list, int k) {
 	return v;
 }
 
-eu_value* eulist_ref(europa* s, eu_pair* list, int k) {
-	eu_value* v;
+struct europa_value* eulist_ref(europa* s, struct europa_pair* list, int k) {
+	struct europa_value* v;
 
 	v = eulist_tail(s, list, k);
 	if (v == NULL)
@@ -101,8 +101,8 @@ eu_value* eulist_ref(europa* s, eu_pair* list, int k) {
 	return _eupair_head(_euvalue_to_pair(v));
 }
 
-int eulist_length(europa* s, eu_pair* list) {
-	eu_value *v, lv;
+int eulist_length(europa* s, struct europa_pair* list) {
+	struct europa_value *v, lv;
 	int length;
 
 	_eu_makepair(&lv, list);
@@ -121,8 +121,8 @@ int eulist_length(europa* s, eu_pair* list) {
 	return length;
 }
 
-int eulist_is_list(europa* s, eu_value* obj) {
-	eu_value* current;
+int eulist_is_list(europa* s, struct europa_value* obj) {
+	struct europa_value* current;
 
 	if (!_euvalue_is_pair(obj))
 		return EU_FALSE;
@@ -141,8 +141,8 @@ int eulist_is_list(europa* s, eu_value* obj) {
 	return EU_FALSE;
 }
 
-int eulist_copy(europa* s, eu_value* list, eu_value* out) {
-	eu_pair* pair;
+int eulist_copy(europa* s, struct europa_value* list, struct europa_value* out) {
+	struct europa_pair* pair;
 
 	if (!s || !list || !out)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -188,9 +188,9 @@ int eulist_copy(europa* s, eu_value* list, eu_value* out) {
  * @return The result of the operation.
  */
 int euapi_register_pair(europa* s) {
-	eu_table* env;
+	struct europa_table* env;
 
-	env = s->env;
+	env = s->environment;
 
 	/* */
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "pair?", euapi_pairQ));
@@ -206,7 +206,7 @@ int euapi_register_pair(europa* s) {
 }
 
 int euapi_pairQ(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	/* check procedure arity */
 	_eucc_arity_proper(s, 1);
@@ -219,8 +219,8 @@ int euapi_pairQ(europa* s) {
 }
 
 int euapi_cons(europa* s) {
-	eu_value *a, *b;
-	eu_pair* p;
+	struct europa_value *a, *b;
+	struct europa_pair* p;
 
 	/* check arity */
 	_eucc_arity_proper(s, 2);
@@ -239,8 +239,8 @@ int euapi_cons(europa* s) {
 }
 
 int euapi_car(europa* s) {
-	eu_value *list;
-	eu_pair* p;
+	struct europa_value *list;
+	struct europa_pair* p;
 
 	/* check arity */
 	_eucc_arity_proper(s, 1);
@@ -253,8 +253,8 @@ int euapi_car(europa* s) {
 }
 
 int euapi_cdr(europa* s) {
-	eu_value *list;
-	eu_pair* p;
+	struct europa_value *list;
+	struct europa_pair* p;
 
 	/* check arity */
 	_eucc_arity_proper(s, 1);
@@ -267,8 +267,8 @@ int euapi_cdr(europa* s) {
 }
 
 int euapi_set_carB(europa* s) {
-	eu_value *pair, *value;
-	eu_pair* p;
+	struct europa_value *pair, *value;
+	struct europa_pair* p;
 
 	/* check arity */
 	_eucc_arity_proper(s, 2);
@@ -283,8 +283,8 @@ int euapi_set_carB(europa* s) {
 }
 
 int euapi_set_cdrB(europa* s) {
-	eu_value *pair, *value;
-	eu_pair* p;
+	struct europa_value *pair, *value;
+	struct europa_pair* p;
 
 	/* check arity */
 	_eucc_arity_proper(s, 2);
@@ -299,7 +299,7 @@ int euapi_set_cdrB(europa* s) {
 }
 
 int euapi_nullQ(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	/* check procedure arity */
 	_eucc_arity_proper(s, 1);

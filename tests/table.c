@@ -23,11 +23,11 @@ void table_teardown(void* fixture) {
 
 MunitResult simple_table_test(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_table* t;
-	eu_symbol* k;
+	struct europa_table* t;
+	struct europa_symbol* k;
 	eu_string* v;
-	eu_value key, value;
-	eu_value *rv, out;
+	struct europa_value key, value;
+	struct europa_value *rv, out;
 
 	// create the table
 	t = eutable_new(s, 0);
@@ -67,9 +67,9 @@ MunitResult simple_table_test(MunitParameter params[], void* fixture) {
 
 MunitResult multiple_elements(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_symbol *k1, *k2, *k3;
-	eu_value key1, key2, key3, *rv;
-	eu_table* t;
+	struct europa_symbol *k1, *k2, *k3;
+	struct europa_value key1, key2, key3, *rv;
+	struct europa_table* t;
 
 	k1 = eusymbol_new(s, "joyful");
 	munit_assert_not_null(k1);
@@ -113,9 +113,9 @@ MunitResult multiple_elements(MunitParameter params[], void* fixture) {
 
 MunitResult simple_index(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_symbol* key;
-	eu_table *t, *i;
-	eu_value *vr, kv;
+	struct europa_symbol* key;
+	struct europa_table *t, *i;
+	struct europa_value *vr, kv;
 
 	// create the key
 	key = eusymbol_new(s, "+!");

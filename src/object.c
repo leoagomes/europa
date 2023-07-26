@@ -17,10 +17,10 @@
 #include "europa/character.h"
 
 /* global "singleton" declarations */
-eu_value _null = EU_VALUE_NULL;
-eu_value _true = EU_VALUE_TRUE;
-eu_value _false = EU_VALUE_FALSE;
-eu_value _eof = EU_VALUE_EOF;
+struct europa_value _null = EU_VALUE_NULL;
+struct europa_value _true = EU_VALUE_TRUE;
+struct europa_value _false = EU_VALUE_FALSE;
+struct europa_value _eof = EU_VALUE_EOF;
 
 const char* eu_type_names[] = {
 	"null", "boolean", "number", "character", "eof", "symbol", "string", "error",
@@ -34,7 +34,7 @@ const char* eu_type_names[] = {
  * @param type The type to check.
  * @return A boolean representing if the value is of the type.
  */
-eu_bool euvalue_is_type(eu_value* value, eu_byte type) {
+eu_bool euvalue_is_type(struct europa_value* value, eu_byte type) {
 	if (value == NULL)
 		return EU_FALSE;
 	return _euvalue_is_type(value, type);
@@ -45,7 +45,7 @@ eu_bool euvalue_is_type(eu_value* value, eu_byte type) {
  * @param value The value structure pointer.
  * @return A boolean representing if the value is null.
  */
-eu_bool euvalue_is_null(eu_value* value) {
+eu_bool euvalue_is_null(struct europa_value* value) {
 	/* TODO: this needs discussion:
 	 * is a null value pointer similar to the null value? */
 	if (value == NULL)
@@ -58,7 +58,7 @@ eu_bool euvalue_is_null(eu_value* value) {
  * @param object The object.
  * @return A boolean representing if the object is null.
  */
-eu_bool euobj_is_null(eu_object* obj) {
+eu_bool euobj_is_null(struct europa_object* obj) {
 	return _euobj_is_null(obj);
 }
 
@@ -67,7 +67,7 @@ eu_bool euobj_is_null(eu_object* obj) {
  * @param obj The object.
  * @return A boolean representing whether the object is of the type.
  */
-eu_bool euobj_is_type(eu_object* obj, eu_byte type) {
+eu_bool euobj_is_type(struct europa_object* obj, eu_byte type) {
 	if (obj == NULL)
 		return (type == EU_TYPE_NULL);
 	return _euobj_is_type(obj, type);
@@ -78,7 +78,7 @@ eu_bool euobj_is_type(eu_object* obj, eu_byte type) {
  * @param v The value to hash.
  * @return The hash.
  */
-eu_uinteger euvalue_hash(eu_value* v) {
+eu_uinteger euvalue_hash(struct europa_value* v) {
 	if (v == NULL)
 		return 0;
 
@@ -111,7 +111,7 @@ eu_uinteger euvalue_hash(eu_value* v) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-int euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -160,7 +160,7 @@ int euvalue_eqv(eu_value* a, eu_value* b, eu_value* out) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-int euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_eq(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -209,7 +209,7 @@ int euvalue_eq(eu_value* a, eu_value* b, eu_value* out) {
  * @param out Where to place the result.
  * @return Whether the operation was successful.
  */
-int euvalue_equal(eu_value* a, eu_value* b, eu_value* out) {
+int euvalue_equal(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (a == NULL || b == NULL || out == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 

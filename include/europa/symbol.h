@@ -7,20 +7,12 @@
 
 #include "europa/europa.h"
 
-/** type definition for the symbol type */
-typedef struct europa_symbol eu_symbol;
-
-/** symbol structure */
-struct europa_symbol {
-	EU_OBJECT_HEADER
-	eu_integer hash; /*!< the symbol's hash */
-	char _text; /*!< the first character of its text */
-};
+#include "europa/types.h"
 
 /* conversion macros */
 
-#define _euobj_to_symbol(o) (cast(eu_symbol*, o))
-#define _eusymbol_to_obj(s) (cast(eu_object*,s))
+#define _euobj_to_symbol(o) (cast(struct europa_symbol*, o))
+#define _eusymbol_to_obj(s) (cast(struct europa_object*,s))
 
 #define _euvalue_to_symbol(v) _euobj_to_symbol((v)->value.object)
 #define _eusymbol_to_value(s) { \
@@ -38,13 +30,13 @@ struct europa_symbol {
 
 /* function declarations */
 
-eu_symbol* eusymbol_new(europa* s, void* text);
+struct europa_symbol* eusymbol_new(europa* s, void* text);
 
-void* eusymbol_text(eu_symbol* sym);
-eu_uinteger eusymbol_hash(eu_symbol* sym);
+void* eusymbol_text(struct europa_symbol* sym);
+eu_uinteger eusymbol_hash(struct europa_symbol* sym);
 eu_integer eusymbol_hash_cstr(const char* str);
-int eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out);
-eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* str);
+int eusymbol_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out);
+eu_bool eusymbol_equal_cstr(struct europa_value* vsym, const char* str);
 
 /* library functions */
 int euapi_register_symbol(europa* s);

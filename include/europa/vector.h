@@ -7,21 +7,10 @@
 #include "europa/int.h"
 #include "europa/object.h"
 
-/** Vector structure type definition. */
-typedef struct europa_vector eu_vector;
+#include "europa/types.h"
 
-/** Vector object structure. */
-struct europa_vector {
-	EU_OBJECT_HEADER
-
-	eu_integer length; /*!< the length of the vector. */
-	eu_value _value; /*!< the first value for the vector. */
-};
-
-/* conversion macros */
-
-#define _euobj_to_vector(o) cast(eu_vector*, o)
-#define _euvector_to_obj(v) cast(eu_object*, v)
+#define _euobj_to_vector(o) cast(struct europa_value*, o)
+#define _euvector_to_obj(v) cast(struct europa_object*, v)
 
 #define _euvalue_to_vector(v) _euobj_to_vector((v)->value.object)
 #define _euvector_to_value(v) { \
@@ -41,12 +30,12 @@ struct europa_vector {
 #define _euvector_set(v, i, value) (*_euvector_ref(v, i) = (value))
 
 /* function declarations */
-eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length);
+struct europa_value* euvector_new(europa* s, struct europa_value* data, eu_integer length);
 
-eu_integer euvector_length(eu_vector* vec);
-eu_value* euvector_values(eu_vector* vec);
-eu_uinteger euvector_hash(eu_vector* vec);
+eu_integer euvector_length(struct europa_value* vec);
+struct europa_value* euvector_values(struct europa_value* vec);
+eu_uinteger euvector_hash(struct europa_value* vec);
 
-int euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec);
+int euvector_mark(europa* s, europa_gc_mark mark, struct europa_value* vec);
 
 #endif /* __EUROPA_VECTOR_H__ */

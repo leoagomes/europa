@@ -9,8 +9,8 @@
 
 #include "utf8.h"
 
-eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested) {
-	eu_error* err;
+struct europa_error* euerror_new(europa* s, int flags, void* text, struct europa_error* nested) {
+	struct europa_error* err;
 	size_t text_size;
 
 	if (!s || !text)
@@ -19,7 +19,7 @@ eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested) {
 	text_size = utf8size(text);
 
 	err = _euobj_to_error(eugc_new_object(s, EU_TYPEFLAG_COLLECTABLE | EU_TYPE_ERROR,
-		sizeof(eu_error) + text_size));
+		sizeof(struct europa_error) + text_size));
 	if (err == NULL)
 		return NULL;
 
@@ -31,10 +31,10 @@ eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested) {
 	return err;
 }
 
-void* euerror_message(eu_error* err) {
+void* euerror_message(struct europa_error* err) {
 	return _euerror_message(err);
 }
 
-eu_uinteger euerror_hash(eu_error* err) {
+eu_uinteger euerror_hash(struct europa_error* err) {
 	return (eu_integer)err;
 }

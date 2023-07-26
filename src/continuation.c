@@ -1,11 +1,11 @@
 #include "europa/rt.h"
 
-eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
-	eu_value* rib, eu_value* rib_lastpos, eu_closure* cl, unsigned int pc) {
-	eu_continuation* cont;
+struct europa_continuation* eucont_new(europa* s, struct europa_continuation* previous, struct europa_table* env,
+	struct europa_value* rib, struct europa_value* rib_lastpos, struct europa_closure* cl, unsigned int pc) {
+	struct europa_continuation* cont;
 
 	cont = _euobj_to_cont(eugc_new_object(s, EU_TYPE_CONTINUATION |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_continuation)));
+		EU_TYPEFLAG_COLLECTABLE, sizeof(struct europa_continuation)));
 	if (cont == NULL)
 		return NULL;
 
@@ -27,7 +27,7 @@ eu_continuation* eucont_new(europa* s, eu_continuation* previous, eu_table* env,
  * @param cont The target continuation.
  * @return The result of the operation.
  */
-int eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
+int eucont_mark(europa* s, europa_gc_mark mark, struct europa_continuation* cont) {
 	/* mark linked continuations */
 	if (cont->previous) {
 		_eu_checkreturn(mark(s, _eucont_to_obj(cont->previous)));
@@ -54,7 +54,7 @@ int eucont_mark(europa* s, eu_gcmark mark, eu_continuation* cont) {
  * @param cont The target continuation.
  * @return The result of the operation.
  */
-int eucont_destroy(europa* s, eu_continuation* cont) {
+int eucont_destroy(europa* s, struct europa_continuation* cont) {
 	return EU_RESULT_OK;
 }
 
@@ -66,6 +66,6 @@ int eucont_destroy(europa* s, eu_continuation* cont) {
  * @param cont The target continuation.
  * @return The continuation's hash.
  */
-eu_integer eucont_hash(eu_continuation* cont) {
+eu_integer eucont_hash(struct europa_continuation* cont) {
 	return cast(eu_integer, cont);
 }

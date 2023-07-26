@@ -35,7 +35,7 @@ int main(int argc, char* argv) {
 
 	/* do the REPL */
 	char* line;
-	eu_value output;
+	struct europa_value output;
 
 	while ((line = linenoise("> ")) != NULL) {
 		/* check if it is a command */

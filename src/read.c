@@ -116,14 +116,14 @@
 typedef struct parser parser;
 struct parser {
 	europa* s;
-	eu_port* port;
-	eu_error* error;
+	struct europa_port* port;
+	struct europa_error* error;
 	int current, peek, line, col;
 	char buf[AUX_BUFFER_SIZE];
 
-	eu_table* intern;
+	struct europa_table* intern;
 
-	eu_symbol *quote, *quasiquote, *unquote, *unqspl;
+	struct europa_symbol *quote, *quasiquote, *unquote, *unqspl;
 };
 
 /* some helper macros */
@@ -155,7 +155,7 @@ struct parser {
 #define punqspl(p) testmake(p, unqspl)
 
 /* some needed prototypes */
-int pread_datum(parser* p, eu_value* out);
+int pread_datum(parser* p, struct europa_value* out);
 int pskip_itspace(parser* p);
 
 
@@ -287,13 +287,13 @@ int gbuf_append_byte(parser* p, void** buf, void** next, size_t* size,
  *
  */
 int gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
-	size_t* remaining, eu_value* val) {
-	eu_value *vbuf, *vnext;
+	size_t* remaining, struct europa_value* val) {
+	struct europa_value *vbuf, *vnext;
 
 	vbuf = *buf;
 	vnext = *next;
 
-	if (*remaining < sizeof(eu_value)) {
+	if (*remaining < sizeof(struct europa_value)) {
 		if (*buf == p->buf) {
 			/* we need to allocate a new buffer on the heap a bit larger than
 			 * the auxilary buffer. */
@@ -324,7 +324,7 @@ int gbuf_append_value(parser* p, void** buf, void** next, size_t* size,
 	*vnext = *val;
 	vnext++;
 	*next = vnext;
-	(*remaining) -= sizeof(eu_value);
+	(*remaining) -= sizeof(struct europa_value);
 
 	return EU_RESULT_OK;
 }
@@ -338,7 +338,7 @@ int gbuf_terminate(parser* p, void** buf) {
 }
 
 /* initializes a parser structure */
-int parser_init(parser* p, europa* s, eu_port* port) {
+int parser_init(parser* p, europa* s, struct europa_port* port) {
 	int res;
 	p->s = s;
 	p->port = port;
@@ -360,9 +360,9 @@ int parser_init(parser* p, europa* s, eu_port* port) {
 	return euport_peek_char(s, port, &(p->peek));
 }
 
-eu_symbol* pmake_symbol(parser* p, void* text) {
-	eu_symbol* sym;
-	eu_value *rval, sval;
+struct europa_symbol* pmake_symbol(parser* p, void* text) {
+	struct europa_symbol* sym;
+	struct europa_value *rval, sval;
 
 	/* try getting the symbol from the internalized table */
 	if (eutable_rget_symbol(p->s, p->intern, text, &rval))
@@ -388,7 +388,7 @@ eu_symbol* pmake_symbol(parser* p, void* text) {
 
 eu_string* pmake_string(parser* p, void* text) {
 	eu_string* str;
-	eu_value *rval, sval;
+	struct europa_value *rval, sval;
 
 	/* try getting the string from the internalized table */
 	if (eutable_rget_string(p->s, p->intern, text, &rval))
@@ -510,7 +510,7 @@ int pcasematchstring(parser* p, void* str) {
 
 /* reads a <boolean> in either #t or #true (or #f and #false) formats, returning
  * an error if the sequence does not form a valid boolean. */
-int pread_boolean(parser* p, eu_value* out) {
+int pread_boolean(parser* p, struct europa_value* out) {
 	int res;
 
 	_checkreturn(res, pmatch(p, CHASH));
@@ -592,7 +592,7 @@ int pread_boolean(parser* p, eu_value* out) {
  * integer numbers are exact unless #i is explicitely set and real (non-integer)
  * numbers are numbers are always inexact.
  */
-int pread_number(parser* p, eu_value* out) {
+int pread_number(parser* p, struct europa_value* out) {
 	int res;
 	int exactness = 'a', radix = 'd', sign = 1, value = 0, divideby = 0, aux;
 	eu_integer ipart = 0;
@@ -738,7 +738,7 @@ int pread_number(parser* p, eu_value* out) {
  *
  * only R7RS-required character names are currently implemented.
  */
-int pread_character(parser* p, eu_value* out) {
+int pread_character(parser* p, struct europa_value* out) {
 	int res;
 	int c, v, pos;
 	char buf[CHAR_BUF_SIZE];
@@ -819,13 +819,13 @@ int pread_character(parser* p, eu_value* out) {
 	}
 }
 
-int pread_bytevector(parser* p, eu_value* out) {
+int pread_bytevector(parser* p, struct europa_value* out) {
 	int res;
 	eu_integer vsize;
-	eu_value temp;
+	struct europa_value temp;
 	void *buf, *next;
 	size_t size, remaining;
-	eu_bvector* vec;
+	struct europa_bytevector* vec;
 
 	/* match the '#u8(' */
 	_checkreturn(res, pcasematchstring(p, "#u8("));
@@ -884,10 +884,10 @@ int pread_bytevector(parser* p, eu_value* out) {
 /*
  * This reads a vector.
  */
-int pread_vector(parser* p, eu_value* out) {
+int pread_vector(parser* p, struct europa_value* out) {
 	int res;
-	eu_value temp;
-	eu_vector* vec;
+	struct europa_value temp;
+	struct europa_vector* vec;
 	eu_integer count = 0;
 	int size;
 
@@ -898,7 +898,7 @@ int pread_vector(parser* p, eu_value* out) {
 	size = 0;
 
 	/* allocate the vector but only with the size of the GC header */
-	vec = _eugc_malloc(_eu_gc(p->s), sizeof(eu_object));
+	vec = _eugc_malloc(_eu_gc(p->s), sizeof(struct europa_object));
 	if (vec == NULL) {
 		seterror(p, "Could not create read vector header.");
 		return EU_RESULT_BAD_ALLOC;
@@ -925,7 +925,7 @@ int pread_vector(parser* p, eu_value* out) {
 
 			size += VECTOR_GROWTH_RATE;
 			vec = _eugc_realloc(_eu_gc(p->s), vec,
-				sizeof(eu_vector) + ((size - 1) * sizeof(eu_value)));
+				sizeof(struct europa_vector) + ((size - 1) * sizeof(struct europa_value)));
 			if (vec == NULL) {
 				seterrorf(p, "Could not grow read vector to size %d.", size);
 				return EU_RESULT_BAD_ALLOC;
@@ -957,7 +957,7 @@ int pread_vector(parser* p, eu_value* out) {
 
 /* reads a token that begins with a '#', those can be booleans (#t), numbers
  * (#e#x1F), characters, vectors (#(a b c)), bytevectors (#u8(a b c)) */
-int pread_hash(parser* p, eu_value* out) {
+int pread_hash(parser* p, struct europa_value* out) {
 	int res;
 
 	/* match the hash character */
@@ -1052,7 +1052,7 @@ int pskip_nestedcomment(parser* p) {
 /* skips datum comment */
 int pskip_datumcomment(parser* p) {
 	int res;
-	eu_value out;
+	struct europa_value out;
 
 	_checkreturn(res, pmatch(p, CHASH));
 	_checkreturn(res, padvance(p));
@@ -1204,7 +1204,7 @@ int pread_escaped_char(parser* p, int* out) {
 }
 
 /* reads a string literal from the port */
-int pread_string(parser* p, eu_value* out) {
+int pread_string(parser* p, struct europa_value* out) {
 	int res;
 	int c, v, should_advance;
 	void *buf, *next;
@@ -1267,11 +1267,11 @@ int pread_string(parser* p, eu_value* out) {
 /* reads a
  * <symbol> := <vertical line> <symbol element>* <vertical line>
  */
-int pread_vline_symbol(parser* p, eu_value* out) {
+int pread_vline_symbol(parser* p, struct europa_value* out) {
 	int res;
 	void *next, *buf;
 	size_t size, remaining;
-	eu_symbol* sym;
+	struct europa_symbol* sym;
 	int c;
 
 	_checkreturn(res, pmatch(p, CVLINE));
@@ -1307,11 +1307,11 @@ int pread_vline_symbol(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int pread_insub_symbol(parser* p, eu_value* out) {
+int pread_insub_symbol(parser* p, struct europa_value* out) {
 	int res;
 	void *next, *buf;
 	size_t size, remaining;
-	eu_symbol* sym;
+	struct europa_symbol* sym;
 
 	/* initialize the auxilary buffer */
 	_checkreturn(res, gbuf_init(p, &buf, &next, &size));
@@ -1340,7 +1340,7 @@ int pread_insub_symbol(parser* p, eu_value* out) {
 }
 
 /* reads a <symbol> */
-int pread_symbol(parser* p, eu_value* out) {
+int pread_symbol(parser* p, struct europa_value* out) {
 
 	if (isvline(p->current)) { /* vertical line symbols */
 		return pread_vline_symbol(p, out);
@@ -1363,12 +1363,12 @@ int pread_symbol(parser* p, eu_value* out) {
  * <list> := ( <datum>* )
  *         | ( <datum>+ . <datum> )
  */
-int pread_list(parser* p, eu_value* out) {
+int pread_list(parser* p, struct europa_value* out) {
 	int res;
 	int has_datum = 0;
 	int has_dot = 0;
-	eu_pair *first_pair, *pair, *nextpair;
-	eu_value *slot;
+	struct europa_pair *first_pair, *pair, *nextpair;
+	struct europa_value *slot;
 
 	/* consume left parenthesis */
 	_checkreturn(res, padvance(p));
@@ -1480,11 +1480,11 @@ int pread_list(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int pread_abbreviation(parser* p, eu_value* out) {
+int pread_abbreviation(parser* p, struct europa_value* out) {
 	int res;
-	eu_symbol* sym;
-	eu_pair* pair;
-	eu_value* slot;
+	struct europa_symbol* sym;
+	struct europa_pair* pair;
+	struct europa_value* slot;
 
 	/* make sure the state is consistent */
 	if (!isabbrevprefix(p->current)) {
@@ -1535,7 +1535,7 @@ int pread_abbreviation(parser* p, eu_value* out) {
 }
 
 /* this reads a <datum> */
-int pread_datum(parser* p, eu_value* out) {
+int pread_datum(parser* p, struct europa_value* out) {
 	int res;
 
 	/* check and skip inter token spaces (aka <atmosphere>) */
@@ -1564,7 +1564,7 @@ int pread_datum(parser* p, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int euport_read(europa* s, eu_port* port, eu_value* out) {
+int euport_read(europa* s, struct europa_port* port, struct europa_value* out) {
 	parser p;
 	int res;
 

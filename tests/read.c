@@ -30,7 +30,7 @@ static void read_teardown(void* fixture) {
 MunitResult test_read_booleans(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	int res;
-	eu_value out;
+	struct europa_value out;
 
 	eu_mport* port;
 
@@ -84,7 +84,7 @@ MunitResult test_read_booleans(MunitParameter params[], void* fixture) {
 MunitResult test_read_num_binary(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#b1001 #b#e1001 #b-1001 #b#i-1001 #b#i1001 #b1001.1");
@@ -126,7 +126,7 @@ MunitResult test_read_num_binary(MunitParameter params[], void* fixture) {
 MunitResult test_read_num_octal(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#o14 #o#e-14 #o#i14 #o14.4 #o-14.4");
@@ -163,7 +163,7 @@ MunitResult test_read_num_octal(MunitParameter params[], void* fixture) {
 MunitResult test_read_num_dec(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"123 -123 #d123 #e-123 #i123 123.45 #d#i123.45");
@@ -203,7 +203,7 @@ MunitResult test_read_num_dec(MunitParameter params[], void* fixture) {
 MunitResult test_read_num_hex(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#xaa #x#eaa #X#iAA #xaA.8");
@@ -231,7 +231,7 @@ MunitResult test_read_num_hex(MunitParameter params[], void* fixture) {
 MunitResult test_read_char(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#\\a #\\newline #\\x35 #\\invalid");
@@ -284,7 +284,7 @@ MunitResult test_read_char(MunitParameter params[], void* fixture) {
 MunitResult test_read_string(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"\"small simple string\" \"escaped \\x35;\\n\"");
@@ -314,7 +314,7 @@ MunitResult test_read_string(MunitParameter params[], void* fixture) {
 MunitResult test_read_symbol(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"simple-symbol |vertical-line-\\x53;\\x79;mbol-with-\\nnewline| "
@@ -371,9 +371,9 @@ MunitResult test_read_symbol(MunitParameter params[], void* fixture) {
 MunitResult test_read_list(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value* v;
-	eu_pair* pair;
-	eu_value out;
+	struct europa_value* v;
+	struct europa_pair* pair;
+	struct europa_value out;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"() (.-a) (a 8 #t) (#\\A -123.45 . #b1010)");
@@ -460,8 +460,8 @@ MunitResult test_read_list(MunitParameter params[], void* fixture) {
 MunitResult test_read_bytevector(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
-	eu_bvector* vec;
+	struct europa_value out;
+	struct europa_bytevector* vec;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#u8(#b00 #xA 12 3)");
@@ -482,8 +482,8 @@ MunitResult test_read_bytevector(MunitParameter params[], void* fixture) {
 MunitResult test_read_vector(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
 	eu_mport* port;
-	eu_value out;
-	eu_vector* vec;
+	struct europa_value out;
+	struct europa_vector* vec;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,
 		"#(#b00 #xA 12 3)");
@@ -505,7 +505,7 @@ MunitResult test_read_vector(MunitParameter params[], void* fixture) {
 
 MunitResult test_read_abbreviation(MunitParameter params[], void* fixture) {
 	europa* s = (europa*)fixture;
-	eu_value out, *v, *u;
+	struct europa_value out, *v, *u;
 	eu_mport* port;
 
 	port = eumport_from_str(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT,

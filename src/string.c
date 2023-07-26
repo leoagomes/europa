@@ -119,7 +119,7 @@ eu_integer eustring_hash_cstr(const char* str) {
  * @param cstr The C string.
  * @result Whether they are equal.
  */
-eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr) {
+eu_integer eustring_equal_cstr(struct europa_value* vstr, const char* cstr) {
 	if (vstr == NULL || cstr == NULL)
 		return EU_FALSE;
 
@@ -135,7 +135,7 @@ eu_integer eustring_equal_cstr(eu_value* vstr, const char* cstr) {
  * @param b The second string value.
  * @return The result of the operation.
  */
-int eustring_equal(eu_value* a, eu_value* b, eu_value* out) {
+int eustring_equal(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	/* check for bad arguments */
 	if (!a || !b || !out)
 		return EU_RESULT_NULL_ARGUMENT;

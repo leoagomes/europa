@@ -38,9 +38,9 @@
  * @param text the symbol's text.
  * @return The created symbol.
  */
-eu_symbol* eusymbol_new(europa* s, void* text) {
-	eu_symbol* sym;
-	eu_value *tv;
+struct europa_symbol* eusymbol_new(europa* s, void* text) {
+	struct europa_symbol* sym;
+	struct europa_value *tv;
 
 	/* if symbol text is not a valid utf-8 string, the call is invalid. */
 	if (utf8valid(text))
@@ -58,8 +58,8 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
 
 	size_t text_size = utf8size(text);
 
-	sym = (eu_symbol*)eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_symbol) + text_size);
+	sym = (struct europa_symbol*)eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(struct europa_symbol) + text_size);
 	if (sym == NULL)
 		return NULL;
 
@@ -79,7 +79,7 @@ eu_symbol* eusymbol_new(europa* s, void* text) {
  * @remarks The buffer will be managed by the GC and it will not outlive the
  * object, so if you need a lasting copy of it, make it yourself.
  */
-void* eusymbol_text(eu_symbol* sym) {
+void* eusymbol_text(struct europa_symbol* sym) {
 	if (sym == NULL)
 		return NULL;
 	return _eusymbol_text(sym);
@@ -90,7 +90,7 @@ void* eusymbol_text(eu_symbol* sym) {
  * @param sym The symbol object.
  * @return The obejct's hash.
  */
-eu_uinteger eusymbol_hash(eu_symbol* sym) {
+eu_uinteger eusymbol_hash(struct europa_symbol* sym) {
 	if (sym == NULL)
 		return 0;
 	return _eusymbol_hash(sym);
@@ -114,8 +114,8 @@ eu_integer eusymbol_hash_cstr(const char* str){
  * @param out Where to place the boolean result.
  * @returns The result of executing the operation.
  */
-int eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
-	eu_symbol *sa, *sb;
+int eusymbol_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
+	struct europa_symbol *sa, *sb;
 	int v;
 
 	sa = _euvalue_to_symbol(a);
@@ -141,7 +141,7 @@ int eusymbol_eqv(eu_value* a, eu_value* b, eu_value* out) {
  * @param cstr The C string.
  * @return Whether the two match.
  */
-eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* cstr) {
+eu_bool eusymbol_equal_cstr(struct europa_value* vsym, const char* cstr) {
 	if (!vsym || !cstr)
 		return EU_FALSE;
 	return !utf8cmp(_eusymbol_text(_euvalue_to_symbol(vsym)), cstr);
@@ -153,7 +153,7 @@ eu_bool eusymbol_equal_cstr(eu_value* vsym, const char* cstr) {
  */
 
 int euapi_register_symbol(europa* s) {
-	eu_table* env;
+	struct europa_table* env;
 
 	env = s->env;
 
@@ -165,7 +165,7 @@ int euapi_register_symbol(europa* s) {
 }
 
 int euapi_symbolQ(europa* s) {
-	eu_value* object;
+	struct europa_value* object;
 
 	_eucc_arity_proper(s, 1); /* check arity */
 	_eucc_argument(s, object, 0); /* get argument */
@@ -175,7 +175,7 @@ int euapi_symbolQ(europa* s) {
 }
 
 int euapi_symbolEQ(europa* s) {
-	eu_value *current, *previous, *cv, *pv;
+	struct europa_value *current, *previous, *cv, *pv;
 
 	_eucc_arity_improper(s, 2); /* check arity */
 
@@ -202,7 +202,7 @@ int euapi_symbolEQ(europa* s) {
 }
 
 int euapi_symbol_to_string(europa* s) {
-	eu_value* symbol;
+	struct europa_value* symbol;
 	eu_string* str;
 
 	_eucc_arity_proper(s, 1); /* check arity */
@@ -218,8 +218,8 @@ int euapi_symbol_to_string(europa* s) {
 }
 
 int euapi_string_to_symbol(europa* s) {
-	eu_value* string;
-	eu_symbol* sym;
+	struct europa_value* string;
+	struct europa_symbol* sym;
 
 	_eucc_arity_proper(s, 1); /* check arity */
 	_eucc_argument_type(s, string, 0, EU_TYPE_STRING); /* get argument */

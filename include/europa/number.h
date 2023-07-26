@@ -35,20 +35,20 @@
 #define _eunum_is_zero(v) (_eunum_is_exact(v) ? (_eunum_i(v) == (eu_integer)0) :\
 	(_eunum_r(v) == (eu_real)0))
 
-eu_uinteger eunum_hash(eu_value* v);
-int eunum_eqv(eu_value* a, eu_value* b, eu_value* out);
+eu_uinteger eunum_hash(struct europa_value* v);
+int eunum_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out);
 
-int eunum_equal(europa* s, eu_value* a, eu_value* b);
-int eunum_greater(europa* s, eu_value* a, eu_value* b);
-int eunum_lesser(europa* s, eu_value* a, eu_value* b);
+int eunum_equal(europa* s, struct europa_value* a, struct europa_value* b);
+int eunum_greater(europa* s, struct europa_value* a, struct europa_value* b);
+int eunum_lesser(europa* s, struct europa_value* a, struct europa_value* b);
 
-int eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out);
-int eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out);
-int eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out);
-int eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out);
+int eunum_add(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out);
+int eunum_subtract(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out);
+int eunum_multiply(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out);
+int eunum_divide(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out);
 
-int eunum_invert(europa* s, eu_value* a, eu_value* out);
-int eunum_negate(europa* s, eu_value* a, eu_value* out);
+int eunum_invert(europa* s, struct europa_value* a, struct europa_value* out);
+int eunum_negate(europa* s, struct europa_value* a, struct europa_value* out);
 
 /* boolean functions */
 
@@ -62,8 +62,8 @@ int eunum_negate(europa* s, eu_value* a, eu_value* out);
 #define _eubool_is_false(v) (!((v)->value.boolean))
 #define _eubool_is_true(v) ((v)->value.boolean)
 
-eu_uinteger eubool_hash(eu_value* v);
-int eubool_eqv(eu_value* a, eu_value* b, eu_value* out);
+eu_uinteger eubool_hash(struct europa_value* v);
+int eubool_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out);
 
 /* library functions */
 

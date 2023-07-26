@@ -28,11 +28,11 @@
  * @param args The argument list value.
  * @return The result of the operation.
  */
-int prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
-	eu_proto* proto;
-	eu_value *tv, *cv, *cf;
-	eu_table* new_env;
-	eu_value key;
+int prepare_environment(europa* s, struct europa_closure* cl, struct europa_value* args) {
+	struct europa_prototype* proto;
+	struct europa_value *tv, *cv, *cf;
+	struct europa_table* new_env;
+	struct europa_value key;
 	int length, improper, i;
 
 	/* beacause C functions don't need to use the argument rib, we can leave
@@ -40,7 +40,7 @@ int prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	 * creation */
 	if (cl->cf) {
 		/* place their creation environment in env */
-		s->env = cl->env;
+		s->environment = cl->env;
 		/* place the arguments in rib */
 		s->rib = *args;
 		s->rib_lastpos = NULL;
@@ -131,10 +131,10 @@ int prepare_environment(europa* s, eu_closure* cl, eu_value* args) {
 	return EU_RESULT_OK;
 }
 
-void set_cc(europa* s, eu_continuation* cont) {
+void set_cc(europa* s, struct europa_continuation* cont) {
 	if (cont == NULL) { /* nothing else to run */
 		s->ccl = NULL;
-		s->env = _eu_global_env(s);
+		s->env = _struct europa_global_env(s);
 		s->pc = 0;
 		s->status = EU_SSTATUS_STOPPED;
 		return;
@@ -149,7 +149,7 @@ void set_cc(europa* s, eu_continuation* cont) {
 }
 
 /* WARNING: DOES NOT PREPARE THE ENVIRONMENT, USE prepare_environment FOR THAT */
-void set_closure(europa* s, eu_closure* cl) {
+void set_closure(europa* s, struct europa_closure* cl) {
 	s->ccl = cl; /* set current closure */
 
 	/* only clean up the rib if closure is not C closure, because arguments of a
@@ -222,7 +222,7 @@ int check_off_in_code(europa* s, int off, const char* inst) {
  * @param args
  * @return int
  */
-int prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
+int prepare_for_closure(europa* s, struct europa_closure* cl, struct europa_value* args) {
 	/* place the closure in the current continuation */
 	_eu_checkreturn(prepare_environment(s, cl, args));
 	set_closure(s, cl);
@@ -237,7 +237,7 @@ int prepare_for_closure(europa* s, eu_closure* cl, eu_value* args) {
  * @param args
  * @return int
  */
-int prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
+int prepare_for_continuation(europa* s, struct europa_continuation* cont, struct europa_value* args) {
 	/* we need to set the accumulator to the first argument */
 	if (!_euvalue_is_pair(args)) {
 		s->acc = s->rib;
@@ -251,9 +251,9 @@ int prepare_for_continuation(europa* s, eu_continuation* cont, eu_value* args) {
 	return EU_RESULT_OK;
 }
 
-int solve_value_application(europa* s, eu_value* v) {
-	eu_value *tv;
-	eu_pair* pair;
+int solve_value_application(europa* s, struct europa_value* v) {
+	struct europa_value *tv;
+	struct europa_pair* pair;
 
 	/* TODO: add support for type indexes */
 
@@ -308,12 +308,12 @@ int solve_value_application(europa* s, eu_value* v) {
 int euvm_execute(europa* s) {
 	int res;
 	eu_instruction ir;
-	eu_value* tv;
-	eu_proto* proto, *p;
-	eu_closure *c;
-	eu_continuation* cont;
-	eu_pair* pair;
-	eu_closure* cl;
+	struct europa_value* tv;
+	struct europa_prototype* proto, *p;
+	struct europa_closure *c;
+	struct europa_continuation* cont;
+	struct europa_pair* pair;
+	struct europa_closure* cl;
 
 	/* we need to do the execution loop
 	 *
@@ -577,7 +577,7 @@ int euvm_execute(europa* s) {
  */
 int euvm_initialize_state(europa* s) {
 	s->acc = _null;
-	s->env = _eu_global_env(s);
+	s->env = _struct europa_global_env(s);
 	s->ccl = NULL;
 	s->previous = NULL;
 	s->rib = _null;
@@ -596,7 +596,7 @@ int euvm_initialize_state(europa* s) {
  * @param out Where to place the returned value.
  * @return The result of the operation.
  */
-int euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* out) {
+int euvm_doclosure(europa* s, struct europa_closure* cl, struct europa_value* args, struct europa_value* out) {
 	/* place the closure in the current continuation */
 	_eu_checkreturn(prepare_environment(s, cl, args));
 	set_closure(s, cl);
@@ -621,7 +621,7 @@ int euvm_doclosure(europa* s, eu_closure* cl, eu_value* args, eu_value* out) {
  * @param out Where to place the resulting value.
  * @return The result of the operation.
  */
-int euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
+int euvm_apply(europa* s, struct europa_value* v, struct europa_value* args, struct europa_value* out) {
 	int running = 0;
 
 	/* check if anything is being executed already */
@@ -668,7 +668,7 @@ int euvm_apply(europa* s, eu_value* v, eu_value* args, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) {
+int _disas_inst(europa* s, struct europa_port* port, struct europa_prototype* proto, eu_instruction inst) {
 	static const char* opc_names[] = {
 		"nop", "refer", "const", "close", "test", "jump", "assign", "argument",
 		"conti", "apply", "return", "frame", "define", "halt"
@@ -721,7 +721,7 @@ int _disas_inst(europa* s, eu_port* port, eu_proto* proto, eu_instruction inst) 
 	return EU_RESULT_OK;
 }
 
-int _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
+int _disas_proto(europa* s, struct europa_port* port, struct europa_prototype* proto, int pc) {
 	int i;
 
 	_eu_checkreturn(euport_write_string(s, port, "Prototype 0x"));
@@ -763,7 +763,7 @@ int _disas_proto(europa* s, eu_port* port, eu_proto* proto, int pc) {
 	return euport_write_string(s, port, "]\n");
 }
 
-static int _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc) {
+static int _disas_closure(europa* s, struct europa_port* port, struct europa_closure* cl, int pc) {
 	_eu_checkreturn(euport_write_string(s, port, "Closure 0x"));
 	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_uinteger, cl)));
 	_eu_checkreturn(euport_write_string(s, port, ":\n"));
@@ -780,7 +780,7 @@ static int _disas_closure(europa* s, eu_port* port, eu_closure* cl, int pc) {
 	return _disas_proto(s, port, cl->proto, pc);
 }
 
-int _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
+int _disas_cont(europa* s, struct europa_port* port, struct europa_continuation* cont) {
 	_eu_checkreturn(euport_write_string(s, port, "Continuation 0x"));
 	_eu_checkreturn(euport_write_hex_uint(s, port, cast(eu_integer, cont)));
 	_eu_checkreturn(euport_write_string(s, port, ":\nPC: "));
@@ -799,7 +799,7 @@ int _disas_cont(europa* s, eu_port* port, eu_continuation* cont) {
  * @param v The target value.
  * @return The result of the operation.
  */
-int euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
+int euvm_disassemble(europa* s, struct europa_port* port, struct europa_value* v) {
 
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_CLOSURE:
@@ -819,8 +819,8 @@ int euvm_disassemble(europa* s, eu_port* port, eu_value* v) {
 }
 
 int euapi_disassemble(europa* s) {
-	eu_value *procedure, *port;
-	eu_port* p;
+	struct europa_value *procedure, *port;
+	struct europa_port* p;
 
 	_eucc_arity_improper(s, 1); /* check arity */
 	_eucc_argument(s, procedure, 0); /* get procedure argument */

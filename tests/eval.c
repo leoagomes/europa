@@ -31,7 +31,7 @@ void eval_teardown(void* fixture) {
 
 MunitResult test_lambda_formals(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_value result;
+	struct europa_value result;
 
 	assert_ok(eu_do_string(s, "((lambda (a b) b) 123 456)", &result));
 	assertv_int(&result, ==, 456);
@@ -63,7 +63,7 @@ MunitResult test_lambda_formals(MunitParameter params[], void* fixture) {
 
 MunitResult test_eval_constants(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_value out;
+	struct europa_value out;
 
 	assert_ok(eu_do_string(s, "1234", &out));
 	assertv_type(&out, EU_TYPE_NUMBER);
@@ -114,7 +114,7 @@ MunitResult test_eval_constants(MunitParameter params[], void* fixture) {
 
 MunitResult test_eval_ifs(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_value result;
+	struct europa_value result;
 
 	assert_ok(eu_do_string(s, "(if #t #t #f)", &result));
 	assertv_type(&result, EU_TYPE_BOOLEAN);
@@ -137,7 +137,7 @@ int simple_test_cl(europa* s) {
 }
 
 int cl_that_calls(europa* s) {
-	eu_value v;
+	struct europa_value v;
 
 	_eucc_dispatcher(s,
 		_eucc_dtag(argument_call)
@@ -156,9 +156,9 @@ int cl_that_calls(europa* s) {
 
 MunitResult test_c_closures(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_value *tv, key, result;
-	eu_symbol* keysym;
-	eu_closure* cl;
+	struct europa_value *tv, key, result;
+	struct europa_symbol* keysym;
+	struct europa_closure* cl;
 
 	cl = eucl_new(s, simple_test_cl, NULL, s->global->env);
 	munit_assert_not_null(cl);
@@ -186,7 +186,7 @@ MunitResult test_c_closures(MunitParameter params[], void* fixture) {
 
 MunitResult test_simple_callcc(MunitParameter params[], void* fixture) {
 	europa* s = cast(europa*, fixture);
-	eu_value result;
+	struct europa_value result;
 
 	assert_ok(eu_do_string(s,
 		"((lambda (value) (call/cc (lambda (return) (return value)))) 123)", &result));

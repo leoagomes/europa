@@ -7,18 +7,7 @@
 #include "europa/object.h"
 #include "europa/gc.h"
 
-typedef struct europa_table eu_table;
-typedef struct europa_table_node eu_tnode;
-
-struct europa_table_node {
-	/* because of an ugly hack below, value needs to be the first field
-	 * (this forces &tn->value and tn to the same value and the conversion cast
-	 * works)
-	 */
-	eu_value value;
-	eu_value key;
-	int next;
-};
+#include "europa/types.h"
 
 #define _eutnode_key(n) (&((n)->key))
 #define _eutnode_value(n) (&((n)->value))
@@ -28,17 +17,9 @@ struct europa_table_node {
 /* calculates 2^x */
 #define twoto(x) (1 << (x))
 
-struct europa_table {
-	EU_OBJECT_HEADER
-	eu_byte lsize; /*!< log2 of the table's size */
-	int count; /*!< the number of elements in the table */
-	struct europa_table_node *nodes, *last_free;
 
-	struct europa_table* index; /*!< the table's index */
-};
-
-#define _eutable_to_obj(s) cast(eu_object*, s)
-#define _euobj_to_table(o) cast(eu_table*, o)
+#define _eutable_to_obj(s) cast(struct europa_object*, s)
+#define _euobj_to_table(o) cast(struct europa_table*, o)
 
 #define _euvalue_to_table(v) _euobj_to_table((v)->value.object)
 #define _eu_maketable(vptr, t) do {\
@@ -60,25 +41,25 @@ struct europa_table {
 
 /* function declarations */
 
-eu_table* eutable_new(europa* s, size_t count);
-int eutable_destroy(europa* s, eu_table* t);
-int eutable_mark(europa* s, eu_gcmark mark, eu_table* t);
-eu_uinteger eutable_hash(eu_table* t);
-eu_table* eutable_set_index(eu_table* t, eu_table* i);
+struct europa_table* eutable_new(europa* s, size_t count);
+int eutable_destroy(europa* s, struct europa_table* t);
+int eutable_mark(europa* s, europa_gc_mark mark, struct europa_table* t);
+eu_uinteger eutable_hash(struct europa_table* t);
+struct europa_table* eutable_set_index(struct europa_table* t, struct europa_table* i);
 
-int eutable_create_key(europa* s, eu_table* t, eu_value* key,
-	eu_value** val);
-int eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val);
-int eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val);
-int eutable_get_string(europa* s, eu_table* t, const char* str,
-	eu_value** val);
-int eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
-	eu_value** val);
+int eutable_create_key(europa* s, struct europa_table* t, struct europa_value* key,
+	struct europa_value** val);
+int eutable_define_symbol(europa* s, struct europa_table* t, void* text, struct europa_value** val);
+int eutable_get(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val);
+int eutable_get_string(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val);
+int eutable_get_symbol(europa* s, struct europa_table* t, const char* sym_text,
+	struct europa_value** val);
 
-int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
-int eutable_rget_string(europa* s, eu_table* t, const char* str,
-	eu_value** val);
-int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
-	eu_value** val);
+int eutable_rget(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val);
+int eutable_rget_string(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val);
+int eutable_rget_symbol(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val);
 
 #endif

@@ -18,16 +18,16 @@
  * @param cf The C function to close. (Only if C function.)
  * @param proto The europa function prototype.
  * @param env The environment where the closure was created.
- * @return eu_closure*
+ * @return struct europa_closure*
  */
-eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
-	eu_closure* cl;
+struct europa_closure* eucl_new(europa* s, europa_c_callback cf, struct europa_prototype* proto, struct europa_table* env) {
+	struct europa_closure* cl;
 	int length, improper, i;
-	eu_value *tv, *cv;
+	struct europa_value *tv, *cv;
 
 	/* allocate the closure */
 	cl = _euobj_to_closure(eugc_new_object(s, EU_TYPE_CLOSURE |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_closure)));
+		EU_TYPEFLAG_COLLECTABLE, sizeof(struct europa_closure)));
 	if (cl == NULL)
 		return NULL;
 
@@ -81,7 +81,7 @@ eu_closure* eucl_new(europa* s, eu_cfunc cf, eu_proto* proto, eu_table* env) {
  * @param cl The target closure.
  * @return The result of the operation.
  */
-int eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
+int eucl_mark(europa* s, europa_gc_mark mark, struct europa_closure* cl) {
 	if (!s || !mark || !cl)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -102,7 +102,7 @@ int eucl_mark(europa* s, eu_gcmark mark, eu_closure* cl) {
  * @param cl The target closure.
  * @return Its hash.
  */
-eu_integer eucl_hash(eu_closure* cl) {
+eu_integer eucl_hash(struct europa_closure* cl) {
 	return cast(eu_integer, cl);
 }
 
@@ -112,6 +112,6 @@ eu_integer eucl_hash(eu_closure* cl) {
  * @param cl The target closure.
  * @return The result of the operation.
  */
-int eucl_destroy(europa* s, eu_closure* cl) {
+int eucl_destroy(europa* s, struct europa_closure* cl) {
 	return EU_RESULT_OK;
 }

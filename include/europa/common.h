@@ -5,6 +5,8 @@
 #define NULL ((void*)0)
 #endif /* NULL */
 
+#define API
+
 #define cast(t,p) ((t)(p))
 
 #define _eu_checkreturn(exp) do {\

@@ -31,8 +31,8 @@ int eurt_runcprotected(europa* s, eu_pfunc f, void* ud) {
 	return jmp.res;
 }
 
-int eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
-	eu_value chunk;
+int eurt_evaluate(europa* s, struct europa_value* v, struct europa_value* out) {
+	struct europa_value chunk;
 
 	/* compile the value */
 	_eu_checkreturn(eucode_compile(s, v, &chunk));
@@ -45,7 +45,7 @@ int eurt_evaluate(europa* s, eu_value* v, eu_value* out) {
 
 
 int euapi_register_controls(europa* s) {
-	eu_table* env;
+	struct europa_table* env;
 
 	env = s->env;
 
@@ -59,7 +59,7 @@ int euapi_register_controls(europa* s) {
 }
 
 int euapi_procedureQ(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -70,9 +70,9 @@ int euapi_procedureQ(europa* s) {
 }
 
 int euapi_apply(europa* s) {
-	eu_value *proc, *current;
-	eu_value args, *slot;
-	eu_pair* pair;
+	struct europa_value *proc, *current;
+	struct europa_value args, *slot;
+	struct europa_pair* pair;
 
 	_eucc_arity_improper(s, 2); /* check arity */
 	_eucc_argument(s, proc, 0); /* get first argument */
@@ -117,10 +117,10 @@ int euapi_apply(europa* s) {
 }
 
 int euapi_map(europa* s) {
-	eu_table* env;
-	eu_value *proc, *current;
-	eu_value args, *slot, *list, *rslot;
-	eu_pair* pair;
+	struct europa_table* env;
+	struct europa_value *proc, *current;
+	struct europa_value args, *slot, *list, *rslot;
+	struct europa_pair* pair;
 
 	env = _eu_env(s);
 
@@ -132,7 +132,7 @@ int euapi_map(europa* s) {
 		_eucc_dtag(environment_setup)
 
 		/* at this point, the environment has been properly set up, so we can */
-		rslot = cast(eu_value*, env->nodes[1].value.value.p);
+		rslot = cast(struct europa_value*, env->nodes[1].value.value.p);
 
 		/* continue dispatcher */
 		_eucc_dtag(apply_procedure)
@@ -232,10 +232,10 @@ int euapi_map(europa* s) {
 }
 
 int euapi_for_each(europa* s) {
-	eu_table* env;
-	eu_value *proc, *current;
-	eu_value args, *slot, *list, *rslot;
-	eu_pair* pair;
+	struct europa_table* env;
+	struct europa_value *proc, *current;
+	struct europa_value args, *slot, *list, *rslot;
+	struct europa_pair* pair;
 	int reached_end = 0;
 
 	env = _eu_env(s);

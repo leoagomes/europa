@@ -21,7 +21,7 @@
 #define eugco_markblack(obj) ((obj)->_color = EUGC_COLOR_BLACK)
 
 /* forward function declarations */
-int eugco_destroy(europa* s, eu_object* obj);
+int eugco_destroy(europa* s, struct europa_object* obj);
 
 /* function definitions */
 
@@ -31,26 +31,26 @@ int eugco_destroy(europa* s, eu_object* obj);
  * @param ud The userdata pointer to be passed to the realloc-like function.
  * @return Whether initializing the data was successful.
  */
-int eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
+int eugc_init(struct europa_gc* gc, void* ud, europa_realloc rlc) {
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* initialize the realloc function and user data */
 	gc->realloc = rlc;
-	gc->ud = ud;
+	gc->realloc_ud = ud;
 
 	/* initializing the list of objects. */
 	gc->last_obj = NULL;
 
 	/* set up object list head */
-	gc->objs_head._color = EUGC_DO_NOT_TOUCH;
-	gc->objs_head._next = &(gc->objs_head);
-	gc->objs_head._previous = &(gc->objs_head);
+	gc->thisgen._color = EUGC_DO_NOT_TOUCH;
+	gc->thisgen._next = &(gc->thisgen);
+	gc->thisgen._previous = &(gc->thisgen);
 
 	/* set up root set head */
-	gc->root_head._color = EUGC_DO_NOT_TOUCH;
-	gc->root_head._next = &(gc->root_head);
-	gc->root_head._previous = &(gc->root_head);
+	gc->root._color = EUGC_DO_NOT_TOUCH;
+	gc->root._next = &(gc->root);
+	gc->root._previous = &(gc->root);
 
 	return EU_RESULT_OK;
 }
@@ -61,37 +61,37 @@ int eugc_init(eu_gc* gc, void* ud, eu_realloc rlc) {
  * @return The result of the operation.
  */
 int eugc_destroy(europa* s) {
-	eu_object* currentobj;
-	eu_object* tmp;
-	eu_gc* gc = _eu_gc(s);
+	struct europa_object* currentobj;
+	struct europa_object* tmp;
+	struct europa_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* destroy all normal objects */
-	currentobj = gc->objs_head._next;
-	while (currentobj != &(gc->objs_head)) {
+	currentobj = gc->thisgen._next;
+	while (currentobj != &(gc->thisgen)) {
 		eugco_destroy(s, currentobj);
 		currentobj = currentobj->_next;
 	}
 	/* and root set objects */
-	currentobj = gc->root_head._next;
-	while (currentobj != &(gc->root_head)) {
+	currentobj = gc->root._next;
+	while (currentobj != &(gc->root)) {
 		eugco_destroy(s, currentobj);
 		currentobj = currentobj->_next;
 	}
 
 	/* then free their memories */
-	currentobj = gc->objs_head._next;
-	while (currentobj != &(gc->objs_head)) {
+	currentobj = gc->thisgen._next;
+	while (currentobj != &(gc->thisgen)) {
 		tmp = currentobj->_next;
 		_eu_checkreturn(eugc_remove_object(s, currentobj));
 		_eugc_free(gc, currentobj);
 		currentobj = tmp;
 	}
 	/* and root set objects */
-	currentobj = gc->root_head._next;
-	while (currentobj != &(gc->root_head)) {
+	currentobj = gc->root._next;
+	while (currentobj != &(gc->root)) {
 		tmp = currentobj->_next;
 		_eu_checkreturn(eugc_remove_object(s, currentobj));
 		_eugc_free(gc, currentobj);
@@ -108,9 +108,9 @@ int eugc_destroy(europa* s) {
  * @param gc The garbage collector structure.
  * @param type The type of the new
  */
-eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
-	eu_object* obj;
-	eu_gc* gc = _eu_gc(s);
+struct europa_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
+	struct europa_object* obj;
+	struct europa_gc* gc = _eu_gc(s);
 
 	/* alloc object memory */
 	obj = _eugc_malloc(gc, size);
@@ -125,10 +125,10 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
 	}
 
 	/* add object to object list */
-	obj->_next = gc->objs_head._next;
-	obj->_previous = &(gc->objs_head);
-	gc->objs_head._next->_previous = obj;
-	gc->objs_head._next = obj;
+	obj->_next = gc->thisgen._next;
+	obj->_previous = &(gc->thisgen);
+	gc->thisgen._next->_previous = obj;
+	gc->thisgen._next = obj;
 
 	eugco_markwhite(obj);
 
@@ -149,15 +149,15 @@ eu_object* eugc_new_object(europa* s, eu_byte type, unsigned long long size) {
  */
 int eugc_naive_collect(europa* s) {
 	int res;
-	eu_object* obj;
-	eu_gc* gc = _eu_gc(s);
+	struct europa_object* obj;
+	struct europa_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* mark all objects in root set */
-	obj = gc->root_head._next;
-	while (obj != &(gc->root_head)) {
+	obj = gc->root._next;
+	while (obj != &(gc->root)) {
 		_eu_checkreturn(eugc_naive_mark(s, obj));
 		obj = obj->_next;
 	}
@@ -177,8 +177,8 @@ int eugc_naive_collect(europa* s) {
  * @param gc the GC structure.
  * @param obj the object to mark.
  */
-int eugc_naive_mark(europa* s, eu_object* obj) {
-	eu_gc* gc = _eu_gc(s);
+int eugc_naive_mark(europa* s, struct europa_object* obj) {
+	struct europa_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -229,7 +229,7 @@ int eugc_naive_mark(europa* s, eu_object* obj) {
 		break;
 
 	case EU_TYPE_GLOBAL:
-		_eu_checkreturn(euglobal_mark(s, eugc_naive_mark, cast(eu_global*, obj)));
+		_eu_checkreturn(euglobal_mark(s, eugc_naive_mark, cast(struct europa_global*, obj)));
 		break;
 
 	case EU_TYPE_USERDATA:
@@ -255,17 +255,17 @@ int eugc_naive_mark(europa* s, eu_object* obj) {
  * @return The result of the operation.
  */
 int eugc_naive_sweep(europa* s) {
-	eu_object *current, *aux;
+	struct europa_object *current, *aux;
 	int res;
-	eu_gc* gc = _eu_gc(s);
+	struct europa_gc* gc = _eu_gc(s);
 
 	if (gc == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* start at just after the head */
-	current = gc->objs_head._next;
+	current = gc->thisgen._next;
 
-	while (current != &(gc->objs_head)) { /* run until we've reached the head again */
+	while (current != &(gc->thisgen)) { /* run until we've reached the head again */
 		switch (current->_color) {
 		/* remove objects that couldn't be reached during the mark stage */
 		case EUGC_COLOR_WHITE:
@@ -313,9 +313,9 @@ int eugc_naive_sweep(europa* s) {
 		return res;\
 	}
 
-int eugco_destroy(europa* s, eu_object* obj) {
+int eugco_destroy(europa* s, struct europa_object* obj) {
 	int res;
-	eu_gc* gc = _eu_gc(s);
+	struct europa_gc* gc = _eu_gc(s);
 
 	switch (_euobj_type(obj)) {
 	/* objects that may reference external resources that need closing */
@@ -362,9 +362,9 @@ int eugco_destroy(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-int eugc_remove_object(europa* s, eu_object* obj) {
+int eugc_remove_object(europa* s, struct europa_object* obj) {
 	/* prevent the user from breaking the list */
-	if (obj == &(_eu_gc(s)->objs_head))
+	if (obj == &(_eu_gc(s)->thisgen))
 		return EU_RESULT_BAD_ARGUMENT;
 
 	/* check if object is in any list */
@@ -394,7 +394,7 @@ int eugc_remove_object(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-int eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
+int eugc_add_object(europa* s, struct europa_object* head, struct europa_object* obj) {
 	/* add object to object list */
 	obj->_next = head->_next;
 	obj->_previous = head;
@@ -415,11 +415,11 @@ int eugc_add_object(europa* s, eu_object* head, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-int eugc_move_to_root(europa* s, eu_object* obj) {
+int eugc_move_to_root(europa* s, struct europa_object* obj) {
 	/* remove object from previous list */
 	_eu_checkreturn(eugc_remove_object(s, obj));
 	/* add object to root list */
-	_eu_checkreturn(eugc_add_object(s, _eugc_root_head(_eu_gc(s)), obj));
+	_eu_checkreturn(eugc_add_object(s, _eugc_root(_eu_gc(s)), obj));
 	/* mark it white */
 	eugco_markwhite(obj);
 
@@ -438,11 +438,11 @@ int eugc_move_to_root(europa* s, eu_object* obj) {
  * @param obj The target object.
  * @return The result of the operation.
  */
-int eugc_move_off_root(europa* s, eu_object* obj) {
+int eugc_move_off_root(europa* s, struct europa_object* obj) {
 	/* remove object from previous list */
 	_eu_checkreturn(eugc_remove_object(s, obj));
 	/* add it to the object list */
-	_eu_checkreturn(eugc_add_object(s, _eugc_objs_head(_eu_gc(s)), obj));
+	_eu_checkreturn(eugc_add_object(s, _eugc_thisgen(_eu_gc(s)), obj));
 	/* paint it white */
 	eugco_markwhite(obj);
 

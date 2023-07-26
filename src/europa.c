@@ -18,9 +18,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-int global_basic_init(eu_global* g, eu_realloc f, void* ud, eu_cfunc panic) {
+int global_basic_init(struct europa_global* g, europa_realloc f, void* ud, europa_c_callback panic) {
 	/* pretend this is a normal GC object */
-	g->_previous = g->_next = cast(eu_object*, g);
+	g->_previous = g->_next = cast(struct europa_object*, g);
 	g->_color = EUGC_COLOR_WHITE;
 	g->_type = EU_TYPE_GLOBAL | EU_TYPEFLAG_COLLECTABLE;
 
@@ -61,9 +61,9 @@ int global_environment_init(europa* s, int pred_size) {
  * @return The operation's result.
  */
 int euglobal_bootstrap_internalized(europa* s) {
-	eu_table* t;
-	eu_symbol* sym;
-	eu_value symvalue, *tvalue;
+	struct europa_table* t;
+	struct europa_symbol* sym;
+	struct europa_value symvalue, *tvalue;
 
 	/* create the table */
 	t = eutable_new(s, INTERNALIZED_COUNT);
@@ -98,14 +98,14 @@ int euglobal_bootstrap_internalized(europa* s) {
  * NULL.
  * @return A new main europa state, with a new global state.
  */
-europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, int* err) {
+europa* eu_new(europa_realloc f, void* ud, europa_c_callback panic, int* err) {
 	europa* s;
-	eu_global* gl;
+	struct europa_global* gl;
 	int res;
 
 	/* Even the main state is just an instance in the global's GC, so we must
 	 * first allocate a global. */
-	gl = (f)(ud, NULL, sizeof(eu_global));
+	gl = (f)(ud, NULL, sizeof(struct europa_global));
 	if (gl == NULL) {
 		/* set error variable */
 		_checkset(err, EU_RESULT_BAD_ALLOC);
@@ -135,16 +135,16 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, int* err) {
 	s->output_port = NULL;
 	s->error_port = NULL;
 
-	s->err = NULL;
+	s->last_error = NULL;
 	s->global = gl;
 	s->global->main = s;
 
 	/* insert the global into the GC's root set */
-	if ((res = eugc_move_to_root(s, cast(eu_object*, gl)))) {
+	if ((res = eugc_move_to_root(s, cast(struct europa_object*, gl)))) {
 		_checkset(err, res);
 		goto fail;
 	}
-	if ((res = eugc_move_to_root(s, cast(eu_object*, s)))) {
+	if ((res = eugc_move_to_root(s, cast(struct europa_object*, s)))) {
 		_checkset(err, res);
 		goto fail;
 	}
@@ -188,7 +188,7 @@ europa* eu_new(eu_realloc f, void* ud, eu_cfunc panic, int* err) {
  * @param text The message.
  * @return The result of the operation.
  */
-int eu_set_error(europa* s, int flags, eu_error* nested, void* text) {
+int eu_set_error(europa* s, int flags, struct europa_error* nested, void* text) {
 	if (!s || !text)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -212,7 +212,7 @@ int eu_set_error(europa* s, int flags, eu_error* nested, void* text) {
  * @param ... Any printf-like arguments.
  * @return The result of the operation.
  */
-int eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len,
+int eu_set_error_nf(europa* s, int flags, struct europa_error* nested, size_t len,
 	const char* fmt, ...) {
 	char buf[len];
 
@@ -238,9 +238,9 @@ int eu_set_error_nf(europa* s, int flags, eu_error* nested, size_t len,
  * @param out Where to place the result.
  * @return The result of the operation.
  */
-int eu_do_string(europa* s, void* text, eu_value* out) {
-	eu_port* p;
-	eu_value obj;
+int eu_do_string(europa* s, void* text, struct europa_value* out) {
+	struct europa_port* p;
+	struct europa_value obj;
 
 	/* create a memory port for the text */
 	p = _eumport_to_port(eumport_from_str(s, EU_PORT_FLAG_INPUT | EU_PORT_FLAG_TEXTUAL, text));
@@ -264,8 +264,8 @@ int eu_do_string(europa* s, void* text, eu_value* out) {
  */
 int eu_terminate(europa* s) {
 	int res;
-	eu_global* gl;
-	eu_realloc f;
+	struct europa_global* gl;
+	europa_realloc f;
 	void* ud;
 
 	if (s != s->global->main) {
@@ -276,11 +276,11 @@ int eu_terminate(europa* s) {
 	/* save the free function, its user data and the global state */
 	gl = s->global;
 	f = gl->gc.realloc;
-	ud = gl->gc.ud;
+	ud = gl->gc.realloc_ud;
 
 	/* remove current state and global from gc */
-	_eu_checkreturn(eugc_remove_object(s, cast(eu_object*, gl)));
-	_eu_checkreturn(eugc_remove_object(s, cast(eu_object*, s)));
+	_eu_checkreturn(eugc_remove_object(s, cast(struct europa_object*, gl)));
+	_eu_checkreturn(eugc_remove_object(s, cast(struct europa_object*, s)));
 
 	/* destroy everything in the GC */
 	res = eugc_destroy(s);
@@ -308,7 +308,7 @@ eu_uinteger eustate_hash(europa* s) {
  * @param gl The target global.
  * @return The hash.
  */
-eu_uinteger euglobal_hash(eu_global* gl) {
+eu_uinteger euglobal_hash(struct europa_global* gl) {
 	return cast(eu_integer, gl);
 }
 
@@ -320,16 +320,16 @@ eu_uinteger euglobal_hash(eu_global* gl) {
  * @param state The target state (to be marked).
  * @return The result of the operation.
  */
-int eustate_mark(europa* s, eu_gcmark mark, europa* state) {
+int eustate_mark(europa* s, europa_gc_mark mark, europa* state) {
 	if (!s || !mark || !state)
 		return EU_RESULT_NULL_ARGUMENT;
 
-	if (state->ccl) { /* state is executing something */
+	if (state->current_closure) { /* state is executing something */
 		/* mark current closure */
-		_eu_checkreturn(mark(s, _euclosure_to_obj(state->ccl)));
+		_eu_checkreturn(mark(s, _euclosure_to_obj(state->current_closure)));
 
 		/* mark its environment */
-		_eu_checkreturn(mark(s, _eutable_to_obj(state->env)));
+		_eu_checkreturn(mark(s, _eutable_to_obj(state->environment)));
 
 		/* mark the stack */
 		_eu_checkreturn(mark(s, _eucont_to_obj(state->previous)));
@@ -340,19 +340,19 @@ int eustate_mark(europa* s, eu_gcmark mark, europa* state) {
 		}
 
 		/* mark the accumulator */
-		if (_euvalue_is_collectable(&state->acc)) {
-			_eu_checkreturn(mark(s, state->acc.value.object));
+		if (_euvalue_is_collectable(&state->accumulator)) {
+			_eu_checkreturn(mark(s, state->accumulator.value.object));
 		}
 	}
 
 	/* mark the global state (which should be in the root set, anyway) */
 	if (state->global) {
-		_eu_checkreturn(mark(s, cast(eu_object*, state->global)));
+		_eu_checkreturn(mark(s, cast(struct europa_object*, state->global)));
 	}
 
 	/* mark any errors */
-	if (state->err) {
-		_eu_checkreturn(mark(s, _euerror_to_obj(state->err)));
+	if (state->last_error) {
+		_eu_checkreturn(mark(s, _euerror_to_obj(state->last_error)));
 	}
 
 	return EU_RESULT_OK;
@@ -366,12 +366,12 @@ int eustate_mark(europa* s, eu_gcmark mark, europa* state) {
  * @param gl The target global state (to be marked).
  * @return The result of the operation.
  */
-int euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
+int euglobal_mark(europa* s, europa_gc_mark mark, struct europa_global* gl) {
 	if (!s || !mark || !gl)
 		return EU_RESULT_NULL_ARGUMENT;
 
 	/* mark the main state */
-	_eu_checkreturn(mark(s, cast(eu_object*, gl->main)));
+	_eu_checkreturn(mark(s, cast(struct europa_object*, gl->main)));
 
 	/* mark internalized table */
 	_eu_checkreturn(mark(s, _eutable_to_obj(gl->internalized)));
@@ -389,12 +389,12 @@ int euglobal_mark(europa* s, eu_gcmark mark, eu_global* gl) {
  * @param[out] err Where to place the current error. Ignored if NULL.
  * @return The result of the operation.
  */
-int eu_recover(europa* s, eu_error** err) {
+int eu_recover(europa* s, struct europa_error** err) {
 	if (err)
-		*err = s->err;
+		*err = s->last_error;
 
 	euvm_initialize_state(s);
-	s->err = NULL;
+	s->last_error = NULL;
 
 	return EU_RESULT_OK;
 }

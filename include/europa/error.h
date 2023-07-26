@@ -6,29 +6,18 @@
 #include "europa/common.h"
 #include "europa/object.h"
 
+#include "europa/types.h"
+
 enum {
 	EU_ERROR_NONE, /* it makes no sense, I know */
 	EU_ERROR_READ,
 	EU_ERROR_WRITE,
 };
 
-/** error type definition */
-typedef struct europa_error eu_error;
-
-/** Error type structure */
-struct europa_error {
-	EU_OBJECT_HEADER
-
-	eu_error* nested; /*!< possibly nested error. */
-
-	int flags; /*!< error flags. */
-	eu_byte _msg; /*!< start of the errors, message. */
-};
-
 /* conversion macros */
 
-#define _euerror_to_obj(s) cast(eu_object*, s)
-#define _euobj_to_error(o) cast(eu_error*, o)
+#define _euerror_to_obj(s) cast(struct europa_object*, s)
+#define _euobj_to_error(o) cast(struct europa_error*, o)
 
 #define _euvalue_to_error(v) _euobj_to_error((v)->value.object)
 #define _euerror_to_value(v) { \
@@ -40,9 +29,9 @@ struct europa_error {
 #define _euerror_message(s) (&((s)->_msg))
 #define _euerror_nested(s) (&((s)->nested))
 
-eu_error* euerror_new(europa* s, int flags, void* text, eu_error* nested);
+struct europa_error* euerror_new(europa* s, int flags, void* text, struct europa_error* nested);
 
-void* euerror_message(eu_error* err);
-eu_uinteger euerror_hash(eu_error* err);
+void* euerror_message(struct europa_error* err);
+eu_uinteger euerror_hash(struct europa_error* err);
 
 #endif

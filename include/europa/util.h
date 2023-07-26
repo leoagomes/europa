@@ -13,7 +13,7 @@ eu_uinteger eutil_cstr_hash(const char* str);
 
 int unicodetoutf8(int c);
 
-int eutil_list_length(europa* s, eu_value* v, int* improper);
+int eutil_list_length(europa* s, struct europa_value* v, int* improper);
 
 void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size);
 

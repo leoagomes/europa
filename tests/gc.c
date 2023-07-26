@@ -69,8 +69,8 @@ MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	s = (europa*)fixture;
 
 	/* allocate an object */
-	eu_object* obj = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_object));
+	struct europa_object* obj = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(struct europa_object));
 
 	/* make sure something was allocated */
 	munit_assert_ptr_not_null(obj);
@@ -81,9 +81,9 @@ MunitResult test_object_creation(MunitParameter params[], void* fixture) {
 	return MUNIT_OK;
 }
 
-int object_in_list(europa* s, eu_object* obj) {
-	eu_gc* gc;
-	eu_object* current;
+int object_in_list(europa* s, struct europa_object* obj) {
+	struct europa_gc* gc;
+	struct europa_object* current;
 
 	gc = _eu_gc(s);
 
@@ -104,8 +104,8 @@ int object_in_list(europa* s, eu_object* obj) {
  */
 MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 	europa* s;
-	eu_object* obj[4];
-	eu_gc* gc;
+	struct europa_object* obj[4];
+	struct europa_gc* gc;
 	int i;
 
 	if (fixture == NULL)
@@ -116,16 +116,16 @@ MunitResult test_gc_naive_sweep(MunitParameter params[], void* fixture) {
 
 	/* allocate 4 objects */
 	obj[0] = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_object));
+		sizeof(struct europa_object));
 	munit_assert_ptr_not_null(obj[0]);
 	obj[1] = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_object));
+		sizeof(struct europa_object));
 	munit_assert_ptr_not_null(obj[1]);
 	obj[2] = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_object));
+		sizeof(struct europa_object));
 	munit_assert_ptr_not_null(obj[2]);
 	obj[3] = eugc_new_object(s, EU_TYPE_SYMBOL | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_object));
+		sizeof(struct europa_object));
 	munit_assert_ptr_not_null(obj[3]);
 
 	/* mark first and third objects */

@@ -19,13 +19,13 @@ void* rlike(void* ud, void* ptr, size_t size);
 europa* bootstrap_default_instance(void);
 void terminate_default_instance(europa* s);
 
-void printv(europa* s, eu_value* v);
-void printvln(europa* s, eu_value* v);
-void printobj(europa* s, eu_object* obj);
-void printobjln(europa* s, eu_object* obj);
+void printv(europa* s, struct europa_value* v);
+void printvln(europa* s, struct europa_value* v);
+void printobj(europa* s, struct europa_object* obj);
+void printobjln(europa* s, struct europa_object* obj);
 
-void disas_closure(europa* s, eu_closure* cl);
-void disas_proto(europa* s, eu_proto* proto);
-void disas_inst(europa* s, eu_proto* proto, eu_instruction inst);
+void disas_closure(europa* s, struct europa_closure* cl);
+void disas_proto(europa* s, struct europa_prototype* proto);
+void disas_inst(europa* s, struct europa_prototype* proto, eu_instruction inst);
 
 #endif

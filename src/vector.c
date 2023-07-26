@@ -20,22 +20,22 @@
  * @param s The Europa state.
  * @param length The number of values the vector can house.
  */
-eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
-	eu_vector* vec;
+struct europa_vector* euvector_new(europa* s, struct europa_value* data, eu_integer length) {
+	struct europa_vector* vec;
 
 	if(s == NULL || length < 0)
 		return NULL;
 
 	vec = _euobj_to_vector(eugc_new_object(s,
 		EU_TYPE_VECTOR | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_vector) + (sizeof(eu_value) * (length - 1))));
+		sizeof(struct europa_vector) + (sizeof(struct europa_value) * (length - 1))));
 	if (vec == NULL)
 		return NULL;
 
 	vec->length = length;
 
 	if (data != NULL) {
-		memcpy(_euvector_values(vec), data, length * sizeof(eu_value));
+		memcpy(_euvector_values(vec), data, length * sizeof(struct europa_value));
 	}
 
 	return vec;
@@ -46,7 +46,7 @@ eu_vector* euvector_new(europa* s, eu_value* data, eu_integer length) {
  * @param vec The target vector object.
  * @return The length of the given vector.
  */
-eu_integer euvector_length(eu_vector* vec) {
+eu_integer euvector_length(struct europa_vector* vec) {
 	if (vec == NULL)
 		return -1;
 	return _euvector_length(vec);
@@ -57,7 +57,7 @@ eu_integer euvector_length(eu_vector* vec) {
  * @param vec The vector object.
  * @return The address of where values are stored.
  */
-eu_value* euvector_values(eu_vector* vec) {
+struct europa_value* euvector_values(struct europa_vector* vec) {
 	if (vec == NULL)
 		return NULL;
 	return _euvector_values(vec);
@@ -70,11 +70,11 @@ eu_value* euvector_values(eu_vector* vec) {
  * @param vec The target vector object.
  * @return The result of the marking process.
  */
-int euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
+int euvector_mark(europa* s, europa_gc_mark mark, struct europa_vector* vec) {
 	int res;
 	eu_integer i;
-	eu_value* values;
-	eu_object* obj;
+	struct europa_value* values;
+	struct europa_object* obj;
 
 	if (vec == NULL)
 		return EU_RESULT_NULL_ARGUMENT;
@@ -97,6 +97,6 @@ int euvector_mark(europa* s, eu_gcmark mark, eu_vector* vec) {
  * @param vec The target vector.
  * @return The hash.
  */
-eu_uinteger euvector_hash(eu_vector* vec) {
+eu_uinteger euvector_hash(struct europa_vector* vec) {
 	return cast(eu_integer, vec);
 }

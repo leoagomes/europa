@@ -60,7 +60,7 @@ int ceil_log2(unsigned int length) {
  * @param length The new minimum length.
  * @return The result of the operation.
  */
-static int set_nodes_length(europa* s, eu_table* t, size_t length) {
+static int set_nodes_length(europa* s, struct europa_table* t, size_t length) {
 	size_t size;
 	eu_tnode* node;
 
@@ -96,10 +96,10 @@ static int set_nodes_length(europa* s, eu_table* t, size_t length) {
 	return EU_RESULT_OK;
 }
 
-int eutable_resize(europa* s, eu_table* t, size_t new_length) {
+int eutable_resize(europa* s, struct europa_table* t, size_t new_length) {
 	size_t old_llen, old_len, new_llen;
 	eu_tnode* old_nodes;
-	eu_value* v;
+	struct europa_value* v;
 	int i;
 
 	/* check whether trying to shrink a table beyond the number of elements it
@@ -159,7 +159,7 @@ int eutable_resize(europa* s, eu_table* t, size_t new_length) {
  * @param t The target table.
  * @return The node. NULL if length is 0 or no free positions.
  */
-eu_tnode* eutnode_free_position(europa* s, eu_table* t) {
+eu_tnode* eutnode_free_position(europa* s, struct europa_table* t) {
 	if (t->last_free) {
 		while (t->last_free > t->nodes) {
 			t->last_free--;
@@ -177,12 +177,12 @@ eu_tnode* eutnode_free_position(europa* s, eu_table* t) {
  * hold.
  * @return The new table. NULL in case there was an error.
  */
-eu_table* eutable_new(europa* s, size_t length) {
-	eu_table *t;
+struct europa_table* eutable_new(europa* s, size_t length) {
+	struct europa_table *t;
 
 	/* allocate space for the main table structure */
-	t = cast(eu_table*, eugc_new_object(s, EU_TYPE_TABLE | EU_TYPEFLAG_COLLECTABLE,
-		sizeof(eu_table)));
+	t = cast(struct europa_table*, eugc_new_object(s, EU_TYPE_TABLE | EU_TYPEFLAG_COLLECTABLE,
+		sizeof(struct europa_table)));
 	if (t == NULL)
 		return NULL;
 
@@ -208,11 +208,11 @@ eu_table* eutable_new(europa* s, size_t length) {
  * @param t The target table.
  * @return The hash.
  */
-eu_uinteger eutable_hash(eu_table* t) {
+eu_uinteger eutable_hash(struct europa_table* t) {
 	return cast(eu_integer, t);
 }
 
-eu_table* eutable_set_index(eu_table* t, eu_table* i) {
+struct europa_table* eutable_set_index(struct europa_table* t, struct europa_table* i) {
 	return _eutable_set_index(t, i);
 }
 
@@ -222,7 +222,7 @@ eu_table* eutable_set_index(eu_table* t, eu_table* i) {
  * @param t The target table.
  * @return The result of the operation. (Always OK)
  */
-int eutable_destroy(europa* s, eu_table* t) {
+int eutable_destroy(europa* s, struct europa_table* t) {
 	/* manually free the node array if applicable */
 	if (t->nodes != &_dummy) {
 		_eugc_free(_eu_gc(s), t->nodes);
@@ -238,10 +238,10 @@ int eutable_destroy(europa* s, eu_table* t) {
  * @param t The target table.
  * @return The result of the operation.
  */
-int eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
+int eutable_mark(europa* s, europa_gc_mark mark, struct europa_table* t) {
 	int i;
 	size_t len;
-	eu_value* v;
+	struct europa_value* v;
 	eu_tnode* n;
 
 	/* mark elements in table */
@@ -281,11 +281,11 @@ int eutable_mark(europa* s, eu_gcmark mark, eu_table* t) {
  * @return A pointer to the associated value. NULL if key is not found in the
  * table.
  */
-int eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_get(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val) {
 	eu_uinteger vhash;
 	int pos;
 	eu_tnode* node;
-	eu_value out;
+	struct europa_value out;
 
 	/* return error in case any of the arguments is invalid */
 	if (!s || !t || !key)
@@ -345,8 +345,8 @@ int eutable_get(europa* s, eu_table* t, eu_value* key, eu_value** val) {
  * @param val Where to place the value pointer.
  * @return Whether the operation was succesfull.
  */
-int eutable_get_string(europa* s, eu_table* t, const char* str,
-	eu_value** val) {
+int eutable_get_string(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val) {
 	eu_uinteger vhash;
 	int pos;
 	eu_tnode* node;
@@ -404,12 +404,12 @@ int eutable_get_string(europa* s, eu_table* t, const char* str,
  * @param val Where to place the resulting value pointer.
  * @return Whether the operation was successful.
  */
-int eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
-	eu_value** val) {
+int eutable_get_symbol(europa* s, struct europa_table* t, const char* sym_text,
+	struct europa_value** val) {
 	eu_uinteger vhash;
 	int pos;
 	eu_tnode* node;
-	eu_value out;
+	struct europa_value out;
 
 	/* check parameters */
 	if (!s || !t || !sym_text || !val)
@@ -461,11 +461,11 @@ int eutable_get_symbol(europa* s, eu_table* t, const char* sym_text,
  * @param val Where to place the value pointer.
  * @return Whether the operation was successful.
  */
-int eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_create_key(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val) {
 	eu_uinteger vhash;
 	int pos, i;
 	eu_tnode *node, *cnode, *fnode;
-	eu_value out;
+	struct europa_value out;
 
 	/* check parameters */
 	if (!s || !t || !key || !val)
@@ -555,11 +555,11 @@ int eutable_create_key(europa* s, eu_table* t, eu_value* key, eu_value** val) {
 	return EU_RESULT_OK; /* everything went fine */
 }
 
-int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val);
-int eutable_rget_string(europa* s, eu_table* t, const char* str,
-	eu_value** val);
-int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
-	eu_value** val);
+int eutable_rget(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val);
+int eutable_rget_string(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val);
+int eutable_rget_symbol(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val);
 
 /** Gets a value from a table, recursing into index if necessary.
  *
@@ -569,7 +569,7 @@ int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
+int eutable_rget(europa* s, struct europa_table* t, struct europa_value* key, struct europa_value** val) {
 	/* try getting the key in current table */
 	_eu_checkreturn(eutable_get(s, t, key, val));
 
@@ -588,8 +588,8 @@ int eutable_rget(europa* s, eu_table* t, eu_value* key, eu_value** val) {
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-int eutable_rget_string(europa* s, eu_table* t, const char* str,
-	eu_value** val) {
+int eutable_rget_string(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val) {
 	/* try getting the string */
 	_eu_checkreturn(eutable_get_string(s, t, str, val));
 
@@ -608,8 +608,8 @@ int eutable_rget_string(europa* s, eu_table* t, const char* str,
  * @param val Where to place the pointer to the value.
  * @return Whether the operation was successful.
  */
-int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
-	eu_value** val) {
+int eutable_rget_symbol(europa* s, struct europa_table* t, const char* str,
+	struct europa_value** val) {
 	/* try getting the string */
 	_eu_checkreturn(eutable_get_string(s, t, str, val));
 
@@ -620,9 +620,9 @@ int eutable_rget_symbol(europa* s, eu_table* t, const char* str,
 	return EU_RESULT_OK;
 }
 
-int eutable_define_symbol(europa* s, eu_table* t, void* text, eu_value** val) {
-	eu_value key, *v;
-	eu_symbol* keysym;
+int eutable_define_symbol(europa* s, struct europa_table* t, void* text, struct europa_value** val) {
+	struct europa_value key, *v;
+	struct europa_symbol* keysym;
 
 	/* save passed value */
 	v = *val;

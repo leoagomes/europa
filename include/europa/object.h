@@ -7,13 +7,10 @@
 #ifndef __EUROPA_OBJECT_H__
 #define __EUROPA_OBJECT_H__
 
-#include "europa/gc/header.h"
 #include "europa/common.h"
 #include "europa/int.h"
 
-/* type definitions */
-typedef struct europa_object eu_object;
-typedef struct europa_value eu_value;
+#include "europa/types.h"
 
 /* internal value representation. */
 /** enum representing the possible types for tagged value */
@@ -56,39 +53,16 @@ extern const char* eu_type_names[];
 /** helper mask to check for types */
 #define EU_TYPEMASK (0xFF ^ (EU_TYPEFLAG_COLLECTABLE | EU_TYPEFLAG_EXTRA))
 
-/** union of values for language types */
-union eu_values {
-	eu_object* object; /*!< garbage collected objects */
-
-	eu_integer i; /*!< (fixnum) integer number value */
-	eu_real r; /*!< (floating) real number value */
-
-	int boolean; /*!< booleans */
-	int character; /*!< characters */
-	void* p; /*!< (unmanaged) c pointer */
-};
-
-/** internal value representation structure */
-struct europa_value {
-	union eu_values value; /*!< value itself */
-	eu_byte type; /*!< the value's type */
-};
-
 /* garbage collected objects */
 #define EU_OBJECT_HEADER \
 	EU_OBJECT_GC_HEADER
-
-/** Garbage Collected object abstraction. */
-struct europa_object {
-	EU_OBJECT_HEADER
-};
 
 /* Global object singletons declarations */
 /** value struct initialization definition for the null object */
 #define EU_VALUE_NULL \
 	{.type = EU_TYPE_NULL, .value = {.object = NULL}}
 /** effective null value singleton */
-extern eu_value _null;
+extern struct europa_value _null;
 #define _eu_makenull(vptr) \
 	do {\
 		(vptr)->type = EU_TYPE_NULL;\
@@ -99,19 +73,19 @@ extern eu_value _null;
 #define EU_VALUE_TRUE \
 	{.value = {.boolean = EU_TRUE}, .type = EU_TYPE_BOOLEAN}
 /** effective true value singleton */
-extern eu_value _true;
+extern struct europa_value _true;
 
 /** value struct initialization definition for the true object */
 #define EU_VALUE_FALSE \
 	{.value = {.boolean = EU_FALSE}, .type = EU_TYPE_BOOLEAN}
 /** effective false value singleton */
-extern eu_value _false;
+extern struct europa_value _false;
 
 /** value struct initialization definition for the EOF object */
 #define EU_VALUE_EOF \
 	{.type = EU_TYPE_EOF}
 /** effective eof singleton */
-extern eu_value _eof;
+extern struct europa_value _eof;
 
 #define _eu_makecpointer(vptr, ptr) \
 	do {\
@@ -148,15 +122,15 @@ extern eu_value _eof;
 #define _euobj_is_type(o, t) (_euobj_type(o) == (t))
 
 /* value functions */
-eu_bool euvalue_is_null(eu_value* value);
-eu_bool euvalue_is_type(eu_value* value, eu_byte type);
-eu_bool euobj_is_null(eu_object* obj);
-eu_bool euobj_is_type(eu_object* obj, eu_byte type);
+eu_bool euvalue_is_null(struct europa_value* value);
+eu_bool euvalue_is_type(struct europa_value* value, eu_byte type);
+eu_bool euobj_is_null(struct europa_object* obj);
+eu_bool euobj_is_type(struct europa_object* obj, eu_byte type);
 
-eu_uinteger euvalue_hash(eu_value* v);
-int euvalue_eqv(eu_value* a, eu_value* b, eu_value* out);
-int euvalue_eq(eu_value* a, eu_value* b, eu_value* out);
-int euvalue_equal(eu_value* a, eu_value* b, eu_value* out);
+eu_uinteger euvalue_hash(struct europa_value* v);
+int euvalue_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out);
+int euvalue_eq(struct europa_value* a, struct europa_value* b, struct europa_value* out);
+int euvalue_equal(struct europa_value* a, struct europa_value* b, struct europa_value* out);
 
 /* language side api */
 

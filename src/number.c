@@ -15,7 +15,7 @@
  * @param v The number.
  * @return The hash.
  */
-eu_uinteger eunum_hash(eu_value* v) {
+eu_uinteger eunum_hash(struct europa_value* v) {
 	eu_integer ival;
 
 	ival = (_euvalue_rtype(v) & EU_NUMBER_REAL) ? cast(int, v->value.r) :
@@ -31,7 +31,7 @@ eu_uinteger eunum_hash(eu_value* v) {
  * @param c Where to place the result.
  * @return Whether the operation was successful.
  */
-int eunum_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int eunum_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	int v;
 
 	/* a and b exact: a == b is #t */
@@ -54,28 +54,28 @@ int eunum_eqv(eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_equal(europa* s, eu_value* a, eu_value* b) {
+int eunum_equal(europa* s, struct europa_value* a, struct europa_value* b) {
 	if (_eunum_is_exact(a) == _eunum_is_exact(b)) {
 		return _eunum_i(a) == _eunum_i(b);
 	}
 	return _eunum_to_real(a) == _eunum_to_real(b);
 }
 
-int eunum_greater(europa* s, eu_value* a, eu_value* b) {
+int eunum_greater(europa* s, struct europa_value* a, struct europa_value* b) {
 	if (_eunum_is_exact(a) && _eunum_is_exact(b)) {
 		return _eunum_i(a) > _eunum_i(b);
 	}
 	return _eunum_to_real(a) > _eunum_to_real(b);
 }
 
-int eunum_lesser(europa* s, eu_value* a, eu_value* b) {
+int eunum_lesser(europa* s, struct europa_value* a, struct europa_value* b) {
 	if (_eunum_is_exact(a) && _eunum_is_exact(b)) {
 		return _eunum_i(a) < _eunum_i(b);
 	}
 	return _eunum_to_real(a) < _eunum_to_real(b);
 }
 
-int eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_add(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -88,7 +88,7 @@ int eunum_add(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_subtract(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -101,7 +101,7 @@ int eunum_subtract(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_multiply(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -114,7 +114,7 @@ int eunum_multiply(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out) {
+int eunum_divide(europa* s, struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	if (!_euvalue_is_number(a) || !_euvalue_is_number(b))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -127,7 +127,7 @@ int eunum_divide(europa* s, eu_value* a, eu_value* b, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_invert(europa* s, eu_value* a, eu_value* out) {
+int eunum_invert(europa* s, struct europa_value* a, struct europa_value* out) {
 	if (!_euvalue_is_number(a))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -149,7 +149,7 @@ int eunum_invert(europa* s, eu_value* a, eu_value* out) {
 	return EU_RESULT_OK;
 }
 
-int eunum_negate(europa* s, eu_value* a, eu_value* out) {
+int eunum_negate(europa* s, struct europa_value* a, struct europa_value* out) {
 	if (!_euvalue_is_number(a))
 		return EU_RESULT_BAD_ARGUMENT;
 
@@ -169,7 +169,7 @@ int eunum_negate(europa* s, eu_value* a, eu_value* out) {
  * @param v The boolean value.
  * @return The hash.
  */
-eu_uinteger eubool_hash(eu_value* v) {
+eu_uinteger eubool_hash(struct europa_value* v) {
 	return v->value.boolean ? 0xAA : ~0xAA;
 }
 
@@ -180,7 +180,7 @@ eu_uinteger eubool_hash(eu_value* v) {
  * @param c Where to place the result.
  * @return Whether the operation was successful.
  */
-int eubool_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int eubool_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	int av, bv;
 	av = _euvalue_to_bool(a);
 	bv = _euvalue_to_bool(b);
@@ -196,9 +196,9 @@ int eubool_eqv(eu_value* a, eu_value* b, eu_value* out) {
  */
 
 int euapi_register_number(europa* s) {
-	eu_table* env;
+	struct europa_table* env;
 
-	env = s->env;
+	env = s->environment;
 
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "number?", euapi_numberQ));
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "complex?", euapi_complexQ));
@@ -234,7 +234,7 @@ int euapi_register_number(europa* s) {
 }
 
 int euapi_numberQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -244,7 +244,7 @@ int euapi_numberQ(europa* s) {
 }
 
 int euapi_complexQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -254,7 +254,7 @@ int euapi_complexQ(europa* s) {
 }
 
 int euapi_realQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -264,7 +264,7 @@ int euapi_realQ(europa* s) {
 }
 
 int euapi_rationalQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	/* TODO: determine whether number is rational? */
 
@@ -276,7 +276,7 @@ int euapi_rationalQ(europa* s) {
 }
 
 int euapi_integerQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -287,7 +287,7 @@ int euapi_integerQ(europa* s) {
 }
 
 int euapi_exactQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -298,7 +298,7 @@ int euapi_exactQ(europa* s) {
 }
 
 int euapi_inexactQ(europa *s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -309,8 +309,8 @@ int euapi_inexactQ(europa *s) {
 }
 
 int euapi_E(europa* s) {
-	eu_value *previous, *current;
-	eu_value *pv, *cv;
+	struct europa_value *previous, *current;
+	struct europa_value *pv, *cv;
 
 	previous = _eucc_arguments(s);
 	current = _eupair_tail(_euvalue_to_pair(previous));
@@ -340,8 +340,8 @@ int euapi_E(europa* s) {
 
 
 int euapi_L(europa* s) {
-	eu_value *previous, *current;
-	eu_value *pv, *cv;
+	struct europa_value *previous, *current;
+	struct europa_value *pv, *cv;
 
 	previous = _eucc_arguments(s);
 	current = _eupair_tail(_euvalue_to_pair(previous));
@@ -371,8 +371,8 @@ int euapi_L(europa* s) {
 }
 
 int euapi_G(europa* s) {
-	eu_value *previous, *current;
-	eu_value *pv, *cv;
+	struct europa_value *previous, *current;
+	struct europa_value *pv, *cv;
 
 	previous = _eucc_arguments(s);
 	current = _eupair_tail(_euvalue_to_pair(previous));
@@ -402,8 +402,8 @@ int euapi_G(europa* s) {
 }
 
 int euapi_LE(europa* s) {
-	eu_value *previous, *current;
-	eu_value *pv, *cv;
+	struct europa_value *previous, *current;
+	struct europa_value *pv, *cv;
 
 	previous = _eucc_arguments(s);
 	current = _eupair_tail(_euvalue_to_pair(previous));
@@ -433,8 +433,8 @@ int euapi_LE(europa* s) {
 }
 
 int euapi_GE(europa* s) {
-	eu_value *previous, *current;
-	eu_value *pv, *cv;
+	struct europa_value *previous, *current;
+	struct europa_value *pv, *cv;
 
 	previous = _eucc_arguments(s);
 	current = _eupair_tail(_euvalue_to_pair(previous));
@@ -464,7 +464,7 @@ int euapi_GE(europa* s) {
 }
 
 int euapi_zeroQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -475,7 +475,7 @@ int euapi_zeroQ(europa* s) {
 }
 
 int euapi_positiveQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -486,7 +486,7 @@ int euapi_positiveQ(europa* s) {
 }
 
 int euapi_negativeQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, value, 0);
@@ -497,7 +497,7 @@ int euapi_negativeQ(europa* s) {
 }
 
 int euapi_oddQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 	eu_integer i;
 	eu_real r;
 
@@ -519,7 +519,7 @@ int euapi_oddQ(europa* s) {
 }
 
 int euapi_evenQ(europa* s) {
-	eu_value* value;
+	struct europa_value* value;
 	eu_integer i;
 	eu_real r;
 
@@ -541,7 +541,7 @@ int euapi_evenQ(europa* s) {
 }
 
 int euapi_min(europa* s) {
-	eu_value *current, *min;
+	struct europa_value *current, *min;
 
 	/* check arity */
 	_eucc_arity_improper(s, 1);
@@ -567,7 +567,7 @@ int euapi_min(europa* s) {
 }
 
 int euapi_max(europa* s) {
-	eu_value *current, *max;
+	struct europa_value *current, *max;
 
 	/* check arity */
 	_eucc_arity_improper(s, 1);
@@ -599,7 +599,7 @@ int euapi_max(europa* s) {
 }
 
 int euapi_P(europa* s) {
-	eu_value *current;
+	struct europa_value *current;
 
 	/* setup inital result as zero */
 	_eu_makeint(_eucc_return(s), 0);
@@ -623,7 +623,7 @@ int euapi_P(europa* s) {
 }
 
 int euapi_S(europa* s) {
-	eu_value *current;
+	struct europa_value *current;
 
 	/* setup inital result as one */
 	_eu_makeint(_eucc_return(s), 1);
@@ -647,7 +647,7 @@ int euapi_S(europa* s) {
 }
 
 int euapi_M(europa* s) {
-	eu_value *current;
+	struct europa_value *current;
 
 	/* check arity for at least one value */
 	_eucc_arity_improper(s, 1);
@@ -688,7 +688,7 @@ int euapi_M(europa* s) {
 }
 
 int euapi_D(europa* s) {
-	eu_value *current;
+	struct europa_value *current;
 
 	/* check arity for at least one value */
 	_eucc_arity_improper(s, 1);
@@ -730,7 +730,7 @@ int euapi_D(europa* s) {
 }
 
 int euapi_abs(europa* s) {
-	eu_value* val;
+	struct europa_value* val;
 
 	_eucc_arity_proper(s, 1); /* check arity */
 	_eucc_argument_type(s, val, 0, EU_TYPE_NUMBER); /* get argument */
@@ -746,7 +746,7 @@ int euapi_abs(europa* s) {
 }
 
 int euapi_not(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -761,7 +761,7 @@ int euapi_not(europa* s) {
 }
 
 int euapi_booleanQ(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -774,7 +774,7 @@ int euapi_booleanQ(europa* s) {
 #define zerooneify(b) ((b) ? 1 : 0)
 
 int euapi_booleanEQ(europa* s) {
-	eu_value *current, *cv, *bool1;
+	struct europa_value *current, *cv, *bool1;
 	int fbv, cbv;
 
 	/* check for at least two arguments */

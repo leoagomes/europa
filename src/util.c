@@ -75,7 +75,7 @@ int unicodetoutf8(int c) {
  *
  * the number of elements may be considered (return + improper)
  * */
-int eutil_list_length(europa* s, eu_value* v, int* improper) {
+int eutil_list_length(europa* s, struct europa_value* v, int* improper) {
 	int count;
 
 	/* initialize some values */
@@ -130,7 +130,7 @@ void* eutil_stdlib_realloclike(void* ud, void* ptr, size_t size) {
 int eutil_register_standard_library(europa* s) {
 
 	/* set the correct environment */
-	s->env = _eu_global_env(s);
+	s->env = _struct europa_global_env(s);
 
 	/* numeric standard library */
 	_eu_checkreturn(euapi_register_number(s));
@@ -147,7 +147,7 @@ int eutil_register_standard_library(europa* s) {
 }
 
 int eutil_set_standard_ports(europa* s) {
-	eu_fport* port;
+	struct europa_file_port* port;
 
 	/* input port */
 	port = eufport_from_file(s, EU_PORT_FLAG_TEXTUAL | EU_PORT_FLAG_INPUT, stdin);

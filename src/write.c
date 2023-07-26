@@ -26,7 +26,7 @@
  */
 
 #define NUMBUF_SIZE 128
-int euport_write_integer(europa* s, eu_port* port, eu_integer v) {
+int euport_write_integer(europa* s, struct europa_port* port, eu_integer v) {
 	char b[NUMBUF_SIZE];
 	int pos, negative;
 	eu_integer val;
@@ -55,7 +55,7 @@ int euport_write_integer(europa* s, eu_port* port, eu_integer v) {
 	return EU_RESULT_OK;
 }
 
-int euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger val) {
+int euport_write_hex_uint(europa* s, struct europa_port* port, eu_uinteger val) {
 	char d[NUMBUF_SIZE];
 	int pos, tv;
 
@@ -76,7 +76,7 @@ int euport_write_hex_uint(europa* s, eu_port* port, eu_uinteger val) {
 	return EU_RESULT_OK;
 }
 
-int write_string_literal(europa* s, eu_port* port, const void* text) {
+int write_string_literal(europa* s, struct europa_port* port, const void* text) {
 	void *next;
 	int c;
 
@@ -127,7 +127,7 @@ int utf8isascii(void* text) {
 	return 1;
 }
 
-int write_symbol_literal(europa* s, eu_port* port, void* text) {
+int write_symbol_literal(europa* s, struct europa_port* port, void* text) {
 	int ascii;
 
 	/* check whether all chars are ascii */
@@ -149,7 +149,7 @@ int write_symbol_literal(europa* s, eu_port* port, void* text) {
 	return EU_RESULT_OK;
 }
 
-int write_bytevector(europa* s, eu_port* port, eu_bvector* bv) {
+int write_bytevector(europa* s, struct europa_port* port, struct europa_bytevector* bv) {
 	int i;
 
 	/* write bytevector "prefix": #u8( */
@@ -170,7 +170,7 @@ int write_bytevector(europa* s, eu_port* port, eu_bvector* bv) {
 	return EU_RESULT_OK;
 }
 
-int write_char_literal(europa* s, eu_port* port, int c) {
+int write_char_literal(europa* s, struct europa_port* port, int c) {
 
 	/* write char prefix #\ */
 	_eu_checkreturn(euport_write_string(s, port, "#\\"));
@@ -193,7 +193,7 @@ int write_char_literal(europa* s, eu_port* port, int c) {
 	return EU_RESULT_OK;
 }
 
-int write_real(europa* s, eu_port* port, eu_real v) {
+int write_real(europa* s, struct europa_port* port, eu_real v) {
 	char buf[NUMBUF_SIZE];
 
 	/* TODO: implement this in a way that does not depend on stdio */
@@ -203,7 +203,7 @@ int write_real(europa* s, eu_port* port, eu_real v) {
 	return EU_RESULT_OK;
 }
 
-int write_number(europa* s, eu_port* port, eu_value* num) {
+int write_number(europa* s, struct europa_port* port, struct europa_value* num) {
 	if (_eunum_is_exact(num))
 		return euport_write_integer(s, port, _eunum_i(num));
 	else
@@ -212,8 +212,8 @@ int write_number(europa* s, eu_port* port, eu_value* num) {
 	return EU_RESULT_OK;
 }
 
-int write_pair_simple(europa* s, eu_port* port, eu_value* p) {
-	eu_value* v;
+int write_pair_simple(europa* s, struct europa_port* port, struct europa_value* p) {
+	struct europa_value* v;
 
 	/* write opening parenthesis ( */
 	_eu_checkreturn(euport_write_char(s, port, '('));
@@ -238,7 +238,7 @@ int write_pair_simple(europa* s, eu_port* port, eu_value* p) {
 	return EU_RESULT_OK;
 }
 
-int write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
+int write_vector_simple(europa* s, struct europa_port* port, struct europa_vector* vec) {
 	int i;
 
 	/* write #( prefix */
@@ -266,7 +266,7 @@ int write_vector_simple(europa* s, eu_port* port, eu_vector* vec) {
  * @param v The target value.
  * @return The result of the operation.
  */
-int euport_write_simple(europa* s, eu_port* port, eu_value* v) {
+int euport_write_simple(europa* s, struct europa_port* port, struct europa_value* v) {
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_NULL:
 		return euport_write_string(s, port, "()");
@@ -349,7 +349,7 @@ int euport_write_simple(europa* s, eu_port* port, eu_value* v) {
  * @param v The target value.
  * @return The result of the operation.
  */
-int euport_write(europa* s, eu_port* port, eu_value* v) {
+int euport_write(europa* s, struct europa_port* port, struct europa_value* v) {
 	/* TODO: implement datum labels and implement proper shared writing procedures */
 	return euport_write_simple(s, port, v);
 }
@@ -365,7 +365,7 @@ int euport_write(europa* s, eu_port* port, eu_value* v) {
  * @param memo A memoization table. (Pass NULL on top-level call.)
  * @return The result of the operation.
  */
-int euport_write_shared(europa* s, eu_port* port, eu_value* v, eu_table* memo) {
+int euport_write_shared(europa* s, struct europa_port* port, struct europa_value* v, struct europa_table* memo) {
 	return euport_write_simple(s, port, v);
 }
 
@@ -382,7 +382,7 @@ int euport_write_shared(europa* s, eu_port* port, eu_value* v, eu_table* memo) {
  * @param v
  * @return int
  */
-int euport_display(europa* s, eu_port* port, eu_value* v) {
+int euport_display(europa* s, struct europa_port* port, struct europa_value* v) {
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_STRING:
 		return euport_write_string(s, port, _eustring_text(_euvalue_to_string(v)));

@@ -12,7 +12,7 @@
  * @param v The character value.
  * @return The hash.
  */
-eu_uinteger euchar_hash(eu_value* v) {
+eu_uinteger euchar_hash(struct europa_value* v) {
 	return v->value.character * 5; /* completely arbitrary. not even sure is a good idea */
 }
 
@@ -23,7 +23,7 @@ eu_uinteger euchar_hash(eu_value* v) {
  * @param out Where to place the result.
  * @return The result code.
  */
-int euchar_eqv(eu_value* a, eu_value* b, eu_value* out) {
+int euchar_eqv(struct europa_value* a, struct europa_value* b, struct europa_value* out) {
 	_eu_makebool(out, _euvalue_to_char(a) == _euvalue_to_char(b));
 	return EU_RESULT_OK;
 }

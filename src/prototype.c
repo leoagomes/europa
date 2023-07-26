@@ -13,10 +13,10 @@
 /** how much to grow the subprotos array */
 #define SUBPROTOS_GROWTH_RATE 2
 
-int resize_constants(europa* s, eu_proto* proto, int size) {
+int resize_constants(europa* s, struct europa_prototype* proto, int size) {
 	proto->constants_size = size; /* new size */
 	proto->constants = _eugc_realloc(_eu_gc(s), proto->constants,
-		sizeof(eu_value) * size);
+		sizeof(struct europa_value) * size);
 
 	/* check for errors */
 	if (proto->constants == NULL && size > 0)
@@ -25,10 +25,10 @@ int resize_constants(europa* s, eu_proto* proto, int size) {
 	return EU_RESULT_OK;
 }
 
-int resize_subprotos(europa* s, eu_proto* proto, int size) {
+int resize_subprotos(europa* s, struct europa_prototype* proto, int size) {
 	proto->subprotos_size = size;
 	proto->subprotos = _eugc_realloc(_eu_gc(s), proto->subprotos,
-		sizeof(eu_proto) * size);
+		sizeof(struct europa_prototype) * size);
 
 	/* check for error */
 	if (proto->subprotos == NULL && size > 0)
@@ -37,7 +37,7 @@ int resize_subprotos(europa* s, eu_proto* proto, int size) {
 	return EU_RESULT_OK;
 }
 
-int resize_code(europa* s, eu_proto* proto, int size) {
+int resize_code(europa* s, struct europa_prototype* proto, int size) {
 	proto->code_size = size;
 	proto->code = _eugc_realloc(_eu_gc(s), proto->code,
 		sizeof(eu_instruction) * size);
@@ -62,9 +62,9 @@ int resize_code(europa* s, eu_proto* proto, int size) {
  * @param code_size The initial size for the prototype's code.
  * @return The created prototype.
  */
-eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
-	eu_value* source, int subprotos_size, int code_size) {
-	eu_proto* proto;
+struct europa_prototype* euproto_new(europa* s, struct europa_value* formals, int constants_size,
+	struct europa_value* source, int subprotos_size, int code_size) {
+	struct europa_prototype* proto;
 
 	/* fail on invalid state */
 	if (!s)
@@ -72,7 +72,7 @@ eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
 
 	/* allocate a prototype */
 	proto = _euobj_to_proto(eugc_new_object(s, EU_TYPE_PROTO |
-		EU_TYPEFLAG_COLLECTABLE, sizeof(eu_proto)));
+		EU_TYPEFLAG_COLLECTABLE, sizeof(struct europa_prototype)));
 	if (proto == NULL)
 		return NULL;
 
@@ -108,7 +108,7 @@ eu_proto* euproto_new(europa* s, eu_value* formals, int constants_size,
  * @param p The target prototype.
  * @return The result of the operation.
  */
-int euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
+int euproto_mark(europa* s, europa_gc_mark mark, struct europa_prototype* p) {
 	int i;
 
 	/* mark formals list/symbol */
@@ -139,7 +139,7 @@ int euproto_mark(europa* s, eu_gcmark mark, eu_proto* p) {
  * @param p The target prototype.
  * @return The result of the operation.
  */
-int euproto_destroy(europa* s, eu_proto* p) {
+int euproto_destroy(europa* s, struct europa_prototype* p) {
 	/* only the code buffer is not garbage collected, so free it */
 	if (p->code) {
 		_eugc_free(_eu_gc(s), p->code);
@@ -165,7 +165,7 @@ int euproto_destroy(europa* s, eu_proto* p) {
  * @param p The target prototype.
  * @return Its hash.
  */
-eu_integer euproto_hash(eu_proto* p) {
+eu_integer euproto_hash(struct europa_prototype* p) {
 	return cast(eu_integer, p);
 }
 
@@ -178,7 +178,7 @@ eu_integer euproto_hash(eu_proto* p) {
  * @param inst The instruction to append.
  * @return The result of the operation.
  */
-eu_integer euproto_append_instruction(europa* s, eu_proto* proto, eu_instruction inst) {
+eu_integer euproto_append_instruction(europa* s, struct europa_prototype* proto, eu_instruction inst) {
 	/* check whether instruction fits the array */
 	if (++(proto->code_length) > proto->code_size) {
 		/* grow it in case it doesn't */
@@ -205,10 +205,10 @@ eu_integer euproto_append_instruction(europa* s, eu_proto* proto, eu_instruction
  * @param index Where to place the resulting index.
  * @return The result of the operation.
  */
-eu_integer euproto_add_constant(europa* s, eu_proto* proto, eu_value* constant,
+eu_integer euproto_add_constant(europa* s, struct europa_prototype* proto, struct europa_value* constant,
 	int* index) {
 	int i;
-	eu_value out;
+	struct europa_value out;
 
 	/* check if constant is in the constant list already */
 	for (i = 0; i < proto->constantc; i++) {
@@ -247,7 +247,7 @@ eu_integer euproto_add_constant(europa* s, eu_proto* proto, eu_value* constant,
  * @param index Where to place the resulting index.
  * @return The result of the operation.
  */
-eu_integer euproto_add_subproto(europa* s, eu_proto* proto, eu_proto* subproto,
+eu_integer euproto_add_subproto(europa* s, struct europa_prototype* proto, struct europa_prototype* subproto,
 	int* index) {
 
 	/* check whether subproto fits the array */

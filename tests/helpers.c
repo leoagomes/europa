@@ -39,7 +39,7 @@ void terminate_default_instance(europa* s) {
 	eu_terminate(s);
 }
 
-void printobj(europa* s, eu_object* obj) {
+void printobj(europa* s, struct europa_objectropa_object* obj) {
 
 	switch (_euobj_type(obj)) {
 	case EU_TYPE_SYMBOL:
@@ -53,7 +53,7 @@ void printobj(europa* s, eu_object* obj) {
 		break;
 
 	case EU_TYPE_PAIR: {
-		eu_value* lv, v;
+		struct europa_value* lv, v;
 
 		_eu_makepair(&v, _euobj_to_pair(obj));
 
@@ -77,7 +77,7 @@ void printobj(europa* s, eu_object* obj) {
 	}
 	case EU_TYPE_VECTOR: {
 		int i;
-		eu_vector* vec = _euobj_to_vector(obj);
+		struct europa_vector* vec = _euobj_to_vector(obj);
 
 		printf("#(");
 		for (i = 0; i < _euvector_length(vec); i++) {
@@ -89,7 +89,7 @@ void printobj(europa* s, eu_object* obj) {
 	}
 	case EU_TYPE_BYTEVECTOR: {
 		int i;
-		eu_bvector* bv = _euobj_to_bvector(obj);
+		struct europa_bytevector* bv = _euobj_to_bvector(obj);
 
 		printf("#u8(");
 		for (i = 0; i < _eubvector_length(bv); i++) {
@@ -105,7 +105,7 @@ void printobj(europa* s, eu_object* obj) {
 		printf("#<table: %p>{", obj);
 
 		int i, first = 1;
-		eu_table* t = _euobj_to_table(obj);
+		struct europa_table* t = _euobj_to_table(obj);
 		for (i = 0; i < _eutable_size(t); i++) {
 			if (!_euvalue_is_null(_eutnode_key(_eutable_node(t, i)))) {
 				if (!first) {
@@ -150,7 +150,7 @@ void printobj(europa* s, eu_object* obj) {
 
 }
 
-void printv(europa* s, eu_value* v) {
+void printv(europa* s, struct europa_value* v) {
 	switch (_euvalue_type(v)) {
 	case EU_TYPE_NULL:
 		printf("'()");
@@ -182,17 +182,17 @@ void printv(europa* s, eu_value* v) {
 	}
 }
 
-void printvln(europa* s, eu_value* v) {
+void printvln(europa* s, struct europa_value* v) {
 	printv(s, v);
 	printf("\n");
 }
 
-void printobjln(europa* s, eu_object* obj) {
+void printobjln(europa* s, struct europa_objectropa_object* obj) {
 	printobj(s, obj);
 	printf("\n");
 }
 
-void disas_inst(europa* s, eu_proto* proto, eu_instruction inst) {
+void disas_inst(europa* s, struct europa_prototype* proto, eu_instruction inst) {
 	static const char* opc_names[] = {
 		"nop", "refer", "const", "close", "test", "jump", "assign", "argument",
 		"conti", "apply", "return", "frame", "halt"
@@ -242,7 +242,7 @@ void disas_inst(europa* s, eu_proto* proto, eu_instruction inst) {
 	printf("\n");
 }
 
-void disas_proto(europa* s, eu_proto* proto) {
+void disas_proto(europa* s, struct europa_prototype* proto) {
 	printf("Prototype #%p\n", proto);
 	printf("source: ");
 	printvln(s, &proto->source);
@@ -264,7 +264,7 @@ void disas_proto(europa* s, eu_proto* proto) {
 	printf("]\n");
 }
 
-void disas_closure(europa* s, eu_closure* cl) {
+void disas_closure(europa* s, struct europa_closure* cl) {
 	if (cl->cf) {
 		printf("Closure is C closure.\n");
 		return;

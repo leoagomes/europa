@@ -23,10 +23,10 @@
 #define IFRAME(return_to) (opc_part(EU_OP_FRAME) | offset_part(return_to))
 #define IDEFINE(k) (opc_part(EU_OP_DEFINE) | val_part(k))
 
-int compile(europa* s, eu_proto* proto, eu_value* v, int is_tail);
+int compile(europa* s, struct europa_prototype* proto, struct europa_value* v, int is_tail);
 
-int check_formals(europa* s, eu_value* formals) {
-	eu_value* v;
+int check_formals(europa* s, struct europa_value* formals) {
+	struct europa_value* v;
 
 	/* invalid type for formals part */
 	if (!_euvalue_is_type(formals, EU_TYPE_SYMBOL)
@@ -61,12 +61,12 @@ int check_formals(europa* s, eu_value* formals) {
 	return EU_RESULT_ERROR;
 }
 
-int compile_application(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
-	eu_value *head, *tail;
+int compile_application(europa* s, struct europa_prototype* proto, struct europa_value* v, int is_tail) {
+	struct europa_value *head, *tail;
 	int length, improper, index, aux;
-	eu_proto* subproto;
-	eu_symbol* beginsymbol;
-	eu_value beginsym, beginpair;
+	struct europa_prototype* subproto;
+	struct europa_symbol* beginsymbol;
+	struct europa_value beginsym, beginpair;
 
 	head = _eupair_head(_euvalue_to_pair(v));
 	tail = _eupair_tail(_euvalue_to_pair(v));
@@ -419,7 +419,7 @@ int compile_application(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
 	return EU_RESULT_OK;
 }
 
-int compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
+int compile(europa* s, struct europa_prototype* proto, struct europa_value* v, int is_tail) {
 	int index;
 
 	switch (_euvalue_type(v)) {
@@ -457,10 +457,10 @@ int compile(europa* s, eu_proto* proto, eu_value* v, int is_tail) {
  * @param chunk Where to place the resulting chunk.
  * @return The result of the operation.
  */
-int eucode_compile(europa* s, eu_value* v, eu_value* chunk) {
-	eu_proto* top;
-	eu_closure* cl;
-	eu_value argssym;
+int eucode_compile(europa* s, struct europa_value* v, struct europa_value* chunk) {
+	struct europa_prototype* top;
+	struct europa_closure* cl;
+	struct europa_value argssym;
 
 	/* create the top level prototype */
 	top = euproto_new(s, &_null, 0, v, 0, 0);

@@ -53,7 +53,7 @@
  *
  * If you think that the impact of constantly doing hashtable referencing operations
  * is too big, you can make use of the fact that Europa never touches a C Closure's
- * environment, by essentially using the eu_table* to store some void* user data
+ * environment, by essentially using the struct europa_table* to store some void* user data
  * of yours (that absolutely must be managed by the GC).
  *
  * This means that C closures can't keep their state in the C stack, having to
@@ -89,7 +89,7 @@
 	do {\
 		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
 		if ((v) == NULL) {\
-			eu_set_error_nf(s, EU_ERROR_NONE, (s)->err, 1024, \
+			eu_set_error_nf(s, EU_ERROR_NONE, (s)->last_error, 1024, \
 				"could not get argument #%d into C local %s.", (index), #v);\
 			return EU_RESULT_ERROR;\
 		}\
@@ -104,7 +104,7 @@
 	do {\
 		(v) = eulist_ref(s, _euvalue_to_pair(&((s)->rib)), (index));\
 		if ((v) == NULL) {\
-			eu_set_error_nf(s, EU_ERROR_NONE, (s)->err, 1024, \
+			eu_set_error_nf(s, EU_ERROR_NONE, (s)->last_error, 1024, \
 				"could not get argument #%d into C local %s.", (index), #v);\
 			return EU_RESULT_ERROR;\
 		}\
@@ -171,7 +171,7 @@
 
 
 int eucc_frame(europa* s);
-int eucc_define_cclosure(europa* s, eu_table* t, eu_table* env, void* text, eu_cfunc cf);
+int eucc_define_cclosure(europa* s, struct europa_table* t, struct europa_table* env, void* text, europa_c_callback cf);
 
 
 

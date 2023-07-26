@@ -13,7 +13,7 @@
 #include "europa/ports/file.h"
 #include "europa/ports/memory.h"
 
-int euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
+int euport_mark(europa* s, europa_gc_mark mark, struct europa_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_mark(s, mark, _euport_to_fport(port));
@@ -27,7 +27,7 @@ int euport_mark(europa* s, eu_gcmark mark, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-int euport_destroy(europa* s, eu_port* port) {
+int euport_destroy(europa* s, struct europa_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_destroy(s, _euport_to_fport(port));
@@ -41,7 +41,7 @@ int euport_destroy(europa* s, eu_port* port) {
 	return EU_RESULT_ERROR;
 }
 
-eu_uinteger euport_hash(eu_port* port) {
+eu_uinteger euport_hash(struct europa_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_hash(_euport_to_fport(port));
@@ -58,7 +58,7 @@ eu_uinteger euport_hash(eu_port* port) {
 /* internal functions */
 
 #define STATE_PORT_OUT_SWITCH(restype, func) \
-int euport_ ## func (europa* s, eu_port* port, restype out) {\
+int euport_ ## func (europa* s, struct europa_port* port, restype out) {\
 	if (!s || !port)\
 		return EU_RESULT_NULL_ARGUMENT;\
 	switch(port->type) {\
@@ -77,13 +77,13 @@ int euport_ ## func (europa* s, eu_port* port, restype out) {\
 
 STATE_PORT_OUT_SWITCH(int*, read_char)
 STATE_PORT_OUT_SWITCH(int*, peek_char)
-STATE_PORT_OUT_SWITCH(eu_value*, read_line)
+STATE_PORT_OUT_SWITCH(struct europa_value*, read_line)
 STATE_PORT_OUT_SWITCH(int*, char_ready)
-STATE_PORT_OUT_SWITCH(eu_value*, read_u8)
-STATE_PORT_OUT_SWITCH(eu_value*, peek_u8)
+STATE_PORT_OUT_SWITCH(struct europa_value*, read_u8)
+STATE_PORT_OUT_SWITCH(struct europa_value*, peek_u8)
 STATE_PORT_OUT_SWITCH(int*, u8_ready)
 
-int euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
+int euport_read_string(europa* s, struct europa_port* port, int k, struct europa_value* out) {
 	if (!s || !port || !out)
 		return EU_RESULT_NULL_ARGUMENT;
 
@@ -100,13 +100,13 @@ int euport_read_string(europa* s, eu_port* port, int k, eu_value* out) {
 	return EU_RESULT_ERROR;
 }
 
-STATE_PORT_OUT_SWITCH(eu_value*, newline)
+STATE_PORT_OUT_SWITCH(struct europa_value*, newline)
 STATE_PORT_OUT_SWITCH(int, write_char)
 STATE_PORT_OUT_SWITCH(eu_byte, write_u8)
-STATE_PORT_OUT_SWITCH(eu_bvector*, write_bytevector)
+STATE_PORT_OUT_SWITCH(struct europa_bytevector*, write_bytevector)
 STATE_PORT_OUT_SWITCH(void*, write_string)
 
-int euport_flush(europa* s, eu_port* port) {
+int euport_flush(europa* s, struct europa_port* port) {
 	switch (port->type) {
 		case EU_PORT_TYPE_FILE:
 			return eufport_flush(s, _euport_to_fport(port));
@@ -122,9 +122,9 @@ int euport_flush(europa* s, eu_port* port) {
 
 
 int euapi_register_port(europa* s) {
-	eu_table* env;
+	struct europa_table* env;
 
-	env = s->env;
+	env = s->environment;
 
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "eof-object?", euapi_eof_objectQ));
 	_eu_checkreturn(eucc_define_cclosure(s, env, env, "eof-object", euapi_eof_object));
@@ -153,7 +153,7 @@ int euapi_register_port(europa* s) {
 }
 
 int euapi_eof_objectQ(europa* s) {
-	eu_value* obj;
+	struct europa_value* obj;
 
 	_eucc_arity_proper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -168,8 +168,8 @@ int euapi_eof_object(europa* s) {
 }
 
 int euapi_port_read(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 
 	/* get port argument */
 	port = _eucc_arguments(s);
@@ -188,8 +188,8 @@ int euapi_port_read(europa* s) {
 }
 
 int euapi_port_read_char(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 	int c;
 
 	/* get port argument */
@@ -212,8 +212,8 @@ int euapi_port_read_char(europa* s) {
 }
 
 int euapi_port_peek_char(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 	int c;
 
 	/* get port argument */
@@ -235,8 +235,8 @@ int euapi_port_peek_char(europa* s) {
 }
 
 int euapi_port_read_line(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 
 	/* get port argument */
 	port = _eucc_arguments(s);
@@ -255,8 +255,8 @@ int euapi_port_read_line(europa* s) {
 }
 
 int euapi_port_char_ready(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 	int ready;
 
 	/* get port argument */
@@ -278,8 +278,8 @@ int euapi_port_char_ready(europa* s) {
 }
 
 int euapi_port_read_string(europa* s) {
-	eu_port* p;
-	eu_value *k, *port;
+	struct europa_port* p;
+	struct europa_value *k, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, k, 0, EU_TYPE_NUMBER);
@@ -301,8 +301,8 @@ int euapi_port_read_string(europa* s) {
 }
 
 int euapi_port_read_u8(europa* s) {
-	eu_port* p;
-	eu_value *k, *port;
+	struct europa_port* p;
+	struct europa_value *k, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, k, 0, EU_TYPE_NUMBER);
@@ -324,8 +324,8 @@ int euapi_port_read_u8(europa* s) {
 }
 
 int euapi_port_peek_u8(europa* s) {
-	eu_port* p;
-	eu_value *k, *port;
+	struct europa_port* p;
+	struct europa_value *k, *port;
 
 	/* get port argument */
 	port = _eucc_arguments(s);
@@ -344,8 +344,8 @@ int euapi_port_peek_u8(europa* s) {
 }
 
 int euapi_port_u8_ready(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 	int ready;
 
 	/* get port argument */
@@ -367,8 +367,8 @@ int euapi_port_u8_ready(europa* s) {
 }
 
 int euapi_port_write(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -391,8 +391,8 @@ int euapi_port_write(europa* s) {
 }
 
 int euapi_port_write_shared(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -415,8 +415,8 @@ int euapi_port_write_shared(europa* s) {
 }
 
 int euapi_port_write_string(europa* s) {
-	eu_port* p;
-	eu_value *string, *port;
+	struct europa_port* p;
+	struct europa_value *string, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, string, 0, EU_TYPE_STRING);
@@ -439,8 +439,8 @@ int euapi_port_write_string(europa* s) {
 }
 
 int euapi_port_write_simple(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -463,8 +463,8 @@ int euapi_port_write_simple(europa* s) {
 }
 
 int euapi_port_display(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument(s, obj, 0);
@@ -487,8 +487,8 @@ int euapi_port_display(europa* s) {
 }
 
 int euapi_port_newline(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 
 	/* get port argument */
 	port = _eucc_arguments(s);
@@ -508,8 +508,8 @@ int euapi_port_newline(europa* s) {
 }
 
 int euapi_port_write_char(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, obj, 0, EU_TYPE_CHARACTER);
@@ -532,8 +532,8 @@ int euapi_port_write_char(europa* s) {
 }
 
 int euapi_port_write_u8(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, obj, 0, EU_TYPE_CHARACTER);
@@ -556,8 +556,8 @@ int euapi_port_write_u8(europa* s) {
 }
 
 int euapi_port_write_bytevector(europa* s) {
-	eu_port* p;
-	eu_value *obj, *port;
+	struct europa_port* p;
+	struct europa_value *obj, *port;
 
 	_eucc_arity_improper(s, 1);
 	_eucc_argument_type(s, obj, 0, EU_TYPE_BYTEVECTOR);
@@ -580,8 +580,8 @@ int euapi_port_write_bytevector(europa* s) {
 }
 
 int euapi_port_flush(europa* s) {
-	eu_port* p;
-	eu_value *port;
+	struct europa_port* p;
+	struct europa_value *port;
 
 	/* get port argument */
 	port = _eucc_arguments(s);
