@@ -1575,9 +1575,8 @@ int euport_read(europa* s, struct europa_port* port, struct europa_value* out) {
 	_checkreturn(res, padvance(&p));
 	if ((res = pread_datum(&p, out))) {
 		out->type = EU_TYPE_ERROR | EU_TYPEFLAG_COLLECTABLE;
-		out->value.object = _euerror_to_obj(p.error);
-
-		s->err = p.error;
+		out->value.error = p.error;
+		s->last_error = p.error;
 
 		return res;
 	}

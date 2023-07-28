@@ -95,7 +95,7 @@ eu_uinteger euvalue_hash(struct europa_value* v) {
 	case EU_TYPE_PORT: return euport_hash(_euvalue_to_port(v));
 	case EU_TYPE_TABLE: return eutable_hash(_euvalue_to_table(v));
 	case EU_TYPE_VECTOR: return euvector_hash(_euvalue_to_vector(v));
-	case EU_TYPE_ERROR: return euerror_hash(_euvalue_to_error(v));
+	case EU_TYPE_ERROR: return euerror_hash(euvalue_get(v, error));
 	case EU_TYPE_EOF:
 	case EU_TYPE_CLOSURE:
 	case EU_TYPE_USERDATA:

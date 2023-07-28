@@ -352,7 +352,7 @@ int eustate_mark(europa* s, europa_gc_mark mark, europa* state) {
 
 	/* mark any errors */
 	if (state->last_error) {
-		_eu_checkreturn(mark(s, _euerror_to_obj(state->last_error)));
+		_eu_checkreturn(mark(s, cast(struct europa_object*, state->last_error)));
 	}
 
 	return EU_RESULT_OK;

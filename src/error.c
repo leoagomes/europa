@@ -1,40 +1,36 @@
-/** Error type implementation.
- *
- * @file error.c
- * @author Leonardo G.
- */
 #include "europa/error.h"
 
 #include <string.h>
 
 #include "utf8.h"
 
-struct europa_error* euerror_new(europa* s, int flags, void* text, struct europa_error* nested) {
-	struct europa_error* err;
-	size_t text_size;
+struct europa_error* euerror_new(
+    europa* s,
+    int flags,
+    struct europa_string* message,
+    struct europa_error* nested
+) {
+    struct europa_error* err;
+    size_t text_size;
 
-	if (!s || !text)
-		return NULL;
+    if (!s || !message)
+        return NULL;
 
-	text_size = utf8size(text);
+    err = eugc_new_object(s, EU_TYPEFLAG_COLLECTABLE | EU_TYPE_ERROR, sizeof(*err));
+    if (err == NULL)
+        return NULL;
 
-	err = _euobj_to_error(eugc_new_object(s, EU_TYPEFLAG_COLLECTABLE | EU_TYPE_ERROR,
-		sizeof(struct europa_error) + text_size));
-	if (err == NULL)
-		return NULL;
+    err->flags = flags;
+    err->message = message;
+    err->nested_error = nested;
 
-	err->flags = flags;
-	memcpy(&(err->_msg), text, text_size);
-
-	err->nested = nested;
-
-	return err;
+    return err;
 }
 
 void* euerror_message(struct europa_error* err) {
-	return _euerror_message(err);
+    return err->message->text;
 }
 
 eu_uinteger euerror_hash(struct europa_error* err) {
-	return (eu_integer)err;
+    return cast(eu_uinteger, err);
 }

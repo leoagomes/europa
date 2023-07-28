@@ -308,7 +308,7 @@ int euport_write_simple(europa* s, struct europa_port* port, struct europa_value
 
 	case EU_TYPE_ERROR:
 		_eu_checkreturn(euport_write_string(s, port, "#<error: "));
-		_eu_checkreturn(euport_write_string(s, port, _euerror_message(_euvalue_to_error(v))));
+		_eu_checkreturn(euport_write_string(s, port, _euerror_message(euvalue_get(v))));
 		return euport_write_char(s, port, '>');
 
 	case EU_TYPE_GLOBAL:

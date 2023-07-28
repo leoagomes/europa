@@ -74,7 +74,7 @@ struct europa_value {
         struct europa_object* object;
         struct europa_symbol* symbol;
         struct europa_string* string;
-        // struct europa_error* error;
+        struct europa_error* error;
         struct europa_pair* pair;
         struct europa_vector* vector;
         struct europa_bytevector* bytevector;
@@ -89,7 +89,7 @@ struct europa_value {
         struct europa_global* global;
     } value;
 
-    eu_byte type; /*!< the value's type */
+    unsigned int tag; /*!< the value's type */
 };
 
 /* garbage collected objects */
